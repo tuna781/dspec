@@ -1,0 +1,33 @@
+node_modules/
+# ⚠️ ANCHORED. A bare `dist/` matches a directory of that name at ANY depth, which once silently
+# swallowed a nested build output and shipped it empty, with nothing saying so.
+/dist/
+*.tsbuildinfo
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build / test output
+*.tgz
+coverage/
+*.log
+
+# Local environment
+.env
+.env.*
+
+# ⚠️ `CLAUDE.md` and `AGENTS.md` are COMMITTED. They are rendered from `.ds/` by
+# `dspec sync --write` and verified against the model — so a clone without them reports a missing
+# artifact, and a teammate gets no pointer at the index. Never edit them by hand; regenerate.
+#
+# ⚠️ So are `.claude/` and `.agents/`, which `dspec init` writes. That is how a teammate gets the
+# slash commands on clone. Codex is the exception and cannot be committed: its prompts load only
+# from the user's own home directory.
+.ds/config.json
+CLAUDE.local.md

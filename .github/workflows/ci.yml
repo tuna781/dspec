@@ -1,0 +1,44 @@
+name: CI
+
+# ⚠️ `master`, not `main`. This said `main` — a branch that has never existed here — so the
+# push trigger never fired once and CI was green by never running.
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22', '24']
+    name: Node ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  install:
+    runs-on: ubuntu-latest
+    name: Install surface
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # ⚠️ What `npm pack` includes is what a user actually receives. `templates/` missing from the
+      # tarball would install a `dspec` whose every command reports an incomplete install — and
+      # nothing else in the suite would catch it, because the checkout always has the directory.
+      - run: npm pack --dry-run --json | grep -q '"path": "templates/commands/sync.md"'
+      # The model is checked against the checkout on every push: a description older than its code
+      # is the one failure this whole project exists to prevent.
+      - run: node bin/ds.js sync --strict

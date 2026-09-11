@@ -1,0 +1,55 @@
+{
+  "name": "dspec",
+  "version": "0.0.1",
+  "description": "Spec-driven development for AI coding agents. The product model lives as markdown in your repo, bound to the code and measured. One `dspec init` puts the /ds-* commands into Claude Code, Codex and Cursor.",
+  "keywords": [
+    "dspec",
+    "specs",
+    "spec-driven",
+    "spec-driven-development",
+    "code-map",
+    "claude-code",
+    "codex",
+    "cursor",
+    "agents",
+    "local",
+    "cli"
+  ],
+  "homepage": "https://github.com/tuna781/dspec#readme",
+  "bugs": {
+    "url": "https://github.com/tuna781/dspec/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tuna781/dspec.git"
+  },
+  "author": "tuna <tuandv.job@gmail.com>",
+  "license": "MIT",
+  "bin": {
+    "dspec": "./bin/ds.js",
+    "ds": "./bin/ds.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "templates",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "clean": "rm -rf dist dist-plugin",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "test": "tsc && node --test test/*/*.test.js",
+    "release": "node scripts/release.js",
+    "prepublishOnly": "npm run build"
+  }
+}

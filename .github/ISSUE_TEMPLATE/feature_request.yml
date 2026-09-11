@@ -1,0 +1,44 @@
+name: Feature request
+description: Something dspec should do and does not
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        dspec is deliberately small: it answers what a feature is, where it lives, and what it
+        touches, and it is built for nothing else. A request that fits that shape has a much better
+        chance than one that widens it — and some things are ruled out on purpose, so it is worth
+        reading the non-negotiables in
+        [`.ds/product.md`](https://github.com/tuna781/dspec/blob/master/.ds/product.md) first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What were you trying to do?
+      description: The situation you were in, not the feature you have in mind. The problem survives longer than the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What happens today
+      description: What dspec does now, and why that is not enough.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Does it hold to the rules?
+      options:
+        - label: It needs no runtime dependency
+        - label: It needs no network call, server or token
+        - label: Anything it would assert about the code can be re-read from the checkout

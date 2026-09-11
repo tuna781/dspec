@@ -1,0 +1,65 @@
+name: Bug report
+description: Something dspec did that it should not have, or did not do that it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        dspec runs entirely on your machine, so nothing about your failure reaches us unless you
+        paste it.
+
+  - type: input
+    id: version
+    attributes:
+      label: Output of `dspec --version`
+      description: Run it in the repository where the problem happened.
+      placeholder: "1.0.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Which agent?
+      description: Only Claude Code gets the session hooks, so half the reports depend on this answer.
+      options:
+        - Claude Code
+        - Codex CLI
+        - Cursor
+        - The `dspec` CLI on its own
+    validations:
+      required: true
+
+  - type: input
+    id: agent-version
+    attributes:
+      label: That agent's version
+      placeholder: "2.0.14"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you typed, and what came back. Paste the output rather than describing it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: model
+    attributes:
+      label: The part of `.ds/` involved, if any
+      description: |
+        The feature file the problem is about, with anything private trimmed. Skip this if the
+        problem is not about a particular feature.
+      render: markdown
+    validations:
+      required: false

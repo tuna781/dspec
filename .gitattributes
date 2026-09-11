@@ -1,0 +1,10 @@
+# Normalise line endings so a Windows contributor cannot CRLF the tree.
+* text=auto eol=lf
+
+# Snapshots are compared byte-for-byte — never let a filter touch them.
+test/__snapshots__/** -text
+
+# Images are binary — an eol filter would corrupt them. `text=auto` above detects this
+# correctly today, but saying it outright means a future edit cannot quietly break it.
+*.gif binary
+*.png binary
