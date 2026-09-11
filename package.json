@@ -46,7 +46,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "clean": "rm -rf dist dist-plugin",
+    "clean": "rm -rf dist",
     "dev": "tsc --watch --preserveWatchOutput",
     "test": "tsc && node --test test/*/*.test.js",
     "release": "node scripts/release.js",
