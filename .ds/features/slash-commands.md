@@ -43,3 +43,8 @@ Behaviour
   it does is read from the checkout, never typed by the user.
 - Describe → plan → build → reconcile. Only the last step writes to the model, and it is offered
   after the code exists rather than before.
+- Reconciling starts with a dry run, never with `--write`: drift is read, each side is judged, and
+  only then is a feature accepted by name. A command that opened with a write measured the drift
+  away before the agent saw it.
+- A command receives the whole request as `$ARGUMENTS`. `$1` is its first word only, so
+  `/ds-spec add a coupon field` once reached the agent as "Turn add into…".

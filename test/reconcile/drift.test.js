@@ -79,7 +79,7 @@ test('a lost entry says where it went', () => {
   assert.strictEqual(item.foundAt, 'src/moved.ts');
 });
 
-test('only re-measurable kinds point at sync', () => {
-  assert.deepStrictEqual([...FIXED_BY_SYNC].sort(), ['stale', 'unmeasured']);
+test('only never-measured features point at sync — drift is never re-stamped mechanically', () => {
+  assert.deepStrictEqual([...FIXED_BY_SYNC].sort(), ['unmeasured']);
   for (const k of Object.keys(STALE_LABEL)) assert.ok(STALE_LABEL[k], `${k} has no label`);
 });

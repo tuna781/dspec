@@ -72,11 +72,13 @@ test('an argument reaches every agent in a form it understands', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--all', '--yes');
 
-  // Claude and Codex both expand `$1`. A Cursor skill has no variable at all, so leaving the
-  // token there would have the agent asking the user about a `$1` that means nothing.
-  assert.match(readIn(dir, '.claude/commands/ds-spec.md'), /\$1/);
-  assert.match(readIn(dir, '.codex-home/prompts/ds-spec.md'), /\$1/);
-  assert.ok(!/\$1/.test(readIn(dir, '.agents/skills/ds-spec/SKILL.md')), 'cursor has no $1 to expand');
+  // Claude and Codex both expand `$ARGUMENTS` — the WHOLE request. `$1` is its first word only, so
+  // `/ds-spec add a coupon field` used to reach the agent as "Turn add into…". A Cursor skill has
+  // no variable at all, so leaving a token there would have the agent asking about nothing.
+  assert.match(readIn(dir, '.claude/commands/ds-spec.md'), /\$ARGUMENTS/);
+  assert.match(readIn(dir, '.codex-home/prompts/ds-spec.md'), /\$ARGUMENTS/);
+  assert.ok(!/\$1\b/.test(readIn(dir, '.claude/commands/ds-spec.md')), 'the first word is not the request');
+  assert.ok(!/\$ARGUMENTS|\$1\b/.test(readIn(dir, '.agents/skills/ds-spec/SKILL.md')), 'cursor has no variable to expand');
 });
 
 test('no agent is promised a fence it does not have', () => {

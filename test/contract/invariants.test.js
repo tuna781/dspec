@@ -165,15 +165,14 @@ test('a hook uses no binding it has not imported', () => {
   }
 });
 
-test('the stop hook only offers sync for what sync can actually fix', () => {
-  const { FIXED_BY_SYNC } = require('../../dist/code/staleness.js');
+test('the stop hook speaks about drift and nothing else', () => {
+  // A description older than its code is what `/ds-sync` walks a person through. Offering it for a
+  // lost file or an unmeasured feature would describe code changing that did not change.
   const body = read('templates/hooks/stop.js');
-  for (const kind of FIXED_BY_SYNC) {
-    assert.ok(body.includes(`'${kind}'`), `stop.js does not offer sync for \`${kind}\``);
-  }
+  assert.ok(body.includes(`'stale'`), 'stop.js does not look for drift');
   const { STALE_LABEL } = require('../../dist/code/staleness.js');
   for (const kind of Object.keys(STALE_LABEL)) {
-    if (FIXED_BY_SYNC.has(kind)) continue;
-    assert.ok(!body.includes(`'${kind}'`), `stop.js offers sync for \`${kind}\`, which sync cannot resolve`);
+    if (kind === 'stale') continue;
+    assert.ok(!body.includes(`'${kind}'`), `stop.js speaks about \`${kind}\`, which is not drift`);
   }
 });

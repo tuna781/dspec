@@ -5,7 +5,7 @@ code: [src/code/staleness.ts]
 entry: computeStaleness
 uses: [Code fingerprint, Source inventory, Model loading]
 tests: [test/reconcile/drift.test.js]
-stamp: sha256f:a662946d4ca5e6c8
+stamp: sha256g:20103d92d431afe1
 ---
 
 Walks the model and asks, of every feature: do the files it names still exist, is its reading entry
@@ -37,5 +37,8 @@ Behaviour
 - It is reported by `dspec sync`, never by a verb of its own. A command that existed only for one
   hook answered a question another command already answered, and two commands deciding separately
   what counts as stale is how they come to disagree.
-- Only two of the five kinds are resolved by re-stamping; the rest need a person, and the report
-  says which is which.
+- Only one of the five kinds — never measured — is resolved by `sync --write`. Drift is resolved by
+  `dspec accept` after reading; the rest need a correction to the model, and the report says which is
+  which.
+- A file that exists but cannot be read is reported as unmeasured with the reason, rather than
+  aborting the whole walk or letting a missing stamp read as nothing to report.

@@ -12,6 +12,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { normalise, stampFiles, declaresSymbol, isLegacyStamp, isCurrentStamp } = require('../../dist/code/hash.js');
+const fs = require('node:fs');
+const path = require('node:path');
 const { makeRepo, writeIn } = require('../support/repo');
 
 const stampOf = (dir, files) => stampFiles(dir, files).stamp;
@@ -89,4 +91,49 @@ test('a CALL is not a declaration', () => {
 test('a control keyword opening a block is not a declaration', () => {
   assert.ok(!declaresSymbol('    catch (IOException e) {', 'e'));
   assert.ok(!declaresSymbol('    while (ready) {', 'ready'));
+});
+
+// ─── a comment is only what the file's language calls one ─────────────────
+
+const changes = (file, before, after) => assert.notStrictEqual(normalise(before, file), normalise(after, file),
+  `${file}: ${JSON.stringify(after)} must be drift`);
+
+test('a JS private field is code, not a `#` comment', () => {
+  changes('a.ts', 'class C {\n  inc() { this.#n = 1; }\n}', 'class C {\n  inc() { this.#n = 999; }\n}');
+});
+
+test('Python floor division is code, not a `//` comment', () => {
+  changes('a.py', 'def half(a):\n    return a // 2', 'def half(a):\n    return a // 3');
+});
+
+test('a Rust or PHP attribute is code', () => {
+  changes('a.rs', '#[derive(Debug)]\nstruct A;', '#[derive(Clone)]\nstruct A;');
+  changes('a.php', '#[Route("/a")]\nfunction a() {}', '#[Route("/b")]\nfunction a() {}');
+});
+
+test('a `/*` inside a regex literal does not hide the rest of the file', () => {
+  const head = 'const trim = (s) => s.replace(/\\/*$/, "");\n';
+  changes('a.js', `${head}export const x = 1;\n`, `${head}export const x = 2;\n`);
+});
+
+test('a markdown heading is content', () => {
+  changes('a.md', '# Place order\n\nText.', '# Cancel order\n\nText.');
+});
+
+test('comments still are not drift where the language has them', () => {
+  assert.strictEqual(normalise('x = 1  # note\n', 'a.py'), normalise('x = 1\n', 'a.py'));
+  assert.strictEqual(normalise('const x = 1; // note\n', 'a.ts'), normalise('const x = 1;\n', 'a.ts'));
+});
+
+test('two different binary files never share a fingerprint', () => {
+  const dir = makeRepo({ files: {} });
+  fs.writeFileSync(path.join(dir, 'a.bin'), Buffer.from([0, 0xff, 0xfe, 1]));
+  const one = stampOf(dir, ['a.bin']);
+  fs.writeFileSync(path.join(dir, 'a.bin'), Buffer.from([0, 0xfd, 0xfc, 1]));
+  assert.notStrictEqual(one, stampOf(dir, ['a.bin']));
+});
+
+test('a stamp from the previous generation reads as unmeasured', () => {
+  assert.ok(isLegacyStamp('sha256f:0123456789abcdef'));
+  assert.ok(!isCurrentStamp('sha256f:0123456789abcdef'));
 });

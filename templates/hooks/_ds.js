@@ -49,11 +49,10 @@ function findRepo(from) {
 /**
  * How the CLI was reached last time `ds()` ran — `null` until it has.
  *
- * ⚠️ Kept so the ADVICE can match the installation. `work` prints hints like
- * `→ ds compile`, which are correct for someone who installed the npm package and plain
- * wrong for someone who only installed the plugin: they have no `ds` on PATH, so the agent
- * reads the hint, runs it, and gets "command not found" from a tool that was working a second
- * ago. See `retarget`.
+ * ⚠️ Kept so the ADVICE can match the installation. `dspec sync` prints hints like
+ * `→ dspec sync --write`, which are correct for someone with `dspec` on PATH and plain wrong for
+ * someone reached only through `.ds/config.json`: the agent reads the hint, runs it, and gets
+ * "command not found" from a tool that was working a second ago. See `retarget`.
  */
 let lastInvocation = null;
 

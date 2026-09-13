@@ -46,7 +46,7 @@ function repo() {
 test('--write stamps, renders, and then reports a clean repo', () => {
   const dir = repo();
   assert.strictEqual(runCli(dir, 'sync', '--write').status, 0);
-  assert.match(readIn(dir, '.ds/features/adder.md'), /stamp: sha256f:/);
+  assert.match(readIn(dir, '.ds/features/adder.md'), /stamp: sha256g:/);
   assert.ok(existsIn(dir, '.ds/index.md'));
   assert.ok(existsIn(dir, 'CLAUDE.md'));
   commit(dir);
@@ -176,7 +176,7 @@ code:
 Placing and cancelling orders.
 `);
   runCli(dir, 'sync', '--write');
-  assert.match(readIn(dir, '.ds/features/order.md'), /stamp: sha256f:/);
+  assert.match(readIn(dir, '.ds/features/order.md'), /stamp: sha256g:/);
 });
 
 test('the index and CLAUDE.md are rendered on the first sync', () => {
@@ -221,4 +221,95 @@ test('a dry run on a repo with no model reports it and creates nothing', () => {
   assert.strictEqual(r.status, 0);
   assert.ok(!existsIn(dir, '.ds'), 'only `--write` ever writes, model missing or not');
   assert.match(r.stdout, /no `\.ds\/` here yet/);
+});
+
+// ─── drift survives a write ─────────────────────────────────────────────────
+
+test('--write NEVER re-stamps a feature whose code changed — the drift is still reported', () => {
+  const dir = repo();
+  runCli(dir, 'sync', '--write');
+  commit(dir);
+  const stamped = readIn(dir, '.ds/features/adder.md');
+  writeIn(dir, 'src/add.ts', 'export function add(a: number, b: number) {\n  return a - b;\n}\n');
+  const r = runCli(dir, 'sync', '--write');
+  assert.strictEqual(readIn(dir, '.ds/features/adder.md'), stamped, 'the stamp was left as it was');
+  assert.match(r.stdout, /left stale/);
+  assert.match(r.stdout, /description older than code\] Adder/);
+});
+
+test('accept clears the drift of the feature it is named, and only that', () => {
+  const dir = repo();
+  runCli(dir, 'sync', '--write');
+  commit(dir);
+  writeIn(dir, 'src/add.ts', 'export function add(a: number, b: number) {\n  return b + a;\n}\n');
+  assert.match(runCli(dir, 'sync').stdout, /description older than code/);
+  const r = runCli(dir, 'accept', 'adder');
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /accepted 1 feature/);
+  assert.ok(!/description older than code/.test(runCli(dir, 'sync').stdout));
+});
+
+test('accept refuses a name the model does not have', () => {
+  const dir = repo();
+  const r = runCli(dir, 'accept', 'Subtractor');
+  assert.strictEqual(r.status, 2);
+  assert.match(r.stderr, /no feature named "Subtractor"/);
+});
+
+test('a second --write changes nothing at all', () => {
+  const dir = repo();
+  runCli(dir, 'sync', '--write');
+  commit(dir);
+  runCli(dir, 'sync', '--write');
+  const status = require('node:child_process').execFileSync('git', ['status', '--porcelain'], { cwd: dir, encoding: 'utf-8' });
+  assert.strictEqual(status, '', 'a write with nothing to change must leave git clean');
+});
+
+test('a hand-written CLAUDE.md keeps its text and gains a block', () => {
+  const dir = repo();
+  const mine = '# House rules\n\nAlways run `make lint` before pushing.\n';
+  writeIn(dir, 'CLAUDE.md', mine);
+  runCli(dir, 'sync', '--write');
+  const after = readIn(dir, 'CLAUDE.md');
+  assert.ok(after.startsWith(mine.trimEnd()), 'every existing byte is kept, in place');
+  assert.match(after, /<!-- ds:begin -->[\s\S]*\.ds\/index\.md[\s\S]*<!-- ds:end -->/);
+  commit(dir);
+  runCli(dir, 'sync', '--write');
+  assert.strictEqual(readIn(dir, 'CLAUDE.md'), after, 'and the block is not written twice');
+});
+
+test('a mistyped flag is an error, never a silent pass', () => {
+  const dir = repo();
+  const r = runCli(dir, 'sync', '--stirct');
+  assert.notStrictEqual(r.status, 0);
+  assert.match(r.stderr, /stirct/);
+});
+
+test('--write --json prints one parseable document on stdout', () => {
+  const dir = repo();
+  const r = runCli(dir, 'sync', '--write', '--json');
+  assert.strictEqual(r.status, 0, r.stderr);
+  const report = JSON.parse(r.stdout);
+  assert.ok(Array.isArray(report.items));
+});
+
+test('a product name with a space passes --strict once synced', () => {
+  const dir = repo();
+  writeIn(dir, '.ds/product.md', '---\nname: Acme Calc\n---\n\nA calculator.\n');
+  runCli(dir, 'sync', '--write');
+  commit(dir);
+  const r = runCli(dir, 'sync', '--strict');
+  assert.strictEqual(r.status, 0, r.stdout);
+});
+
+test('code nobody could look at is reported as not measured, never as agreeing', () => {
+  const dir = makeRepo({ files: {
+    'src/add.ts': 'export function add(a: number, b: number) {\n  return a + b;\n}\n',
+    '.ds/product.md': '---\nname: Calc\n---\n\nA calculator.\n',
+    '.ds/features/adder.md': FEATURE,
+  }, git: 'none' });
+  runCli(dir, 'sync', '--write');
+  const r = runCli(dir, 'sync');
+  assert.ok(!/the model and the code agree/.test(r.stdout), r.stdout);
+  assert.match(r.stdout, /code coverage not measured/);
 });

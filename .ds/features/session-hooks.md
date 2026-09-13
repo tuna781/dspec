@@ -8,7 +8,7 @@ code:
   - templates/hooks/stop.js
 entry: retarget
 uses: [Reconciliation, Drift detection, Model loading]
-stamp: sha256f:7b26a5662c986ddd
+stamp: sha256g:af89d0ccd14af9c0
 ---
 
 Three hooks that run without being asked: a session can open knowing what the project owes, an edit
@@ -28,8 +28,9 @@ Rules
 - **The edit hook speaks rarely, and that is where its value comes from.** It runs after every edit
   and is silent whenever no description points at the file — which is the overwhelming majority of
   the time. Something that speaks on every edit is something nobody reads.
-- **It must be affordable.** The session hook runs under a timeout, so it takes the fast half of the
-  report and keeps drift, which is the most valuable thing a session can open with.
+- **It must be affordable.** The session hook runs under a timeout, so it takes the brief report,
+  which does not read the code — and therefore does not include drift. The stop hook is where drift
+  is measured.
 
 Behaviour
 - The edit hook reads the model **in-process** rather than shelling out. There used to be a verb
@@ -42,7 +43,8 @@ Behaviour
 - On session start: what the project owes right now, plus where to look for more.
 - After an edit: the descriptions bound to that file, and the instruction to say so if the change
   contradicts one — rather than leaving the model describing behaviour the code no longer has.
-- On stop: an offer to reconcile, only when something bound to changed code is stale.
+- On stop: an offer to reconcile, only when a description is older than its code. Never measured,
+  lost files and missing tests are the sync report's to name, not a claim that code just changed.
 - The hooks are installed into `.claude/hooks/` and wired by a `hooks` key added to the project's
   `settings.json`, referenced through `$CLAUDE_PROJECT_DIR` — the same file is committed and read
   on every teammate's machine, and an absolute path would be right on exactly one of them.

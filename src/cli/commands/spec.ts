@@ -1,6 +1,6 @@
 // `dspec spec "<Feature>"` — what the model already knows about a piece of work.
 //
-// The measurement behind `/ds:spec` and `/ds:plan`. It resolves a NAME and never guesses: see the header
+// The measurement behind `/ds-spec` and `/ds-plan`. It resolves a NAME and never guesses: see the header
 // of `compile/pack.ts` for the failure that rule exists to prevent.
 import { loadModel } from '../../model/load';
 import { renderPack } from '../../compile/pack';

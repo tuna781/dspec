@@ -21,11 +21,12 @@
 // files deserve a feature is a judgement, and a command that quietly answered it would fill a
 // curated model with directories.
 //
-// ⚠️ **`--write` RE-MEASURES; it does not rewrite prose.** It restores missing base files, writes
-// stamps and re-renders artifacts — all mechanical and reproducible. It never edits a body to
-// agree with the code and never deletes a feature: a description the code has overtaken is where
-// the CODE is the unreviewed party, and silently rewriting it would discard a decision somebody
-// made.
+// ⚠️ **`--write` MEASURES; it never accepts.** It restores missing base files, stamps features
+// that have never been measured and re-renders artifacts — all mechanical and reproducible. It
+// never re-stamps a feature whose code changed after it was stamped: that is drift, the one finding
+// this tool exists for, and only `dspec accept` clears it, after both sides have been read. Nor
+// does it edit a body to agree with the code or delete a feature — a description the code has
+// overtaken is where the CODE is the unreviewed party.
 //
 // ⚠️ **It exits non-zero only when asked, with `--strict`.** That flag is the CI gate and nothing
 // else turns it on: a command that failed by default would make every other use of it a hazard —
@@ -35,14 +36,15 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { FEATURES_DIR, GLOSSARY_FILE, PRODUCT_FILE, SPEC_DIR, hasModel, loadModel } from '../../model/load';
-import { computeCoverage, type Coverage } from '../../code/coverage';
+import { computeCoverage, UNMEASURED_COVERAGE, type Coverage } from '../../code/coverage';
 import { computeStaleness, type StaleItem } from '../../code/staleness';
 import { lintRepo, SEVERITY, type Finding } from '../../compile/lint';
 import { checkArtifacts } from '../../compile/artifacts';
 import { lintLine, MARK } from '../lintMessage';
 import { buildWorkList, type WorkItem } from '../../compile/worklist';
 import { memoryFilesFor } from '../../install/agents';
-import { renderAll } from '../../compile/renderers';
+import { materialise, renderAll } from '../../compile/renderers';
+import { parseFlags } from '../args';
 import { proposeFeatures, writeProposals } from './scaffold';
 import { findRepo } from '../repo';
 import { plural } from '../../text';
@@ -68,7 +70,7 @@ export function buildSyncReport(repo: string, opts: SyncOptions = {}): SyncRepor
   return {
     items: buildWorkList(repo, model, { skipCode: opts.skipCode }),
     coverage: opts.skipCode
-      ? { dirs: [], unclaimed: 0, claimed: 0, total: 0, extra: 0 }
+      ? { ...UNMEASURED_COVERAGE, dirs: [] }
       : computeCoverage(repo, model),
     restored: [],
     staleness: opts.skipCode ? [] : computeStaleness(repo, model),
@@ -156,13 +158,59 @@ function restoreMissing(repo: string): string[] {
   return restored;
 }
 
+/**
+ * Re-render every artifact, writing only what changed. Returns the paths written.
+ *
+ * ⚠️ **A file whose content already matches is not written**, so a second `sync --write` leaves
+ * `git diff` empty. And a memory file somebody else wrote only ever gains or updates a block —
+ * see `materialise`.
+ */
+export function renderArtifacts(repo: string): string[] {
+  const { model } = loadModel(repo);
+  const written: string[] = [];
+  for (const file of renderAll(model, { projectId: model.product.name }, memoryFilesFor(repo))) {
+    const abs = path.join(repo, file.file);
+    const existing = fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
+    const next = materialise(file, existing);
+    if (next === existing) continue;
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, next, 'utf-8');
+    written.push(file.file);
+  }
+  return written;
+}
+
+const USAGE = `dspec sync [--write] [--strict] [--json] [--brief]
+
+  Create the model when there is none; otherwise reconcile it with the code, in both directions,
+  and report what only a person can settle.
+
+  --write    create or restore base files, stamp features never measured, re-render artifacts.
+             Never re-stamps a feature whose code changed — that is drift; see \`dspec accept\`
+  --strict   exit 1 when the model and the code disagree about something measurable (for CI)
+  --json     the report as JSON on stdout
+  --brief    the short, fast view the session hook prints (skips reading the code)`;
+
 export function cmdSync(args: string[]): number {
-  const write = args.includes('--write');
-  const json = args.includes('--json');
-  const brief = args.includes('--brief');
+  const { values, positionals } = parseFlags<{
+    write?: boolean; strict?: boolean; json?: boolean; brief?: boolean; help?: boolean;
+  }>(args, {
+    write: { type: 'boolean' },
+    strict: { type: 'boolean' },
+    json: { type: 'boolean' },
+    brief: { type: 'boolean' },
+    help: { type: 'boolean', short: 'h' },
+  });
+  if (values.help) { console.log(USAGE); return 0; }
+  if (positionals.length) throw new Error(`sync takes no arguments (got \`${positionals.join(' ')}\`)`);
+  const { write = false, json = false, brief = false } = values;
   // ⚠️ **The only way this command exits non-zero**, and it is opt-in. A pipeline chooses its own
   // strictness; a command that failed by default would make every other use of it a hazard.
-  const strict = args.includes('--strict');
+  const strict = values.strict ?? false;
+  if (strict && brief) {
+    // `--brief` skips reading the code, so a strict gate over it would pass on drift it never looked for.
+    throw new Error('--strict cannot be combined with --brief, which does not read the code');
+  }
   const repo = findRepo();
   const hadModel = hasModel(repo);
 
@@ -173,6 +221,9 @@ export function cmdSync(args: string[]): number {
     console.log(`· no \`${SPEC_DIR}/\` here yet — run \`dspec sync --write\` to create one`);
     return 0;
   }
+
+  // Progress goes to stderr under `--json`, so stdout stays one parseable document.
+  const say = json ? (m: string) => console.error(m) : (m: string) => console.log(m);
 
   const restored: string[] = [];
   const proposed: string[] = [];
@@ -190,27 +241,26 @@ export function cmdSync(args: string[]): number {
     // artifact from values that are about to change.
     const loaded = loadModel(repo);
     const stamps = writeStamps(repo, loaded.model, loaded.sourceOf, true);
-    const fresh = loadModel(repo).model;
-    for (const file of renderAll(fresh, { projectId: fresh.product.name, generatedAt: new Date().toISOString() }, memoryFilesFor(repo))) {
-      const abs = path.join(repo, file.file);
-      fs.mkdirSync(path.dirname(abs), { recursive: true });
-      fs.writeFileSync(abs, file.content, 'utf-8');
-    }
+    const rendered = renderArtifacts(repo);
 
-    for (const r of restored) console.log(`✓ restored ${r}`);
+    for (const r of restored) say(`✓ restored ${r}`);
     if (!hadModel && !proposed.length) {
-      console.log('· no source files found to propose features from — write `.ds/features/*.md` by hand.');
+      say('· no source files found to propose features from — write `.ds/features/*.md` by hand.');
     } else if (proposed.length) {
-      console.log(`✓ proposed ${plural(proposed.length, 'feature')} from the code here:`);
-      for (const p of proposed.slice(0, 10)) console.log(`  + ${p}`);
-      if (proposed.length > 10) console.log(`  … +${proposed.length - 10} more`);
+      say(`✓ proposed ${plural(proposed.length, 'feature')} from the code here:`);
+      for (const p of proposed.slice(0, 10)) say(`  + ${p}`);
+      if (proposed.length > 10) say(`  … +${proposed.length - 10} more`);
       // Every name is PROVISIONAL and every body is EMPTY — a directory is an observed fact, not a
       // feature. The worklist below will say each one has no body; this says what to do about it.
-      console.log('  Every name is provisional. Merge, split and rename these into real features,');
-      console.log('  fixing each `code:` list, then write what a read of the files would NOT tell you.');
+      say('  Every name is provisional. Merge, split and rename these into real features,');
+      say('  fixing each `code:` list, then write what a read of the files would NOT tell you.');
     }
-    if (stamps.updated.length) console.log(`✓ stamped ${plural(stamps.updated.length, 'feature')}`);
-    for (const s of stamps.skipped) console.log(`! ${s}`);
+    if (stamps.updated.length) say(`✓ measured ${plural(stamps.updated.length, 'feature')}`);
+    for (const r of rendered) say(`✓ rendered ${r}`);
+    for (const s of stamps.skipped) say(`! ${s}`);
+    if (stamps.held.length) {
+      say(`! ${plural(stamps.held.length, 'feature')} left stale — the code changed after the description; read both, then \`dspec accept\`: ${stamps.held.join(', ')}`);
+    }
   }
 
   // Built AFTER the writes, so what is reported is the state the user is left in — not the one
@@ -230,7 +280,7 @@ export function cmdSync(args: string[]): number {
     return 0;
   }
 
-  if (!report.items.length && !report.coverage.unclaimed) {
+  if (!report.items.length && !report.coverage.unclaimed && report.coverage.measured) {
     console.log('✓ the model and the code agree');
     return 0;
   }
@@ -244,7 +294,7 @@ export function cmdSync(args: string[]): number {
     console.log(`${MARK[f.severity]} ${lintLine(f)}`);
   }
   reportCoverage(report.coverage);
-  if (!write) console.log('\n(dry run — add `--write` to restore, stamp and render)');
+  if (!write) console.log('\n(dry run — `--write` restores, measures and renders; `dspec accept` clears drift)');
 
   if (strict) {
     const failed = failures(repo, report);

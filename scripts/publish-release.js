@@ -3,10 +3,10 @@
 // ============================================================
 // Publish a GitHub Release for a tag that is already pushed
 //
-// A git tag and a GitHub Release are different objects, and `release.js` only ever created the
-// tag. The Releases page therefore sat at 0.1.0 while v0.2.0, v0.3.0 and v0.3.1 were all tagged
-// and shipping — the same "one fact, several places, kept in step by hand" drift that
-// `release.js` exists to prevent, reappearing one level up.
+// A git tag and a GitHub Release are different objects, and `release.js` only ever creates the
+// tag. Left to memory, the Releases page falls behind the tags that are actually shipping — the
+// same "one fact, several places, kept in step by hand" drift that `release.js` exists to
+// prevent, reappearing one level up.
 //
 // ⚠️ **Separate from `release.js` on purpose.** That script must not push: it builds, commits and
 // tags, then hands the push to a human, because a push to `master` is a release to every user
@@ -14,7 +14,7 @@
 // so this step necessarily comes AFTER the push, and pretending otherwise would mean either
 // pushing from `release.js` or creating a Release that silently tags the wrong commit.
 //
-//   node scripts/publish-release.js v0.3.1
+//   node scripts/publish-release.js v0.0.2
 //
 // Idempotent: a tag that already has a Release is left alone, so re-running is safe and this is
 // also what backfills the ones that were missed.
@@ -43,7 +43,7 @@ const quiet = (cmd, args) => {
 
 // ── which tag ───────────────────────────────────────────────────────────────
 const tag = process.argv[2];
-if (!tag) die('no tag given', 'node scripts/publish-release.js v0.3.1');
+if (!tag) die('no tag given', 'node scripts/publish-release.js v0.0.2');
 if (!/^v\d+\.\d+\.\d+$/.test(tag)) die(`\`${tag}\` is not a version tag`, 'expected vMAJOR.MINOR.PATCH');
 const version = tag.slice(1);
 

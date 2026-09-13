@@ -41,13 +41,15 @@ describes what the product **is** — never what somebody proposed.
    the features it uses, the files bound to them, and an explicit warning wherever the model is too
    thin to trust. Start here, not by reading source.
 2. **Plan and implement**, staying inside the files the pack's Code Map lists.
-3. **`dspec sync --write`** — restore what is missing, re-stamp every feature, re-render the
-   artifacts, then work through what it could not decide alone.
+3. **`dspec sync`** — see what the change left behind. Every *"description older than code"* is
+   yours to read: fix whichever side is wrong, then **`dspec accept "<Feature>"`**. Then
+   **`dspec sync --write`** restores what is missing, measures new features and re-renders the
+   artifacts. It never clears drift — only `accept` does, and only for what it is named.
 
-⚠️ **`dspec sync` is the only command that writes to `.ds/`** — it creates the model the first time
-there is nothing there, and repairs it every time after — and nothing exits non-zero unless asked
-with `dspec sync --strict`. Writing a description before the code exists leaves the model
-describing something that is not there.
+⚠️ **Only `dspec sync` and `dspec accept` write to `.ds/`** — `sync` creates the model the first time
+there is nothing there and repairs it every time after; `accept` records that a drifted feature was
+read — and nothing exits non-zero unless asked with `dspec sync --strict`. Writing a description
+before the code exists leaves the model describing something that is not there.
 
 ## Looking a feature up
 
@@ -91,8 +93,9 @@ __DS_LANG_FULL__
 
 ## Rules that are not obvious
 
-- **Never write `stamp` by hand.** `dspec sync --write` computes it from the real files. A typed
-  fingerprint is a claim nobody can check.
+- **Never write `stamp` by hand.** `dspec sync --write` measures it from the real files, and
+  `dspec accept` re-measures it once a changed feature has been read. A typed fingerprint is a
+  claim nobody can check.
 - **Never invent `tests:`.** List only tests you have actually read that exercise this feature.
   Guessing `drift.ts` → `drift.test.js` turns *"nobody proved this"* into *"this is proven"* — the
   dangerous direction, and it fails silently.
@@ -105,7 +108,7 @@ __DS_LANG_FULL__
   convention is exactly the guess this whole system exists to prevent.
 - **Drift is reported, never auto-fixed.** If a description is older than its code, read both and
   ask the user which one is wrong. Rewriting the description to match the code silently discards a
-  decision someone made.
+  decision someone made. Only when both agree again, `dspec accept "<Feature>"`.
 - **Do not add a feature to mirror a folder.** A feature is something a person would name. If the
   feature list ends up mirroring the directory tree, the names are wrong.
 - **Most undescribed code should stay undescribed.** A helper module in the model is noise that
@@ -113,6 +116,7 @@ __DS_LANG_FULL__
 
 ## When the code does something the model never described
 
-Write it into `.ds/features/` as part of the same change, and say so. The model going stale is the
+Once the code exists, propose the description for `.ds/features/` and ask before writing it — the
+model records what the product **is**, never what was proposed. The model going stale is the
 failure this repository is set up to prevent; an implemented feature with no description is exactly
 how it starts.

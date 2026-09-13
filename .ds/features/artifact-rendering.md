@@ -5,7 +5,7 @@ code: [src/compile/renderers.ts, src/compile/artifacts.ts]
 entry: renderAll
 uses: [Model loading, Agent adapters]
 tests: [test/render/renderers.test.js, test/render/artifacts.test.js]
-stamp: sha256f:7b1c8450ad98697c
+stamp: sha256g:6798869427eae1a8
 ---
 
 Turns the model into the files an agent actually reads — `.ds/index.md`, the entry point, and one
@@ -15,9 +15,9 @@ tokens every user pays on every agent call, which is why every renderer's output
 byte by a snapshot.
 
 Rules
-- **A renderer is a pure function.** The generation timestamp is a parameter, never read from the
-  clock inside — otherwise every snapshot turns red on every run, and the only remaining fix is to
-  strip the one line that matters.
+- **A renderer is a pure function, and its output is deterministic.** There is no generation
+  timestamp: one on line 1 dirtied the tree on every write, made the session brief report dspec's
+  own output as uncommitted work, and guaranteed a conflict between any two branches that synced.
 - **Freshness is decided by re-rendering and comparing content, not by a version number.** A
   hand-edited file still carries the old number.
 - **A memory file is a pointer, not a copy.** Rendered from every element it would grow with the
@@ -35,11 +35,19 @@ Rules
 - **A generated file carries a stamp.** Without it a generated file and a hand-written one are
   indistinguishable, and people edit the very file the next render overwrites — losing their words,
   with nothing to warn them.
-- **A file with no stamp is left alone.** Inside a directory the user owns, unstamped is the
-  ordinary case, and a note on every run teaches people to skim past the whole report.
+- **A memory file somebody else wrote is never replaced.** Most repositories have a `CLAUDE.md` or
+  `AGENTS.md` before they have dspec. Into those only a managed block is written, between
+  `<!-- ds:begin -->` and `<!-- ds:end -->`, and every byte outside the markers is kept — rendering
+  the whole file over one once wiped a team's memory file on its first sync.
+- **An index with no stamp is left alone.** Inside `.ds/` it is reported, never overwritten by the
+  check.
 
 Behaviour
 - A stamp naming a different project is reported as foreign — that catches a file copied in from
-  another repository.
+  another repository. The name is quoted, so a product called "Acme Shop" is not read back as
+  "Acme"; an older unquoted stamp matches on its first word, so those repositories recover on their
+  next write instead of being told their own files were copied in.
+- A hand-written memory file with no block is reported as missing one; with a block, only the block
+  is compared.
 - The stamp carries no bundle id: a value that needs an extra write round-trip to obtain, and that
   nothing reads, is not worth having.

@@ -91,3 +91,17 @@ test('dump drops empty keys — `codeRef: {}` must not read as "declared"', () =
   // element look bound, drag it into drift, and report it as broken forever.
   assert.ok(!/codeRef/.test(dumpYaml({ name: 'x', codeRef: {} })));
 });
+
+test('a comma or a bracket inside a flow item survives the round trip', () => {
+  const round = (v) => parseYaml(dumpYaml(v), 'f.md');
+  assert.deepStrictEqual(round({ uses: ['Cart, checkout', 'Pay'] }).uses, ['Cart, checkout', 'Pay']);
+  assert.deepStrictEqual(round({ code: ['app/[locale]/page.tsx', 'a]b'] }).code, ['app/[locale]/page.tsx', 'a]b']);
+});
+
+test('a number somebody wrote with a leading zero stays what they wrote', () => {
+  assert.strictEqual(parseYaml('name: 007\n', 'f.md').name, '007');
+  assert.strictEqual(parseYaml('v: 1.10\n', 'f.md').v, '1.10');
+  assert.strictEqual(parseYaml('n: 42\n', 'f.md').n, 42);
+  assert.strictEqual(parseYaml('n: 0.5\n', 'f.md').n, 0.5);
+  assert.strictEqual(parseYaml(dumpYaml({ name: '007' }), 'f.md').name, '007');
+});

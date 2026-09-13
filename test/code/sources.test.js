@@ -56,3 +56,17 @@ test('outside a git checkout the answer is empty, not an error', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' }, git: 'none' });
   assert.deepStrictEqual(trackedSources(dir), []);
 });
+
+test('a file whose name is not ASCII is still source', () => {
+  // git quotes such paths by default — `"src/caf\303\251.ts"` — and a quoted name does not end in `.ts`.
+  const dir = makeRepo({ files: { 'src/café.ts': 'export const a = 1;\n' }, git: 'committed' });
+  assert.deepStrictEqual(trackedSources(dir), ['src/café.ts']);
+});
+
+test('outside a git checkout the inventory is UNKNOWN, and coverage says so', () => {
+  const { sourceInventory } = require('../../dist/code/sources.js');
+  const { computeCoverage } = require('../../dist/code/coverage.js');
+  const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' }, git: 'none' });
+  assert.strictEqual(sourceInventory(dir), null);
+  assert.strictEqual(computeCoverage(dir, { features: [] }).measured, false);
+});

@@ -5,7 +5,7 @@ code: [src/model/load.ts, src/model/types.ts]
 entry: loadModel
 uses: [Spec file format, Body vocabulary]
 tests: [test/model/load.test.js]
-stamp: sha256f:5525554a6407f4da
+stamp: sha256g:5525554a6407f4da
 ---
 
 Turns `.ds/` into the one structure every other feature reads. One element is one file and the path

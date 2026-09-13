@@ -58,14 +58,15 @@ Security issues go through [SECURITY.md](SECURITY.md), not the issue tracker.
 
 ## Sending a pull request
 
-**Users install from the `v1` tag, not from `master`, so landing a commit is not yet shipping it.**
-`npm run release` moves `v1` onto the new release, and that is the moment it reaches everybody.
+**Users install from npm, not from `master`, so landing a commit is not yet shipping it.** A
+release reaches everybody at `npm publish`, after `npm run release <tag>` has been reviewed.
 
 - Open an issue first for anything larger than a fix.
 - Add a test.
 - Note user-visible changes in `CHANGELOG.md` under `## [Unreleased]`.
 - Do not bump the version and do not tag — **the git tag is the version**, cut at release time by
-  `npm run release <tag>` and published with `node scripts/publish-release.js <tag>`.
+  `npm run release <tag>`, published with `npm publish`, and given a GitHub Release with
+  `node scripts/publish-release.js <tag>`.
 
 **House style:** English only, everywhere. Comments explain the decision, not the syntax.
 

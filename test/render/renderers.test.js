@@ -12,7 +12,7 @@ const assert = require('node:assert');
 const { renderIndex, renderMemoryFile, renderAll, parseArtifactStamp } = require('../../dist/compile/renderers.js');
 const { model, feature } = require('../fixtures/complete-model.js');
 
-const P = { projectId: 'Shop', generatedAt: '2026-01-01T00:00:00.000Z' };
+const P = { projectId: 'Shop' };
 
 test('the index answers what and where for every feature', () => {
   const { content } = renderIndex(model(), P);
@@ -78,13 +78,31 @@ test('every artifact is stamped, and the stamp names the project', () => {
   }
 });
 
-test('a renderer is pure — the timestamp is the only thing that varies', () => {
-  const a = renderAll(model(), P);
-  const b = renderAll(model(), { ...P, generatedAt: '2030-06-06T00:00:00.000Z' });
-  for (let i = 0; i < a.length; i++) {
-    assert.strictEqual(
-      a[i].content.replace(/generated=\S*/, ''),
-      b[i].content.replace(/generated=\S*/, ''),
-    );
-  }
+test('a renderer is deterministic — two renders of one model are byte-identical', () => {
+  // A timestamp in line 1 dirtied the tree on every write and made every two branches that synced
+  // conflict on the same line. Nothing in an artifact may vary except the model.
+  assert.deepStrictEqual(renderAll(model(), P), renderAll(model(), P));
+  for (const f of renderAll(model(), P)) assert.ok(!/generated=/.test(f.content), `${f.file} carries a timestamp`);
+});
+
+test('a hand-written memory file keeps every byte outside the block', () => {
+  const { materialise } = require('../../dist/compile/renderers.js');
+  const [, claude] = renderAll(model(), P);
+  const mine = '# Our team notes\n\nRun `make dev`.\n';
+  const once = materialise(claude, mine);
+  assert.ok(once.startsWith(mine.trimEnd()), 'what was there is still there, first');
+  assert.ok(once.includes(claude.block.trim()));
+  // Updating replaces the block in place and nothing else — and doing it twice changes nothing.
+  const edited = once.replace('Run `make dev`.', 'Run `make dev` twice.') + '\nTrailing note.\n';
+  const again = materialise(claude, edited);
+  assert.strictEqual(again, edited);
+  const stale = edited.replace(/## Shop — product model \(dspec\)/, '## Old heading');
+  assert.strictEqual(materialise(claude, stale), edited);
+});
+
+test('a file dspec wrote, or no file at all, gets the whole render', () => {
+  const { materialise } = require('../../dist/compile/renderers.js');
+  const [, claude] = renderAll(model(), P);
+  assert.strictEqual(materialise(claude, null), claude.content);
+  assert.strictEqual(materialise(claude, '<!-- ds: project="Shop" -->\n# old\n'), claude.content);
 });

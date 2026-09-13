@@ -1,8 +1,10 @@
 ---
 description: Describe what you want, plan the implementation, and build it
 argument-hint: "[what to build]"
-allowed-tools: Bash(dspec spec:*), Bash(dspec sync:*), Read, Edit, Write, Grep, Glob, Bash
+allowed-tools: Bash(dspec spec:*), Bash(dspec sync:*), Bash(dspec accept:*), Read, Edit, Write, Grep, Glob, Bash
 ---
+
+What to build: $ARGUMENTS
 
 Everything `/ds-spec` does, and then the plan and the build.
 

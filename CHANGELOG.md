@@ -7,8 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
-## [Unreleased]
+## [0.0.2] — 2026-09-13
 
+Fixes for the two ways 0.0.1 could quietly break its own promise: a first `sync --write` could
+overwrite your `CLAUDE.md`, and every `sync --write` erased drift before it was reported.
+
+### Added
+- **`dspec accept "<Feature>"… [--all]`**. Run it after reading a drifted feature and its code. It
+  re-stamps only the features you name, and it is the only command that clears *"description older
+  than code"*.
+- **A managed block in an existing `CLAUDE.md` or `AGENTS.md`.** If you already have one, dspec now
+  writes only a block between `<!-- ds:begin -->` and `<!-- ds:end -->`. Every other byte of the file
+  is left as it was.
+
+### Changed
 - **`dspec bootstrap` is gone — `dspec sync` now creates the model too.** `dspec sync --write`
   creates `.ds/` and proposes one provisional feature per directory of source the first time it
   finds no model, and repairs it every time after; which of the two it does is read from the
@@ -18,6 +30,35 @@ to any of them takes a major bump.
   appends a `.gitignore` line for `.ds/config.json` — it only ever acts on the repo already at the
   current directory. Existing installs keep their `.claude/commands/ds-bootstrap.md` (and Codex/
   Cursor equivalents) until deleted by hand; `dspec init` never removes a file.
+- **`dspec sync --write` no longer re-stamps a feature whose code changed.** That feature stays
+  stale and is listed until `dspec accept` names it. `--write` still stamps features that were never
+  measured.
+- **A new fingerprint generation, `sha256g:`.** Comments are now stripped only in the forms the
+  file's own language uses. Before this, `#` counted as a comment in every language and `//` counted
+  as one in Python, so real edits went unseen: a JS private field, a Rust attribute, a Python floor
+  division, and everything after a `/*` inside a JS regex. Markdown and unknown file types keep their
+  comments, and binary files are hashed byte for byte. **Existing stamps now read as *not measured*,
+  and your next `dspec sync --write` re-measures them. It cannot tell you about drift that happened
+  before the upgrade.**
+- **Artifacts no longer carry a timestamp.** A second `sync --write` on an unchanged checkout
+  writes nothing, and branches no longer conflict on line 1 of `.ds/index.md`.
+- **`/ds-sync` starts with a dry run.** It reads each drifted feature, then accepts it. `/ds-spec`
+  and `/ds-plan` now receive your whole request (`$ARGUMENTS`), not just its first word.
+- **The session-stop reminder only fires for real drift.** It no longer fires for features that were
+  never measured.
+- **`npm run build` no longer emits source maps or type declarations,** so they are not in the
+  published package.
+
+### Fixed
+- A product name with a space, such as "Acme Shop", no longer makes every artifact read as copied
+  from another project. Before this fix, `sync --strict` could never pass.
+- `sync` now rejects mistyped flags. `--stirct` used to pass silently in CI, and `sync --help` used
+  to run a sync. `--write --json` now prints valid JSON on stdout. `--brief --strict` is refused.
+- When git cannot list the repository's files, `sync` says code coverage was not measured. It used to
+  print "the model and the code agree". Files with non-ASCII names now count as source.
+- An unreadable file is reported as unmeasured, instead of aborting the whole run.
+- A value containing a comma or bracket inside `[…]` now survives a stamp rewrite. So does a number
+  written with a leading zero, like `007`. Proposed features quote paths such as `app/[locale]/page.tsx`.
 
 ## [0.0.1] — 2026-09-11
 

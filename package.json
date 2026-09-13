@@ -45,7 +45,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "dev": "tsc --watch --preserveWatchOutput",
     "test": "tsc && node --test test/*/*.test.js",

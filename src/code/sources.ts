@@ -26,7 +26,7 @@ const GENERATED_DIRS = new Set(['dist', 'build', 'out', 'coverage', 'target', '.
  */
 const TEST_DIRS = new Set(['test', 'tests', '__tests__', 'spec', 'specs', 'e2e', 'fixtures']);
 
-/** `dist`, and also `dist-plugin`: a build output does not stop being one for having a suffix. */
+/** `dist`, and also `dist-esm`: a build output does not stop being one for having a suffix. */
 const isGeneratedSegment = (seg: string): boolean =>
   GENERATED_DIRS.has(seg) || seg.startsWith('dist-');
 
@@ -65,19 +65,28 @@ export function isSourceFile(rel: string): boolean {
 }
 
 /**
- * Every source file git tracks.
+ * Every source file git tracks — or `null` when git cannot say.
  *
- * ⚠️ Returns `[]` rather than throwing when this is not a git checkout. Coverage then reports
- * nothing, which is the honest answer — "I cannot see your files" must not render as "every file
- * is described".
+ * ⚠️ **`null` is not `[]`.** Not a git checkout, git missing, an inventory too large to read: each
+ * of these used to come back as an empty list, coverage then counted zero unclaimed files, and
+ * `dspec sync` printed "the model and the code agree" about code it had never seen.
+ *
+ * ⚠️ **`-z` with `core.quotePath=off`.** By default git quotes any path with a non-ASCII byte —
+ * `"src/caf\303\251.ts"` — and a quoted name ends in `.ts"`, so every such file silently
+ * stopped being source.
  */
-export function trackedSources(repo: string): string[] {
-  const out = gitOut(repo, ['ls-files']);
-  if (out === null) return [];
+export function sourceInventory(repo: string): string[] | null {
+  const out = gitOut(repo, ['-c', 'core.quotePath=off', 'ls-files', '-z']);
+  if (out === null) return null;
   // ⚠️ Tracked is not the same as present. A file deleted but not yet committed is still in the
   // index, and reporting it as source nobody describes asks the user to write a feature about a
   // file they just removed.
   return out
-    .split('\n')
+    .split('\0')
     .filter((f) => f && isSourceFile(f) && fs.existsSync(path.join(repo, f)));
+}
+
+/** `sourceInventory` for callers that only search it, where seeing nothing means finding nothing. */
+export function trackedSources(repo: string): string[] {
+  return sourceInventory(repo) ?? [];
 }

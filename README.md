@@ -58,7 +58,7 @@ code: [src/billing/discount.ts]
 entry: applyDiscount
 uses: [Place order]
 tests: [test/billing/discount.spec.ts]
-stamp: sha256f:2600b7f1a5269ae9    # written by `dspec sync` — never typed
+stamp: sha256g:2600b7f1a5269ae9    # written by `dspec sync` / `dspec accept` — never typed
 ---
 
 Applies a coupon code to an order that has not been paid for yet.
@@ -151,7 +151,7 @@ Which agents should get the dspec commands?
 | **Codex CLI** | `/ds-sync` | `~/.codex/prompts/ds-*.md` |
 | **Cursor** | `/ds-sync` | `.agents/skills/ds-*/SKILL.md` |
 
-**The same three commands, spelled the same way in all three.** Claude Code could have had `/ds-sync`
+**The same three commands, spelled the same way in all three.** Claude Code could have had `/ds:sync`
 and deliberately does not: moving between agents should not change what you type.
 
 The Claude Code and Cursor files live in the repo, so **commit them** and a teammate gets the loop
@@ -177,7 +177,7 @@ guarantee, and dspec says which one you are getting.
 
 ```
 npm i -g dspec@latest
-dspec sync --write        # re-render the artifacts
+dspec sync --write        # re-render the artifacts, re-measure stamps from an older dspec
 dspec init                # add any command that is new
 ```
 
@@ -185,8 +185,8 @@ dspec init                # add any command that is new
 
 ## Commands
 
-Three, and there is only one kind. If you cannot name it, it is not a command — its job belongs to
-a flag on one you can.
+Three slash commands over four CLI verbs, and there is only one kind. If you cannot name it, it is not
+a command — its job belongs to a flag on one you can.
 
 **Every one of them is a terminal command.** A `/ds-*` slash command is prose telling your agent
 which `dspec` command to run and what to judge in the output — so you can run any of it yourself,
@@ -200,7 +200,7 @@ and so can the agent, with or without the slash commands installed.
 
 ### `/ds-sync` — create or repair the model
 
-The one command that writes to `.ds/`. Which of the two it does is read from the checkout, not
+The command that writes to `.ds/` (with `dspec accept`, which records a reading). Which of the two it does is read from the checkout, not
 typed by you: nothing there yet, and it creates; something there, and it repairs.
 
 **Run it once, in a repo that has no `.ds/` yet**, and it sets the repo up and then **finishes the
@@ -230,9 +230,10 @@ structure with **every body empty and every name provisional**, and your agent w
 > A body pre-filled with a transcription of the code reports as *complete* — a lie, and it buries
 > the very list that would have told you what still needs writing.
 
-**Run it again, any time after**, and it repairs instead: restores base files that went missing,
-re-stamps every feature, re-renders the index, and reports what only a person can settle — a
-description older than its code, a file that moved, a body nobody wrote, code no feature describes.
+**Run it again, any time after**, and it repairs instead. It reports what only a person can settle —
+a description older than its code, a file that moved, a body nobody wrote, code no feature describes
+— and walks through each: read both sides, fix whichever is wrong, then `dspec accept` it. Then it
+restores base files that went missing, measures new features and re-renders the index.
 Either way it **never invents a feature once one exists** — proposing is a first-run act only, and
 after that, undescribed code is only ever listed.
 
@@ -282,9 +283,10 @@ Map: the feature's own files plus the files of everything it declares in `uses:`
 
 ### Under the commands
 
-The CLI has three verbs — `init`, `sync`, `spec` — every one named after something you already
-know. **`sync` is the only one that writes to `.ds/`** — it creates when there is nothing there and
-repairs when there is — and **nothing exits non-zero unless you ask for it**:
+The CLI has four verbs — `init`, `sync`, `accept`, `spec` — every one named after something you
+already know. **Only `sync` and `accept` write to `.ds/`** — `sync` creates when there is nothing
+there and repairs when there is; `accept` records that a drifted feature was read — and **nothing
+exits non-zero unless you ask for it**:
 
 ```yaml
 - run: dspec sync --strict     # fails only on a measured fact
@@ -376,7 +378,8 @@ for the entire product in one read:
 
 `CLAUDE.md` at your repo root — and `AGENTS.md`, which Codex and Cursor read — is **not** a copy of
 the model. It is a pointer at `.ds/index.md` plus your product rules, so it does not grow as the
-model does. `AGENTS.md` carries one extra paragraph asking the agent to run `dspec sync --brief`
+model does. **If you already have one, it is never replaced**: dspec adds a block between
+`<!-- ds:begin -->` and `<!-- ds:end -->` and from then on rewrites only that block. `AGENTS.md` carries one extra paragraph asking the agent to run `dspec sync --brief`
 when a session opens, because it has no hook to do that for it.
 
 ## The rules of the language
@@ -384,8 +387,9 @@ when a session opens, because it has no hook to do that for it.
 1. **Declared, not inferred.** `code` and `uses` are written by a person and verified by the tool.
    A tool that guesses a file list will one day omit the file that mattered — and present the
    omission as scope.
-2. **The tool writes exactly one field.** `stamp`, and nothing else. `dspec sync` re-measures; only a
-   person may re-decide.
+2. **The tool writes exactly one field.** `stamp`, and nothing else. `dspec sync` measures what was
+   never measured; only `dspec accept` — run by somebody who read both sides — re-stamps a
+   description its code has overtaken.
 3. **Never invent evidence.** `tests` lists tests you have actually read. Guessing `discount.ts` →
    `discount.spec.ts` turns *"nobody proved this"* into *"this is proven"* — the dangerous
    direction, and it fails silently.
@@ -444,7 +448,7 @@ description is current._
 
 ### Reconciliation runs in both directions
 
-`dspec sync --write` reports:
+`dspec sync` reports:
 
 - **model → code** — a description naming files that moved, vanished or changed
 - **code → model** — source files nothing in the model describes
@@ -462,21 +466,27 @@ Code no feature describes — 3 files in 1 directory:
   Decide which of these are real features worth describing — most are not.
 ```
 
-**`--write` only re-measures.** It restores what is missing, writes stamps and re-renders artifacts.
-It never rewrites a description and never deletes a feature: a description the code has overtaken is
-where **the code is the unreviewed party**, and rewriting it would discard a decision somebody made.
+**`--write` measures; it never accepts.** It restores what is missing, stamps features that were
+never measured and re-renders artifacts — writing only files whose content changed, so a second run
+leaves `git diff` empty. It never re-stamps a feature whose code changed, never rewrites a
+description and never deletes a feature: a description the code has overtaken is where **the code is
+the unreviewed party**. Once somebody has read both, `dspec accept "<Feature>"` records it.
 
 ### The fingerprint
 
 `stamp` is a sha256 over `path:hash` lines for every file in `code`, sorted by path, each file
 normalised: line endings, comments, trailing whitespace, blank lines and indentation *width*
-removed; indentation *structure* and in-line spacing kept. **Running a formatter is not drift.**
+removed; indentation *structure* and in-line spacing kept. Comments are only what the file's own
+language calls one — `#` in Python, Ruby and shell; `//` and `/* */` in the brace languages; nothing
+at all in Markdown or any format dspec does not know — and binary files are hashed byte for byte.
+**Re-indenting and re-commenting are not drift**; a formatter that changes quotes or wraps lines is.
 
 Three states, and the middle one is the point:
 
 - **measured and matching** — as true as it was when written
 - **not measured** — no stamp, or one from an older dspec. *Nothing is known.* Never reported as fine.
-- **stale** — the code changed after the description was written. Reported, never auto-fixed.
+- **stale** — the code changed after the description was written. Reported, never auto-fixed:
+  cleared only by `dspec accept`, after reading.
 
 A feature with **no body is never stamped**: a stamp asserts a description is current, and one that
 says nothing cannot be.
@@ -515,10 +525,10 @@ people to route around it rather than write the description.
 | the hooks are not wired, but everything else installed | you already had a `hooks` key, and yours wins | merge the block from `dspec init`'s output into it by hand |
 | `dspec spec` says the model does not name my request | retrieval resolves names, not words | pick from the ranked suggestions it printed, or `--touch "<Feature>"` |
 | `dspec sync` (no `--write`) says there is no model | nothing written yet, only a dry run | `dspec sync --write` creates it |
-| `dspec sync --strict` fails right after `--write` | two features share a name | it reports `duplicate_name` — rename one |
+| `dspec sync --strict` fails right after `--write` | a description is older than its code, or two features share a name | read the feature and `dspec accept "<Feature>"`, or rename one of the two |
 
 **Known limit:** a stamp covers a feature's whole file set, so editing a file two features share
-marks both stale. Re-stamping is one command, and the loop already ends in `sync`.
+marks both stale. Accepting both is one command — `dspec accept "A" "B"` — once both are read.
 
 ---
 
@@ -526,7 +536,7 @@ marks both stale. Re-stamping is one command, and the loop already ends in `sync
 
 Node **≥ 20**, no runtime dependencies, `npm install && npm run build && npm test`.
 
-Everything else — the three rules that are easy to get wrong, where things live, and how a change
+Everything else — the four rules that are easy to get wrong, where things live, and how a change
 reaches users — is in **[CONTRIBUTING.md](CONTRIBUTING.md)**. Bugs go through the
 [issue forms](https://github.com/tuna781/dspec/issues/new/choose); questions go to
 [Discussions](https://github.com/tuna781/dspec/discussions).

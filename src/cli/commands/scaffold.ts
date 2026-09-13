@@ -18,6 +18,7 @@ import { trackedSources } from '../../code/sources';
 import { claims, type Model } from '../../model/types';
 import { FEATURES_DIR, SPEC_DIR } from '../../model/load';
 import { renderLanguageBlock } from '../../model/language';
+import { yamlScalar } from '../../model/yaml';
 import { humanise, slugify } from '../../text';
 
 export interface Proposal {
@@ -79,10 +80,10 @@ export function proposeFeatures(repo: string, model: Model): Proposal[] {
  */
 export function renderProposal(p: Proposal): string {
   return `---
-name: ${p.name}
-area: ${p.area}
+name: ${yamlScalar(p.name)}
+area: ${yamlScalar(p.area)}
 code:
-${p.code.map((c) => `  - ${c}`).join('\n')}
+${p.code.map((c) => `  - ${yamlScalar(c)}`).join('\n')}
 # entry: someFunction     # where to start reading
 # uses: [Other feature]   # the features this one depends on, by name
 # tests: [test/…]         # only tests you have actually READ

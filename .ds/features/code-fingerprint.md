@@ -5,7 +5,7 @@ code: [src/code/hash.ts, src/cli/commands/stamp.ts]
 entry: stampFiles
 uses: [Model loading]
 tests: [test/code/hash.test.js]
-stamp: sha256f:78624138424d7d85
+stamp: sha256g:856275424fe98a54
 ---
 
 Turns "is this description still true of the code?" into a measurement. The CLI reads the files
@@ -26,13 +26,22 @@ Rules
 - **Normalisation is conservative, and the asymmetry is deliberate.** A false positive is noise
   that teaches people to ignore the report; a false negative — calling changed code unchanged — is
   the silent failure this product exists to prevent.
+- **Re-stamping a stamp that no longer matches is accepting drift**, and happens only when asked
+  for by name. Without that, a stale feature keeps its stamp.
 - **Writes the stamp and nothing else.** Never `tests:`: guessing that `drift.ts` is proven by
   `drift.test.js` turns "nobody proved this" into "this is proven", the dangerous direction, and it
   fails silently.
 
 Behaviour
 - Stripped before hashing: line endings, comments, trailing whitespace, blank lines, and the *width*
-  of indentation. Running a formatter is therefore not drift.
+  of indentation. Re-indenting and re-commenting are therefore not drift.
+- **A comment is only what the file's own language calls one**, chosen by extension: `#` for
+  Python, Ruby and shell; `//` and `/* */` for the brace languages; `#` in PHP except before `[`;
+  nothing at all for Markdown or any extension not listed. One scanner for every language once
+  treated `#` as a comment everywhere and `//` as one in Python, so a JS private field, a Rust
+  attribute or a floor division could change unseen — and a `/*` inside a JS regex literal hid the
+  rest of its file. Regex literals are copied through whole.
+- A binary file (a NUL in its first 8 KB) is hashed byte for byte, never decoded as text.
 - Kept: indentation *structure*, so a nested block and a flattened one still differ; and spacing
   inside a line, because without parsing there is no way to tell code spacing from the inside of a
   string literal.
@@ -43,6 +52,6 @@ Behaviour
   turned exactly inside out. It also gives the scaffolding comments a life: they are stripped
   whenever frontmatter is rewritten, so stamping a fresh scaffold erased the guidance before the
   user ever opened the file.
-- A file that cannot be read yields **no stamp at all**. Stamping the files that happen to exist
+- A file that is missing or cannot be read yields **no stamp at all**, and is reported as such. Stamping the files that happen to exist
   would produce a value that looks measured, matches on the next run, and quietly asserts freshness
   for a feature pointing at something that is gone.

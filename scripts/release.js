@@ -117,28 +117,11 @@ if (tagged === head) {
   console.log(`✓ ${tag} → ${head.slice(0, 7)}`);
 }
 
-// ── the channel tag ─────────────────────────────────────────────────────────
-//
-// ⚠️ **`v1` is the one tag that is SUPPOSED to move**, and it is what users actually install from:
-// `.claude/settings.json` names `ref: "v1"`, because Claude Code has no "latest tag" resolution —
-// a ref is a literal name, so "latest" only exists if a name is moved onto it.
-//
-// This is the opposite rule from the one above, and deliberately so. `v1.2.0` is a *record* of
-// what shipped and moving it rewrites history somebody already fetched; `v1` is a *pointer* to the
-// current release, and a release that leaves it behind ships to nobody. Immutable tags stay
-// immutable precisely so this one can move.
-const channel = `v${version.split('.')[0]}`;
-run('git', ['tag', '-f', '-a', channel, '-m', `DSpec ${version} — release channel`]);
-console.log(`✓ ${channel} → ${head.slice(0, 7)} (release channel)`);
-
-// ⚠️ Publishing the GitHub Release is a SEPARATE step, and comes after the push. A Release
-// cannot be created for a tag the remote does not have — `gh` would otherwise create that tag
-// itself, from whatever the default branch points at, and the Release would describe a commit
-// nobody released. This script must not push, so it cannot publish either; it names the step
-// instead. `publish-release.js` is idempotent, so a forgotten one can be run later.
-//
-// The channel tag needs `--force` because it moved; the version tag never does.
-console.log(`\nPush it, then publish the release:
+// ⚠️ This script does not push and does not publish. A push to `master` plus `npm publish` is a
+// release to every user the moment it lands, so both are handed to a human. The GitHub Release
+// comes after the push, because it cannot be created for a tag the remote does not have — `gh`
+// would otherwise create that tag itself, from whatever the default branch points at.
+console.log(`\nReview it, then ship it:
   git push origin master && git push origin ${tag}
-  git push --force origin ${channel}
+  npm publish
   node scripts/publish-release.js ${tag}`);

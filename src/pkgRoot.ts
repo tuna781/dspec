@@ -2,8 +2,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 /**
- * The root directory of the running DSpec — the repo checkout in development, the installed
- * plugin directory in the hands of a user.
+ * The root directory of the running dspec — the repo checkout in development, the installed npm
+ * package in the hands of a user.
  *
  * ⚠️ **Why not `path.join(__dirname, '..', '..', '..')`.** That chain of `..` encodes the
  * DEPTH of whichever file calls it inside `dist/` — three levels from `dist/cli/commands/`, two

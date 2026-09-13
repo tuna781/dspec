@@ -12,7 +12,7 @@ const { renderAll } = require('../../dist/compile/renderers.js');
 const { model, feature } = require('../fixtures/complete-model.js');
 const { makeRepo, writeIn } = require('../support/repo');
 
-const P = (m) => ({ projectId: m.product.name, generatedAt: '2026-01-01T00:00:00.000Z' });
+const P = (m) => ({ projectId: m.product.name });
 
 function rendered(m = model()) {
   const files = {};
@@ -61,10 +61,35 @@ test('an artifact copied in from another repo is named as foreign', () => {
   assert.strictEqual(checkArtifacts(dir, m).stale.find((s) => s.path === 'CLAUDE.md').reason, 'foreign');
 });
 
-test('an unstamped file is reported, never overwritten', () => {
+test('a hand-written memory file is owed a block, never a replacement', () => {
   const { dir, m } = rendered();
   writeIn(dir, 'CLAUDE.md', '# my own file\n');
   const report = checkArtifacts(dir, m);
   assert.deepStrictEqual(report.unstamped, ['CLAUDE.md']);
-  assert.ok(!report.stale.some((s) => s.path === 'CLAUDE.md'), 'hand-written is a state, not a failure');
+  const item = report.stale.find((s) => s.path === 'CLAUDE.md');
+  assert.strictEqual(item.reason, 'missing');
+  assert.match(item.detail, /leaves the rest untouched/);
+});
+
+test('a hand-written memory file with a current block is clean, whatever else it says', () => {
+  const { dir, m } = rendered();
+  const [, claude] = renderAll(m, P(m));
+  writeIn(dir, 'CLAUDE.md', `# my own file\n\nMy notes.\n\n${claude.block}\nMore notes.\n`);
+  assert.ok(!checkArtifacts(dir, m).stale.some((s) => s.path === 'CLAUDE.md'));
+});
+
+test('a product name with a space is not foreign to its own artifacts', () => {
+  const { dir, m } = rendered();
+  m.product.name = 'Acme Shop';
+  for (const f of renderAll(m, P(m))) writeIn(dir, f.file, f.content);
+  assert.deepStrictEqual(checkArtifacts(dir, m).stale, []);
+});
+
+test('a legacy unquoted stamp still belongs to its project', () => {
+  const { dir, m } = rendered();
+  m.product.name = 'Acme Shop';
+  const [index] = renderAll(m, P(m));
+  writeIn(dir, index.file, index.content.replace(/^<!--.*-->/, '<!-- ds: project=Acme generated=2026-01-01T00:00:00.000Z -->'));
+  const item = checkArtifacts(dir, m).stale.find((s) => s.path === index.file);
+  assert.ok(!item || item.reason !== 'foreign', 'the first word of an old stamp is the whole name it could hold');
 });

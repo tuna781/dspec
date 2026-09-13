@@ -52,7 +52,9 @@ export function buildWorkList(repo: string, model: Model, opts: WorkOptions = {}
         kind: 'stale',
         title: `[${STALE_LABEL[s.kind]}] ${s.feature}`,
         detail: s.detail,
-        next: FIXED_BY_SYNC.has(s.kind) ? 'dspec sync --write' : undefined,
+        next: FIXED_BY_SYNC.has(s.kind)
+          ? 'dspec sync --write'
+          : s.kind === 'stale' ? `read both, then dspec accept "${s.feature}"` : undefined,
       });
     }
   }
@@ -67,7 +69,13 @@ export function buildWorkList(repo: string, model: Model, opts: WorkOptions = {}
 
   if (!opts.skipCode) {
     const coverage = computeCoverage(repo, model);
-    if (coverage.unclaimed) {
+    if (!coverage.measured) {
+      items.push({
+        kind: 'coverage',
+        title: 'code coverage not measured',
+        detail: 'git could not list the tracked files here, so undescribed code cannot be counted',
+      });
+    } else if (coverage.unclaimed) {
       items.push({
         kind: 'coverage',
         title: `${plural(coverage.unclaimed, 'source file')} no feature describes`,

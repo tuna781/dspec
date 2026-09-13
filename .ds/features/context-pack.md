@@ -5,7 +5,7 @@ code: [src/compile/pack.ts, src/cli/commands/spec.ts]
 entry: renderPack
 uses: [Model loading, Spec quality lint, Drift detection]
 tests: [test/render/pack.test.js]
-stamp: sha256f:57294ea7926f78bc
+stamp: sha256g:1cebde20bb42d835
 ---
 
 How a piece of work reaches the model: given a request, assemble what the model already knows — the

@@ -30,9 +30,11 @@ Rules
   npm, the same binary answers a hook, a slash command and a person typing in a terminal. The
   Claude Code plugin that preceded this existed only to bundle the CLI beside its own hooks; a
   global install removes that reason, and with it the need for Claude Code to be a special case.
-- **`sync` is the only command that writes to the model** — it creates when there is nothing there
-  and repairs when there is. The help text states it, and the command surface is where that
-  invariant is visible.
+- **`sync` creates and repairs, and `accept` records a reading — only those two write to the
+  model.** The help text states it, and the command surface is where that invariant is visible.
+  `accept` earns its place as a verb because no flag on `sync` can honestly say "a person read both
+  sides"; a flag would make clearing drift one keystroke away from repairing.
+- **Every command parses its flags strictly.** A mistyped flag is an error, never ignored.
 - **Every command works from any subdirectory** — the repository root is the nearest ancestor
   holding the model directory.
 - **Nothing exits non-zero unless asked.** `sync --strict` is the CI gate and nothing else turns

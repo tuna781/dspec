@@ -1,13 +1,10 @@
 import { parseArgs, type ParseArgsConfig } from 'node:util';
 
 /**
- * A wrapper around `node:util.parseArgs` for the NEWER commands (`init`, `upgrade`, `doctor`,
- * `feature`).
+ * A wrapper around `node:util.parseArgs`, and the one way every command reads its flags.
  *
- * ⚠️ **Do not touch `argValue` in `commands/compile.ts`.** The older commands (`compile`,
- * `delta`, `map`, `drift`) read argv through it and have tests around them; moving them to a
- * new parser is a refactor nobody asked for, carrying the risk of behaviour changes somewhere
- * unrelated. The two parsers coexist until there is a real reason to merge them.
+ * ⚠️ **Strict, everywhere.** `sync` once read its flags with `args.includes`, so `--stirct` in a
+ * CI job was a silent pass and `sync --help` ran a sync. A mistyped flag must be an error.
  *
  * The only difference from bare `parseArgs`: `strict` is on, and errors are reduced to one
  * short line with no stack trace — `main()` prints `✗ <message>`, so the message must stand
@@ -38,7 +35,7 @@ export function parseFlags<T = Record<string, unknown>>(args: string[], options:
     const msg = err instanceof Error ? err.message : String(err);
     // `parseArgs` throws a long message with a `--help` suggestion appended; the first line
     // is enough to identify which flag was mistyped.
-    throw new Error(msg.split('\n')[0]);
+    throw new Error(msg.split('\n')[0].replace(/\. To specify a positional argument.*$/, ''));
   }
 }
 

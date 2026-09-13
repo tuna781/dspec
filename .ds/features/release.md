@@ -2,7 +2,7 @@
 name: Release
 area: Delivery
 code: [scripts/release.js, scripts/publish-release.js]
-stamp: sha256f:6fa6cf540b952dd6
+stamp: sha256g:3d12bf770afeae54
 ---
 
 Cuts a release: writes the version into `package.json`, runs the suite, commits, and puts the tag
@@ -18,10 +18,6 @@ Rules
 - **A git tag and a published release are different objects.** Creating the tag does not announce
   anything, so a release that skips publication is shipping while the releases page still advertises
   an older version.
-- **The channel tag is the one tag that must move, and the version tags are the reason it can.**
-  `vMAJOR.MINOR.PATCH` is a record of what shipped, and moving it rewrites what somebody already
-  fetched; `vMAJOR` is a pointer to the current release, and a release that leaves it behind ships
-  to nobody. The opposite rules are deliberate.
 - **Release notes come from the changelog**, never from anything hand-written at publish time: a
   second account of one change starts identical and then drifts.
 - **Publication is a separate step**, because a release cannot be created for a tag the remote does
@@ -32,8 +28,9 @@ Rules
 Behaviour
 - Writing the version, running the suite, committing and tagging happen in
   that order, and the ordering is the point.
-- The release moves `vMAJOR` onto the release commit, and that move is what ships: users declare
-  `ref: v1`, so landing a commit on `master` reaches nobody until the channel tag follows it.
-- The channel tag needs a force-push and the version tag never does, so the two are named as
-  separate commands rather than left to whoever is reading to work out.
+- It never pushes and never publishes. It ends by naming the three steps a person takes after
+  reviewing it — push, `npm publish`, then the GitHub Release — because a publish is a release to
+  every user the moment it lands.
 - The releases page is for people; `npm i -g dspec` is what an install actually reads.
+- The build ships without source maps or declarations: the package is a CLI with no public API, and
+  a map without its source helps nobody.

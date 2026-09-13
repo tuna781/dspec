@@ -49,11 +49,10 @@ function findRepo(from) {
 /**
  * How the CLI was reached last time `ds()` ran — `null` until it has.
  *
- * ⚠️ Kept so the ADVICE can match the installation. `work` prints hints like
- * `→ ds compile`, which are correct for someone who installed the npm package and plain
- * wrong for someone who only installed the plugin: they have no `ds` on PATH, so the agent
- * reads the hint, runs it, and gets "command not found" from a tool that was working a second
- * ago. See `retarget`.
+ * ⚠️ Kept so the ADVICE can match the installation. `dspec sync` prints hints like
+ * `→ dspec sync --write`, which are correct for someone with `dspec` on PATH and plain wrong for
+ * someone reached only through `.ds/config.json`: the agent reads the hint, runs it, and gets
+ * "command not found" from a tool that was working a second ago. See `retarget`.
  */
 let lastInvocation = null;
 
@@ -99,26 +98,26 @@ function ds(args, cwd, timeout = 5000) {
  * `require` throws, the hook catches it and exits 0, and the user sees a hook that has quietly
  * stopped working. Every path into dspec's own code has to go through here.
  *
- * `cli` in `.ds/config.json` is `<install>/bin/ds.js`, so its grandparent is the package root.
+ * ⚠️ **`root` is READ, never derived from `cli`.** After `npm i -g dspec`, `cli` is
+ * `<prefix>/bin/dspec` — a symlink npm made — and its grandparent `<prefix>` holds no `dist/`; the
+ * package is at `<prefix>/lib/node_modules/dspec`. Deriving the root from `cli` therefore works in
+ * a checkout and fails on every real install, which is the worst way for a bug to behave.
+ * `realpath` on `cli` is kept as the fallback for a `config.json` an older dspec wrote.
  */
 function dspecModule(cwd, ...parts) {
   const roots = [];
   try {
     const cfg = JSON.parse(fs.readFileSync(path.join(cwd, '.ds', 'config.json'), 'utf-8'));
-    if (cfg && cfg.cli) roots.push(path.join(path.dirname(cfg.cli), '..'));
-  } catch { /* absent or unreadable — try the next candidate */ }
+    if (cfg && cfg.root) roots.push(cfg.root);
+    if (cfg && cfg.cli) roots.push(path.join(path.dirname(fs.realpathSync(cfg.cli)), '..'));
+  } catch { /* absent, unreadable, or a dangling path — try the next candidate */ }
   roots.push(path.join(cwd, 'node_modules', 'dspec'));
   for (const root of roots) {
     try {
       return require(path.join(root, ...parts));
     } catch { /* not this one */ }
   }
-  // A last try through normal resolution, which finds a global install on some layouts.
-  try {
-    return require(require.resolve(path.posix.join('dspec', ...parts)));
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 function verbs() {

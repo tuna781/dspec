@@ -12,9 +12,14 @@
 // to every agent call, on every turn. A pointer costs a few lines and sends the reader to the one
 // file they need.
 //
-// ⚠️ **A renderer is a pure function.** The generation timestamp is a PARAMETER, never read from
-// the clock inside: reading it here would turn every snapshot red on every run, and the only
-// remaining fix would be to strip the one line that matters.
+// ⚠️ **A renderer is a pure function, and its output is deterministic.** There is no generation
+// timestamp: one changed line 1 of every artifact on every write, so a second `sync --write` left
+// a dirty tree, the session brief reported dspec's own output as uncommitted work, and any two
+// branches that synced were guaranteed to conflict on the same line.
+//
+// ⚠️ **A memory file somebody already wrote is never replaced.** `CLAUDE.md` and `AGENTS.md`
+// usually exist before dspec does. Into those, only a MANAGED BLOCK is written — between
+// `<!-- ds:begin -->` and `<!-- ds:end -->` — and nothing outside the markers is ever touched.
 // ============================================================
 
 import { byArea, summaryOf, type Model } from '../model/types';
@@ -24,15 +29,16 @@ export interface CompiledFile {
   /** Path relative to the repo root. */
   file: string;
   format: 'index' | 'memory';
+  /** The whole file, as written when dspec owns it. */
   content: string;
+  /** Memory files only: what goes between the markers of a file somebody else wrote. */
+  block?: string;
 }
 
 /** The identity of one render run, stamped onto the files it produces. */
 export interface ArtifactStamp {
   /** Which project produced this file — catches an artifact copied in from another repo. */
   projectId: string;
-  /** ISO 8601. Supplied by the caller. */
-  generatedAt: string;
 }
 
 /**
@@ -41,17 +47,66 @@ export interface ArtifactStamp {
  * words, with nothing to warn them. It is also what lets the check tell "stale" apart from "this
  * was never ours".
  */
-export function parseArtifactStamp(content: string): { projectId: string } | null {
-  const m = /ds:\s*"?project=(\S+)/.exec(content.slice(0, 512));
-  return m ? { projectId: m[1] } : null;
+export function parseArtifactStamp(content: string): { projectId: string; legacy: boolean } | null {
+  const m = /<!--\s*ds:\s*project=("(?:[^"\\]|\\.)*"|\S+)/.exec(content.slice(0, 512));
+  if (!m) return null;
+  if (!m[1].startsWith('"')) return { projectId: m[1], legacy: true };
+  try {
+    return { projectId: JSON.parse(m[1]) as string, legacy: false };
+  } catch {
+    return null;
+  }
 }
 
-const stampLine = (p: ArtifactStamp): string =>
-  `<!-- ds: project=${p.projectId} generated=${p.generatedAt} -->`;
+/**
+ * Was this stamp written by the project named `name`?
+ *
+ * ⚠️ **A legacy stamp is unquoted**, and `project=Acme Shop` was read back as `Acme` — so every
+ * artifact of a product whose name has a space was reported as foreign, forever, and
+ * `sync --strict` could never pass. Old stamps are matched on the first word so those repos
+ * recover on the next write instead of being told their own files were copied in.
+ */
+export function stampMatches(stamp: { projectId: string; legacy: boolean }, name: string): boolean {
+  if (!stamp.legacy) return stamp.projectId === name;
+  return stamp.projectId === name || stamp.projectId === name.split(/\s/)[0];
+}
 
-/** Drop the one field that changes on every render and says nothing about staleness. */
-export function withoutTimestamp(s: string): string {
-  return s.replace(/generated=\S*/, '');
+const stampLine = (p: ArtifactStamp): string => `<!-- ds: project=${JSON.stringify(p.projectId)} -->`;
+
+/** Drop what a legacy stamp carried and the current one does not: the line itself. */
+export function withoutStamp(s: string): string {
+  return s.replace(/^<!--\s*ds:\s*project=.*-->\n?/, '');
+}
+
+// ─── the managed block ──────────────────────────────────────────────────────
+
+export const BLOCK_BEGIN = '<!-- ds:begin -->';
+export const BLOCK_END = '<!-- ds:end -->';
+
+/** The text between the markers, markers included — or null when the file has no block. */
+export function extractBlock(content: string): string | null {
+  const start = content.indexOf(BLOCK_BEGIN);
+  if (start < 0) return null;
+  const end = content.indexOf(BLOCK_END, start);
+  if (end < 0) return null;
+  return content.slice(start, end + BLOCK_END.length);
+}
+
+/**
+ * What to write for `file`, given what is on disk now.
+ *
+ * - nothing on disk, or a file dspec stamped ⇒ the whole rendered file;
+ * - a file somebody else wrote, with a block ⇒ that block replaced, every other byte kept;
+ * - a file somebody else wrote, without one ⇒ the block appended, every existing byte kept.
+ *
+ * ⚠️ The index lives inside `.ds/` and is always dspec's; only memory files carry a block.
+ */
+export function materialise(file: CompiledFile, existing: string | null): string {
+  if (existing === null || file.block === undefined || parseArtifactStamp(existing)) return file.content;
+  const current = extractBlock(existing);
+  if (current !== null) return existing.replace(current, () => file.block!.replace(/\n$/, ''));
+  const kept = existing.replace(/\s+$/, '');
+  return kept ? `${kept}\n\n${file.block}` : file.block;
 }
 
 // ─── `.ds/index.md` ─────────────────────────────────────────────────────────
@@ -114,10 +169,39 @@ export function renderMemoryFile(
   file: string,
   sessionStart: boolean,
 ): CompiledFile {
-  const lines: string[] = [
+  const whole: string[] = [
     stampLine(p),
     `# ${model.product.name}`,
     '',
+    ...memoryBody(model, sessionStart, '##'),
+    '---',
+    '',
+    '_Generated from the model by `dspec sync`. Never edit this file by hand — it is overwritten._',
+    '',
+  ];
+  const block: string[] = [
+    BLOCK_BEGIN,
+    `## ${model.product.name} — product model (dspec)`,
+    '',
+    '_Maintained by `dspec sync` — the text between the `ds:begin` and `ds:end` markers is',
+    'rewritten from `.ds/`; everything outside them is yours and is never touched._',
+    '',
+    ...memoryBody(model, sessionStart, '###'),
+    BLOCK_END,
+    '',
+  ];
+
+  return {
+    file,
+    format: 'memory',
+    content: whole.join('\n').replace(/\n+$/, '\n'),
+    block: block.join('\n').replace(/\n{3,}/g, '\n\n'),
+  };
+}
+
+/** What a memory file says, whether it owns the file or only a block inside somebody else's. */
+function memoryBody(model: Model, sessionStart: boolean, h: string): string[] {
+  const lines: string[] = [
     `This repository's product model lives in \`${SPEC_DIR}/\`, written in dspec-lang.`,
     '',
     `**Start at \`${SPEC_DIR}/${INDEX_FILE}\`** — every feature, what it is, and which files it`,
@@ -129,14 +213,14 @@ export function renderMemoryFile(
   if (model.product.vision.trim()) lines.push(model.product.vision.trim(), '');
 
   if (model.product.rules.length) {
-    lines.push('## Rules', '', '_Non-negotiable, and they apply to every change._', '');
+    lines.push(`${h} Rules`, '', '_Non-negotiable, and they apply to every change._', '');
     lines.push(...model.product.rules);
     lines.push('');
   }
 
   if (sessionStart) {
     lines.push(
-      '## At the start of a session',
+      `${h} At the start of a session`,
       '',
       'Run `dspec sync --brief` and read what it says before touching anything. This agent cannot',
       'run a command on a session event, so nothing does this for you — which also means nothing',
@@ -149,14 +233,7 @@ export function renderMemoryFile(
     );
   }
 
-  lines.push(
-    '---',
-    '',
-    '_Generated from the model by `dspec sync`. Never edit this file by hand — it is overwritten._',
-    '',
-  );
-
-  return { file, format: 'memory', content: lines.join('\n').replace(/\n+$/, '\n') };
+  return lines;
 }
 
 /**

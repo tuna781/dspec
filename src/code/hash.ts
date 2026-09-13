@@ -29,10 +29,16 @@ import * as path from 'node:path';
  * after an upgrade: a storm that is entirely an artefact of the upgrade, and the fastest possible
  * way to teach somebody that this warning means nothing.
  */
-const PREFIX = 'sha256f:';
+const PREFIX = 'sha256g:';
 
-/** Every format written before this one. Reported as unmeasured, never as drift. */
-const LEGACY_PREFIXES = ['sha256:', 'sha256n:'];
+/**
+ * Every format written before this one. Reported as unmeasured, never as drift.
+ *
+ * `sha256f:` treated `#` as a comment in every language and `//` as one in Python, so edits to a
+ * JS private field, a Rust attribute or a Python floor division were invisible — and a `/*` inside
+ * a JS regex hid the rest of the file. Its values cannot be compared against this definition.
+ */
+const LEGACY_PREFIXES = ['sha256:', 'sha256n:', 'sha256f:'];
 
 /** How wide a tab counts when measuring indentation. Any constant works; it only has to be one. */
 const TAB_WIDTH = 4;
@@ -71,8 +77,8 @@ export function isCurrentStamp(stamp: string | undefined | null): boolean {
  * from `a + b`, because without parsing there is no way to tell code spacing from the inside of
  * a string literal, and quietly rewriting a string is a false negative.
  */
-export function normalise(body: string): string {
-  const lines = stripComments(body.replace(/\r\n?/g, '\n'))
+export function normalise(body: string, file = 'x.ts'): string {
+  const lines = stripComments(body.replace(/\r\n?/g, '\n'), commentSyntax(file))
     .split('\n')
     .map((l) => l.replace(/[ \t]+$/, ''))
     .filter((l) => l.trim() !== '');
@@ -96,16 +102,58 @@ export function normalise(body: string): string {
     .join('\n');
 }
 
+/** Which comment forms a file's language has. Anything not listed has none that are stripped. */
+interface CommentSyntax {
+  line: boolean;
+  block: boolean;
+  /** `#` to end of line. */
+  hash: boolean;
+  /** `#` is a comment only when not followed by `[` — PHP, where `#[Route]` is an attribute. */
+  hashNotAttr: boolean;
+  /** JavaScript's `/…/` regex literals exist, and a `/*` inside one is not a comment. */
+  regex: boolean;
+}
+
+const NONE: CommentSyntax = { line: false, block: false, hash: false, hashNotAttr: false, regex: false };
+const SLASH: CommentSyntax = { ...NONE, line: true, block: true };
+const JS: CommentSyntax = { ...SLASH, regex: true };
+const HASH: CommentSyntax = { ...NONE, hash: true };
+
+const SYNTAX: Record<string, CommentSyntax> = {
+  ...Object.fromEntries(['js', 'jsx', 'mjs', 'cjs', 'ts', 'tsx', 'mts', 'cts'].map((e) => [e, JS])),
+  ...Object.fromEntries(
+    ['go', 'rs', 'java', 'kt', 'kts', 'cs', 'swift', 'scala', 'c', 'h', 'cc', 'cpp', 'hpp', 'dart'].map((e) => [e, SLASH]),
+  ),
+  ...Object.fromEntries(['css', 'scss', 'less'].map((e) => [e, { ...NONE, block: true }])),
+  ...Object.fromEntries(['py', 'rb', 'sh', 'bash', 'zsh', 'pl', 'r', 'ex', 'exs', 'yml', 'yaml', 'toml'].map((e) => [e, HASH])),
+  php: { ...SLASH, hashNotAttr: true },
+};
+
 /**
- * Remove comments, respecting string literals.
+ * ⚠️ **Unknown means NONE.** Markdown headings start with `#`, a URL contains `//`, and a format
+ * this list does not know may use either as content. Keeping a comment in the hash costs a
+ * false positive; stripping content costs a false negative — see `normalise` for which is worse.
+ */
+export function commentSyntax(file: string): CommentSyntax {
+  const ext = path.extname(file).slice(1).toLowerCase();
+  return SYNTAX[ext] ?? NONE;
+}
+
+/** Characters after which a `/` starts a regex literal rather than a division. */
+const BEFORE_REGEX = new Set(['', '(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^']);
+
+/**
+ * Remove comments, respecting string literals — using only the forms `syntax` names.
  *
  * The same scanning discipline `sliceBraceBlock` uses: a `//` inside `"http://example.com"` is
  * part of a URL, and treating it as a comment would silently truncate the line.
  */
-function stripComments(src: string): string {
+function stripComments(src: string, syntax: CommentSyntax): string {
+  if (!syntax.line && !syntax.block && !syntax.hash && !syntax.hashNotAttr) return src;
   let out = '';
   let inStr: string | null = null;
   let inBlock = false;
+  let prev = ''; // last significant character emitted, for telling a regex from a division
   for (let i = 0; i < src.length; i++) {
     const c = src[i];
     const next = src[i + 1];
@@ -116,19 +164,43 @@ function stripComments(src: string): string {
     if (inStr) {
       out += c;
       if (c === '\\') { out += next ?? ''; i++; }
-      else if (c === inStr) inStr = null;
+      else if (c === inStr) { inStr = null; prev = c; }
       continue;
     }
     if (c === '"' || c === "'" || c === '`') { inStr = c; out += c; continue; }
-    if (c === '/' && next === '*') { inBlock = true; i++; continue; }
-    if ((c === '/' && next === '/') || c === '#') {
-      // To end of line. `#` covers Python, Ruby and shell; in a brace language it only ever
-      // appears inside a string, which the branch above has already claimed.
+    if (syntax.block && c === '/' && next === '*') { inBlock = true; i++; continue; }
+    if (
+      (syntax.line && c === '/' && next === '/') ||
+      (syntax.hash && c === '#') ||
+      (syntax.hashNotAttr && c === '#' && next !== '[')
+    ) {
       while (i < src.length && src[i] !== '\n') i++;
       out += '\n';
+      prev = '';
       continue;
     }
+    // ⚠️ A regex literal is copied through whole. `/\/*$/` — strip trailing slashes — would
+    // otherwise open a block comment that runs to the next `*/`, often the end of the file, and
+    // every later edit in that file would stop being drift.
+    if (syntax.regex && c === '/' && BEFORE_REGEX.has(prev)) {
+      let j = i + 1;
+      let inClass = false;
+      for (; j < src.length && src[j] !== '\n'; j++) {
+        if (src[j] === '\\') { j++; continue; }
+        if (src[j] === '[') inClass = true;
+        else if (src[j] === ']') inClass = false;
+        else if (src[j] === '/' && !inClass) break;
+      }
+      if (j < src.length && src[j] === '/') {
+        out += src.slice(i, j + 1);
+        i = j;
+        prev = '/';
+        continue;
+      }
+    }
     out += c;
+    if (c === '\n') prev = '';
+    else if (c !== ' ' && c !== '\t') prev = c;
   }
   return out;
 }
@@ -222,13 +294,18 @@ function isDeclaration(line: string, strict: RegExp[], loose: RegExp, typed: Reg
   return strict.some((re) => re.test(line)) || loose.test(line) || typed.test(line);
 }
 
-const sha = (s: string): string => createHash('sha256').update(s, 'utf-8').digest('hex');
+const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
+
+/** A NUL in the first 8 KB is what git itself takes to mean "binary". */
+const isBinary = (s: string): boolean => s.slice(0, 8000).includes('\u0000');
 
 export interface StampResult {
   /** `null` when any declared file could not be read — a partial stamp would be a lie. */
   stamp: string | null;
   /** Declared paths that are not on disk, in declared order. */
   missing: string[];
+  /** Declared paths that exist but could not be read, with the reason. */
+  unreadable?: string[];
 }
 
 /**
@@ -245,18 +322,30 @@ export interface StampResult {
  */
 export function stampFiles(repo: string, files: string[], cache?: Map<string, string>): StampResult {
   const missing: string[] = [];
+  const unreadable: string[] = [];
   const lines: string[] = [];
   for (const rel of [...files].sort()) {
     const abs = path.join(repo, rel);
     let source = cache?.get(abs);
     if (source === undefined) {
       if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) { missing.push(rel); continue; }
-      source = fs.readFileSync(abs, 'utf-8');
+      try {
+        source = fs.readFileSync(abs, 'utf-8');
+      } catch (err) {
+        // ⚠️ Reported, not thrown: one unreadable file must not take down every other feature's
+        // answer, and it must not be hashed as empty either.
+        unreadable.push(`${rel} (${(err as NodeJS.ErrnoException).code ?? 'unreadable'})`);
+        continue;
+      }
       cache?.set(abs, source);
     }
-    lines.push(`${rel}:${sha(normalise(source))}`);
+    // A binary file has no comments and no indentation; decoding it as text maps every invalid byte
+    // to the same replacement character, so two different images could hash alike.
+    const digest = isBinary(source) ? sha(fs.readFileSync(abs)) : sha(normalise(source, rel));
+    lines.push(`${rel}:${digest}`);
   }
   if (missing.length) return { stamp: null, missing };
+  if (unreadable.length) return { stamp: null, missing, unreadable };
   if (!lines.length) return { stamp: null, missing };
   return { stamp: PREFIX + sha(lines.join('\n')).slice(0, 16), missing: [] };
 }

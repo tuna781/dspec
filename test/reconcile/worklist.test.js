@@ -21,7 +21,7 @@ function agreeing() {
   // produce artifacts that are stale the moment they are written — the same ordering `dspec sync`
   // has to get right.
   m.features[0].stamp = stampFiles(dir, ['src/a.ts']).stamp;
-  for (const f of renderAll(m, { projectId: m.product.name, generatedAt: '' })) writeIn(dir, f.file, f.content);
+  for (const f of renderAll(m, { projectId: m.product.name, })) writeIn(dir, f.file, f.content);
   commit(dir);
   return { dir, m };
 }
@@ -33,11 +33,12 @@ test('a repo that agrees owes nothing', () => {
   assert.deepStrictEqual(buildWorkList(dir, m), []);
 });
 
-test('editing the code owes a re-stamp, and says which command', () => {
+test('editing the code owes a READING, and points at accept — never at sync --write', () => {
   const { dir, m } = agreeing();
   writeIn(dir, 'src/a.ts', 'export const a = 99;\n');
   const [item] = buildWorkList(dir, m).filter((i) => i.kind === 'stale');
-  assert.strictEqual(item.next, 'dspec sync --write');
+  assert.match(item.next, /^read both, then dspec accept "/);
+  assert.ok(!/sync --write/.test(item.next), 'a mechanical re-stamp would erase the drift unread');
 });
 
 test('an uncommitted model edit is reported with NO next step', () => {

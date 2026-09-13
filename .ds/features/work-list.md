@@ -5,7 +5,7 @@ code: [src/compile/worklist.ts]
 entry: buildWorkList
 uses: [Drift detection, Spec quality lint, Artifact rendering, Git access]
 tests: [test/reconcile/worklist.test.js]
-stamp: sha256f:99b42847e621f95f
+stamp: sha256g:beecee2758dc91af
 ---
 
 Answers "what does this project still owe?" — and answers it **derived, never stored**.
@@ -23,7 +23,10 @@ Rules
   outstanding work. Tracked-ness is the test.
 
 Behaviour
-- Four kinds of item: uncommitted description files, drift, thin descriptions, stale artifacts.
+- Four kinds of item: uncommitted description files, drift, thin descriptions, stale artifacts —
+  plus coverage, when there is undescribed code or when it could not be measured at all.
+- Drift points at reading both sides and `dspec accept`, never at `sync --write`: a mechanical
+  re-stamp would clear it unread.
 - Only items that can be acted on carry a next step. An uncommitted description file carries none —
   under a code-first loop that is normally work already done, and pointing anywhere would send the
   reader to redo something finished.
