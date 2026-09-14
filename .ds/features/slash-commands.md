@@ -2,17 +2,16 @@
 name: Slash commands and skill
 area: Agent surface
 code:
-  - templates/commands/bootstrap.md
   - templates/commands/spec.md
   - templates/commands/plan.md
   - templates/commands/sync.md
   - templates/skills/ds/SKILL.md
 uses: [Body vocabulary]
 tests: [test/contract/invariants.test.js]
-stamp: sha256f:a872fa9b506ce4aa
+stamp: sha256f:7d949803f4d886d9
 ---
 
-The prose that reaches the user's agent: four commands and one skill, written once and read by
+The prose that reaches the user's agent: three commands and one skill, written once and read by
 every adapter. **This is the product's real interface.** dspec is a toolkit and the agent is the
 brain, so everything else here only measures — these files are what turn a measurement into a
 decision somebody acts on.
@@ -40,7 +39,7 @@ Rules
   not.
 
 Behaviour
-- `bootstrap` **creates** and `sync` **repairs** — different intentions, so different commands.
-  Running the wrong one buries a curated model under proposals, or leaves a missing one missing.
+- `sync` **creates** when there is no model and **repairs** when there is — one command, and which
+  it does is read from the checkout, never typed by the user.
 - Describe → plan → build → reconcile. Only the last step writes to the model, and it is offered
   after the code exists rather than before.

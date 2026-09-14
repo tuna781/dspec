@@ -148,14 +148,14 @@ function strictPatterns(symbol: string): RegExp[] {
     new RegExp(`^[ \\t]*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s*\\*?\\s+${n}\\b`),
     // The modifier list is repeated (`*`) rather than a fixed slot because Java and C# stack them:
     // `public static final class`, `public sealed partial class`. Without them `public class Order`
-    // was not a declaration to the hasher, so `dspec bootstrap` — which round-trips every name it
-    // finds through `extractSymbol` — silently dropped every class in a Java or C# repo, and no
-    // entity could be bound to one.
+    // was not a declaration to the hasher, so scaffolding — which round-trips every name it finds
+    // through `extractSymbol` — silently dropped every class in a Java or C# repo, and no entity
+    // could be bound to one.
     //
     // ⚠️ **`pub` is in the same list, and it is Rust's, not Java's.** `survey.ts` recognises
     // `pub struct` / `pub trait` / `pub enum`; this pattern did not, so every candidate survey
     // proposed was dropped again by the round-trip — silently, because `verify()` discards what
-    // it cannot locate without saying so. The visible symptom was `dspec bootstrap` scaffolding
+    // it cannot locate without saying so. The visible symptom was `dspec sync --write` scaffolding
     // ZERO entities on a Rust repo, since virtually every public Rust type is written `pub`.
     // The two lists must recognise the same shapes; see the invariant test in `test/code/`.
     new RegExp(`^[ \\t]*(?:export\\s+)?(?:declare\\s+)?(?:(?:public|private|protected|internal|static|final|abstract|sealed|partial|pub(?:\\([^)]*\\))?)\\s+)*(?:class|interface|enum|type|struct|trait|record)\\s+${n}\\b`),

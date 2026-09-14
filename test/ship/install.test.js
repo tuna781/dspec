@@ -7,7 +7,7 @@
 // will be most tempted to soften — "surely we can overwrite a file WE wrote" is how a tool starts
 // replacing work somebody did by hand.
 //
-// ⚠️ **`bootstrap` owns `.ds/` and nothing else.** Installing the agent surface is `init`'s job.
+// ⚠️ **`sync` owns `.ds/` and nothing else.** Installing the agent surface is `init`'s job.
 // Keeping them apart is what stops "set the tooling up" from carrying the power to invent a model.
 // ============================================================
 const { test } = require('node:test');
@@ -37,11 +37,11 @@ const CODEX_PROMPT = '.codex-home/prompts/ds-sync.md';
 
 // ─── each agent gets its own shape ──────────────────────────────────────────
 
-test('every agent receives all four commands, in its own syntax', () => {
+test('every agent receives all three commands, in its own syntax', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   assert.strictEqual(init(dir, '--all', '--yes').status, 0);
 
-  for (const name of ['bootstrap', 'spec', 'plan', 'sync']) {
+  for (const name of ['spec', 'plan', 'sync']) {
     assert.ok(existsIn(dir, `.claude/commands/ds-${name}.md`), `claude is missing /ds-${name}`);
     assert.ok(existsIn(dir, `.agents/skills/ds-${name}/SKILL.md`), `cursor is missing /ds-${name}`);
     assert.ok(existsIn(dir, `.codex-home/prompts/ds-${name}.md`), `codex is missing /ds-${name}`);
@@ -222,27 +222,27 @@ test('init installs the surface and does not invent a model', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   const r = init(dir, '--all', '--yes');
 
-  assert.ok(!existsIn(dir, '.ds/product.md'), '`bootstrap` creates the model, and only it');
-  assert.match(r.stdout, /ds-bootstrap/, 'and the next step has to be named');
+  assert.ok(!existsIn(dir, '.ds/product.md'), '`sync --write` creates the model, and only it');
+  assert.match(r.stdout, /ds-sync/, 'and the next step has to be named');
 });
 
-test('bootstrap seeds the model and touches no agent directory', () => {
+test('`sync --write` seeds the model and touches no agent directory', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
-  assert.strictEqual(runCli(dir, 'bootstrap', '--here', '--yes').status, 0);
+  assert.strictEqual(runCli(dir, 'sync', '--write').status, 0);
 
   assert.ok(existsIn(dir, '.ds/product.md'));
   assert.ok(existsIn(dir, '.ds/glossary.md'));
   assert.ok(existsIn(dir, '.ds/features'));
   for (const rel of ['.claude', '.agents', '.cursor']) {
-    assert.ok(!existsIn(dir, rel), `${rel} is \`init\`'s to write, not bootstrap's`);
+    assert.ok(!existsIn(dir, rel), `${rel} is \`init\`'s to write, not \`sync\`'s`);
   }
 });
 
-test('a second bootstrap touches nothing the user has edited', () => {
+test('a second `sync --write` touches nothing the user has edited', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
-  runCli(dir, 'bootstrap', '--here', '--yes');
+  runCli(dir, 'sync', '--write');
   writeIn(dir, '.ds/product.md', '---\nname: Mine\n---\n\nMy own words.\n');
-  runCli(dir, 'bootstrap', '--here', '--yes');
+  runCli(dir, 'sync', '--write');
   assert.match(readIn(dir, '.ds/product.md'), /My own words/);
 });
 
@@ -251,7 +251,6 @@ test('a second bootstrap touches nothing the user has edited', () => {
 test('sync renders the memory file each installed agent actually reads', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--agent', 'claude,cursor', '--yes');
-  runCli(dir, 'bootstrap', '--here', '--yes');
   runCli(dir, 'sync', '--write');
 
   assert.ok(existsIn(dir, 'CLAUDE.md'), 'Claude Code reads this one');
@@ -265,7 +264,6 @@ test('sync renders the memory file each installed agent actually reads', () => {
 test('a repo with one agent gets one memory file', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--agent', 'claude', '--yes');
-  runCli(dir, 'bootstrap', '--here', '--yes');
   runCli(dir, 'sync', '--write');
 
   assert.ok(existsIn(dir, 'CLAUDE.md'));

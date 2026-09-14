@@ -1,4 +1,4 @@
-<!-- ds: project=dspec generated=2026-09-10T00:40:53.446Z -->
+<!-- ds: project=dspec generated=2026-09-14T09:45:09.365Z -->
 # dspec — product index
 
 Every feature in this product: what it is, where it lives, and what it depends on.
@@ -10,8 +10,8 @@ Generated from `.ds/features/` — do not edit by hand.
   → `src/install/agents.ts`, `src/install/render.ts`, `src/install/apply.ts` · uses: Body vocabulary, Slash commands and skill
 - **Session hooks** — Three hooks that run without being asked: a session can open knowing what the project owes, an edit can surface the description bound to the file, and leaving with a…
   → `templates/hooks/_ds.js`, `templates/hooks/session-start.js`, `templates/hooks/post-edit.js`, `templates/hooks/stop.js` · uses: Reconciliation, Drift detection, Model loading
-- **Slash commands and skill** — The prose that reaches the user's agent: four commands and one skill, written once and read by every adapter
-  → `templates/commands/bootstrap.md`, `templates/commands/spec.md`, `templates/commands/plan.md`, `templates/commands/sync.md`, `templates/skills/ds/SKILL.md` · uses: Body vocabulary
+- **Slash commands and skill** — The prose that reaches the user's agent: three commands and one skill, written once and read by every adapter
+  → `templates/commands/spec.md`, `templates/commands/plan.md`, `templates/commands/sync.md`, `templates/skills/ds/SKILL.md` · uses: Body vocabulary
 
 ## Artifacts
 
@@ -63,10 +63,10 @@ Generated from `.ds/features/` — do not edit by hand.
 
 - **Agent install** — `dspec init` — the one command a human has to type
   → `src/cli/commands/init.ts`, `src/install/prompt.ts`, `src/install/tracker.ts` · uses: Agent adapters, Model loading
-- **Model creation** — Creates the model for a repository that has none: writes `.ds/` and proposes one provisional feature per directory of source with its file list filled in
-  → `src/cli/commands/scaffold.ts`, `src/cli/commands/bootstrap.ts` · uses: Source inventory, Body vocabulary
+- **Model creation** — Proposes the first features for a repository that has none: one provisional feature per directory of source, with its file list filled in
+  → `src/cli/commands/scaffold.ts` · uses: Source inventory, Body vocabulary
 
 ## The loop
 
-- **Reconciliation** — Reconciles the model with the checkout in **both** directions and repairs what is safe to repair: restores base files that have gone missing, re-stamps every feature,…
+- **Reconciliation** — Reconciles the model with the checkout in **both** directions and repairs what is safe to repair: creates the base files when there are none yet, restores any that have…
   → `src/cli/commands/sync.ts` · uses: Code fingerprint, Coverage gap, Work list, Artifact rendering, Model creation, Agent adapters

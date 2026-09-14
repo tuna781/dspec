@@ -1,4 +1,4 @@
-<!-- ds: project=dspec generated=2026-09-10T00:40:53.446Z -->
+<!-- ds: project=dspec generated=2026-09-14T09:45:09.365Z -->
 # dspec
 
 This repository's product model lives in `.ds/`, written in dspec-lang.

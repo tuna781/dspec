@@ -19,7 +19,6 @@
  */
 import { packageVersion } from '../pkgRoot';
 import { cmdInit } from './commands/init';
-import { cmdBootstrap } from './commands/bootstrap';
 import { cmdSync } from './commands/sync';
 import { cmdSpec } from './commands/spec';
 
@@ -27,15 +26,15 @@ const USAGE = `dspec — the product model lives in your repo, and is measured a
 
   dspec init      [--agent a,b] [--all]      add the /ds-* commands to your AI coding agents, in
                                              each one's own syntax. Adds only; never overwrites
-  dspec bootstrap [<dir>] [--here]           create the model: .ds/, and one provisional feature
-                                             per directory of source
-  dspec sync      [--write] [--strict]       repair an existing model: restore what is missing,
-                                             re-stamp, re-render, and report what only you can settle
+  dspec sync      [--write] [--strict]       create the model when there is none, repair it when
+                                             there is: restore what is missing, re-stamp, re-render,
+                                             and report what only you can settle
   dspec spec      "<Feature>" [--touch F]    what the model already knows about a piece of work
 
 The model lives in \`.ds/\` at the repo root. Every command works from any subdirectory.
-\`bootstrap\` creates and \`sync\` repairs — only those two write to \`.ds/\`. Nothing exits non-zero
-unless you ask for it with \`sync --strict\`, which is what a CI job runs.
+\`sync\` is the only command that writes to \`.ds/\` — it creates when there is nothing there and
+repairs when there is. Nothing exits non-zero unless you ask for it with \`sync --strict\`, which
+is what a CI job runs.
 
 Every one of these is an ordinary terminal command, and the \`/ds-*\` slash commands \`init\` writes
 are prose telling an agent which of them to run — so an agent can run any of this itself.`;
@@ -44,7 +43,6 @@ type Handler = (args: string[]) => number | Promise<number>;
 
 const COMMANDS: Record<string, Handler> = {
   init: cmdInit,
-  bootstrap: cmdBootstrap,
   sync: cmdSync,
   spec: cmdSpec,
 };

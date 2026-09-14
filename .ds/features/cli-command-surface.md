@@ -10,7 +10,7 @@ code:
   - src/text.ts
 entry: main
 tests: [test/contract/cli.test.js, test/contract/suite.test.js]
-stamp: sha256f:6956db83dcf43341
+stamp: sha256f:09cd74068001a02d
 ---
 
 The `dspec` command itself: argument parsing, subcommand dispatch, locating the repository root,
@@ -30,8 +30,9 @@ Rules
   npm, the same binary answers a hook, a slash command and a person typing in a terminal. The
   Claude Code plugin that preceded this existed only to bundle the CLI beside its own hooks; a
   global install removes that reason, and with it the need for Claude Code to be a special case.
-- **`bootstrap` creates and `sync` repairs, and only those two write to the model.** The help text
-  states it, and the command surface is where that invariant is visible.
+- **`sync` is the only command that writes to the model** — it creates when there is nothing there
+  and repairs when there is. The help text states it, and the command surface is where that
+  invariant is visible.
 - **Every command works from any subdirectory** — the repository root is the nearest ancestor
   holding the model directory.
 - **Nothing exits non-zero unless asked.** `sync --strict` is the CI gate and nothing else turns

@@ -15,7 +15,7 @@ Three hooks that run without being asked: a session can open knowing what the pr
 can surface the description bound to the file, and leaving with a stale model earns one reminder.
 
 **Claude Code alone gets these**, because no other agent can run a command on a session event. That
-is the honest shape of the product now: every agent gets the same four commands, and only one gets
+is the honest shape of the product now: every agent gets the same three commands, and only one gets
 the automatic half. On Codex and Cursor the loop degrades to what somebody remembers to type, and
 `AGENTS.md` asks them to run `dspec sync --brief` at the start of a session — an instruction, not a
 hook, and reported as the weaker thing it is.

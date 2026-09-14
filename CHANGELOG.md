@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
+## [Unreleased]
+
+- **`dspec bootstrap` is gone — `dspec sync` now creates the model too.** `dspec sync --write`
+  creates `.ds/` and proposes one provisional feature per directory of source the first time it
+  finds no model, and repairs it every time after; which of the two it does is read from the
+  checkout, never typed. The CLI drops from four verbs to three (`init`, `sync`, `spec`), and the
+  slash commands from four to three (`/ds-sync`, `/ds-spec`, `/ds-plan`). `dspec sync` no longer
+  accepts a `<dir>` argument, `--here`, `--force` or `--no-git`, and no longer runs `git init` or
+  appends a `.gitignore` line for `.ds/config.json` — it only ever acts on the repo already at the
+  current directory. Existing installs keep their `.claude/commands/ds-bootstrap.md` (and Codex/
+  Cursor equivalents) until deleted by hand; `dspec init` never removes a file.
+
 ## [0.0.1] — 2026-09-11
 
 Initial release. dspec is distributed on npm only — there is no Claude Code plugin or marketplace

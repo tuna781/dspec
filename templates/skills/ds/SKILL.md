@@ -44,9 +44,10 @@ describes what the product **is** — never what somebody proposed.
 3. **`dspec sync --write`** — restore what is missing, re-stamp every feature, re-render the
    artifacts, then work through what it could not decide alone.
 
-⚠️ **Only `dspec bootstrap` and `dspec sync` write to `.ds/`,** and nothing exits non-zero unless asked with `dspec sync --strict`.
-Writing a description before the code exists leaves the model describing something that is not
-there.
+⚠️ **`dspec sync` is the only command that writes to `.ds/`** — it creates the model the first time
+there is nothing there, and repairs it every time after — and nothing exits non-zero unless asked
+with `dspec sync --strict`. Writing a description before the code exists leaves the model
+describing something that is not there.
 
 ## Looking a feature up
 
@@ -70,15 +71,11 @@ whole name occurring in your request. It never guesses from overlapping words, s
 
 | | |
 |---|---|
-| `__DS_CMD_BOOTSTRAP__` | **create** the model for a repo that has none, and finish it |
-| `__DS_CMD_SYNC__` | **repair** an existing model — add what is missing, patch what is wrong |
+| `__DS_CMD_SYNC__` | **create** the model for a repo that has none, or **repair** one that exists — add what is missing, patch what is wrong |
 | `__DS_CMD_SPEC__` | describe what the user wants in detail, checked against the model |
 | `__DS_CMD_PLAN__` | the same, plus the implementation plan, then build it |
 
-`bootstrap` creates and `sync` repairs. Those are different intentions, and running the wrong one
-is how a curated model gets buried under proposals or a missing one silently stays missing.
-
-**These four are a convenience, not the interface.** Each one is prose telling you which `dspec`
+**These three are a convenience, not the interface.** Each one is prose telling you which `dspec`
 command to run and what to judge in its output — so everything they do you can also do by running
 the CLI directly, and an agent that has read this file needs no slash command at all.
 

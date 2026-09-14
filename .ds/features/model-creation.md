@@ -1,19 +1,20 @@
 ---
 name: Model creation
 area: Setup
-code: [src/cli/commands/scaffold.ts, src/cli/commands/bootstrap.ts]
-entry: cmdBootstrap
+code: [src/cli/commands/scaffold.ts]
+entry: proposeFeatures
 uses: [Source inventory, Body vocabulary]
-tests: [test/ship/bootstrap.test.js]
-stamp: sha256f:aafbc3e38b19f70c
+tests: [test/reconcile/sync.test.js]
+stamp: sha256f:93c1bf332f538b24
 ---
 
-Creates the model for a repository that has none: writes `.ds/` and proposes one provisional
-feature per directory of source with its file list filled in.
+Proposes the first features for a repository that has none: one provisional feature per directory
+of source, with its file list filled in. `dspec sync --write` calls this the first time it finds no
+`.ds/` — creating the model and proposing its first features are the same act, not two commands
+that happen to run back to back.
 
-It owns `.ds/` and nothing outside it. Installing the slash commands is `dspec init`'s job, and
-keeping the two apart is what stops "set the tooling up" from silently carrying the power to invent
-a model — or the reverse.
+It only ever proposes; deciding what a feature is, and writing `.ds/` itself, belongs to
+Reconciliation.
 
 Rules
 - **It proposes; it never concludes.** A directory is an observed fact; a feature is a judgement

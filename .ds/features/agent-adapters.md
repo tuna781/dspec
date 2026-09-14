@@ -5,7 +5,7 @@ code: [src/install/agents.ts, src/install/render.ts, src/install/apply.ts]
 entry: plan
 uses: [Body vocabulary, Slash commands and skill]
 tests: [test/ship/install.test.js, test/contract/invariants.test.js]
-stamp: sha256f:b9f7fce5088181f3
+stamp: sha256f:f546c0c50fc8cea3
 ---
 
 The one place anything is agent-specific. Claude Code, Codex and Cursor each read commands from a

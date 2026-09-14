@@ -8,10 +8,10 @@
 // ⚠️ **One rule, no exceptions: add what is absent, never touch what is there.** See
 // `install/apply.ts` for why there is no `--force` and what that costs.
 //
-// ⚠️ **It does not create the model.** `dspec bootstrap` does. This command installs the surface;
-// a repo with no `.ds/` gets the commands and a closing line naming `/ds-bootstrap`. Keeping them
-// apart is the same reason `bootstrap` and `sync` are apart: "set the tooling up" and "invent a
-// model" are different intentions and one must not silently carry the other's power.
+// ⚠️ **It does not create the model.** `dspec sync --write` does, the first time it runs. This
+// command installs the surface; a repo with no `.ds/` gets the commands and a closing line naming
+// `/ds-sync`. Keeping them apart matters for the same reason it always did: "set the tooling up"
+// and "invent a model" are different intentions, and one must not silently carry the other's power.
 // ============================================================
 
 import * as fs from 'node:fs';
@@ -27,7 +27,7 @@ import { plural } from '../../text';
 const USAGE = `dspec init [--agent claude,codex,cursor] [--all] [--yes]
 
   Add the dspec commands to the AI coding agents you choose, in each one's own syntax. After
-  this, \`/ds-bootstrap\`, \`/ds-spec\`, \`/ds-plan\` and \`/ds-sync\` are typed inside the session.
+  this, \`/ds-spec\`, \`/ds-plan\` and \`/ds-sync\` are typed inside the session.
 
   It ADDS ONLY. A file that already exists is left exactly as it is, whoever wrote it — so to
   take a newer version of a command, delete that file and run this again.
@@ -147,7 +147,7 @@ export async function cmdInit(argv: string[]): Promise<number> {
   report(chosen.map((k) => AGENTS[k]), applied, notes);
 
   if (!modelExists) {
-    console.log(`\nThis repository has no \`${SPEC_DIR}/\` yet. Open your agent and type \`/ds-bootstrap\`.`);
+    console.log(`\nThis repository has no \`${SPEC_DIR}/\` yet. Open your agent and type \`/ds-sync\`.`);
   }
   return 0;
 }

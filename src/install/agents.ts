@@ -1,7 +1,7 @@
 // ============================================================
 // The agent adapters — the one place anything is agent-specific
 //
-// dspec's real interface is prose: four commands and a skill, written once in `templates/`. What
+// dspec's real interface is prose: three commands and a skill, written once in `templates/`. What
 // differs between Claude Code, Codex and Cursor is not what the prose SAYS, it is where the file
 // goes, what its frontmatter is called, and how an argument arrives. So an adapter is a
 // description of those three things and nothing else — never a second copy of the instructions.
@@ -30,8 +30,8 @@ export function isAgentKey(s: string): s is AgentKey {
   return (AGENT_KEYS as string[]).includes(s);
 }
 
-/** The four commands, in the order they are reported. Read from disk, never listed twice. */
-export const COMMAND_NAMES = ['bootstrap', 'spec', 'plan', 'sync'] as const;
+/** The three commands, in the order they are reported. Read from disk, never listed twice. */
+export const COMMAND_NAMES = ['spec', 'plan', 'sync'] as const;
 
 /** How a command is typed once installed. The same in every agent — see the header. */
 export const invoke = (name: string): string => `/ds-${name}`;

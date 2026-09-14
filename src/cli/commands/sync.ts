@@ -1,5 +1,5 @@
 // ============================================================
-// `dspec sync` — repair the model, as often as you like
+// `dspec sync` — create the model when there is none, repair it when there is
 //
 // It reconciles in BOTH directions and fixes what is safe to fix:
 //
@@ -7,9 +7,19 @@
 //   code → model   `computeCoverage`   source files nothing in the model describes
 //   model quality  `buildWorkList`     features with no body, artifacts that have fallen behind
 //
-// ⚠️ **It repairs; `dspec bootstrap` creates.** This command never invents a feature. Undescribed
-// code is LISTED, never scaffolded: which files deserve a feature is a judgement, and a command
-// that quietly answered it would fill a curated model with directories.
+// ⚠️ **A missing `.ds/` is not refused, it is the first thing `--write` builds.** This used to be
+// two commands — `bootstrap` created, `sync` repaired — split apart so "set this repo up" and "the
+// model has drifted" could not be told apart. In practice a user only ever had one question,
+// "is `.ds/` in step with the code", and had to already know which command answered it. `sync`
+// now asks `hasModel()` itself: nothing there yet → seed the base files and propose one
+// provisional feature per directory of source; something there → repair it. Same command either
+// way, because the code path that restores a missing `product.md` and the one that writes it for
+// the first time were always the same code path.
+//
+// ⚠️ **It never invents a feature once one exists.** Proposing is a first-run act only — the
+// moment a person has named even one feature, undescribed code is LISTED, never scaffolded: which
+// files deserve a feature is a judgement, and a command that quietly answered it would fill a
+// curated model with directories.
 //
 // ⚠️ **`--write` RE-MEASURES; it does not rewrite prose.** It restores missing base files, writes
 // stamps and re-renders artifacts — all mechanical and reproducible. It never edits a body to
@@ -33,6 +43,7 @@ import { lintLine, MARK } from '../lintMessage';
 import { buildWorkList, type WorkItem } from '../../compile/worklist';
 import { memoryFilesFor } from '../../install/agents';
 import { renderAll } from '../../compile/renderers';
+import { proposeFeatures, writeProposals } from './scaffold';
 import { findRepo } from '../repo';
 import { plural } from '../../text';
 import { writeStamps } from './stamp';
@@ -101,11 +112,33 @@ export function reportCoverage(coverage: Coverage): void {
   console.log('\n  Decide which of these are real features worth describing — most are not.');
 }
 
+const PRODUCT_MD = (name: string) => `---
+name: ${name}
+---
+
+<!-- What this product is, and who it is for. A few lines is enough. -->
+
+Rules
+<!-- The non-negotiable rules that outlive every feature: language, framework, database,
+     conventions nobody may quietly break. Every agent reads these before any change,
+     so keep the list short enough that they stay read. -->
+`;
+
+const GLOSSARY_MD = `# Glossary
+
+<!-- What the words mean HERE. This is the half of Domain-Driven Design worth keeping:
+     when two areas use one word differently, say both.
+
+**Order** — in Checkout, the thing being paid for; in Fulfilment, the thing being shipped. -->
+`;
+
 /**
- * Put back the files the model cannot be read without.
+ * Put back the files the model cannot be read without — including all of them, the first time.
  *
  * ⚠️ **Only ones that are ABSENT.** A file the user has written is never touched, whatever it
- * says — repairing a model must not mean overwriting the part of it somebody cared about.
+ * says — repairing a model must not mean overwriting the part of it somebody cared about. A
+ * repo with no `.ds/` at all restores every one of them, which is indistinguishable from creating
+ * it: there is no separate "first run" code path.
  */
 function restoreMissing(repo: string): string[] {
   const root = path.join(repo, SPEC_DIR);
@@ -117,8 +150,8 @@ function restoreMissing(repo: string): string[] {
     fs.writeFileSync(abs, body, 'utf-8');
     restored.push(`${SPEC_DIR}/${rel}`);
   };
-  put(PRODUCT_FILE, `---\nname: ${path.basename(path.resolve(repo))}\n---\n\n<!-- What this product is, and who it is for. -->\n`);
-  put(GLOSSARY_FILE, '# Glossary\n\n<!-- What the words mean HERE. -->\n');
+  put(PRODUCT_FILE, PRODUCT_MD(path.basename(path.resolve(repo))));
+  put(GLOSSARY_FILE, GLOSSARY_MD);
   fs.mkdirSync(path.join(root, FEATURES_DIR), { recursive: true });
   return restored;
 }
@@ -131,17 +164,27 @@ export function cmdSync(args: string[]): number {
   // strictness; a command that failed by default would make every other use of it a hazard.
   const strict = args.includes('--strict');
   const repo = findRepo();
+  const hadModel = hasModel(repo);
 
-  if (!hasModel(repo)) {
-    // Repairing nothing is not a repair. Say which command creates a model rather than quietly
-    // creating one — the two are different intentions and the user gets to pick.
-    console.error(`✗ no \`${SPEC_DIR}/\` here — run \`dspec bootstrap\` to create the model first`);
-    return 2;
+  if (!hadModel && !write) {
+    // Nothing to repair and nothing written yet — say what would create it, rather than either
+    // refusing (there is nothing wrong here) or creating on a dry run (`--write` is the only
+    // thing that ever writes).
+    console.log(`· no \`${SPEC_DIR}/\` here yet — run \`dspec sync --write\` to create one`);
+    return 0;
   }
 
   const restored: string[] = [];
+  const proposed: string[] = [];
   if (write) {
     restored.push(...restoreMissing(repo));
+
+    // Proposing is a first-run act only. Once a person has named even one feature, undescribed
+    // code is reported by `computeCoverage` below, never scaffolded — see the header.
+    if (!hadModel) {
+      const { model } = loadModel(repo);
+      proposed.push(...writeProposals(repo, proposeFeatures(repo, model)));
+    }
 
     // Order matters: stamp first, render second. Rendering before stamping would stamp an
     // artifact from values that are about to change.
@@ -155,6 +198,17 @@ export function cmdSync(args: string[]): number {
     }
 
     for (const r of restored) console.log(`✓ restored ${r}`);
+    if (!hadModel && !proposed.length) {
+      console.log('· no source files found to propose features from — write `.ds/features/*.md` by hand.');
+    } else if (proposed.length) {
+      console.log(`✓ proposed ${plural(proposed.length, 'feature')} from the code here:`);
+      for (const p of proposed.slice(0, 10)) console.log(`  + ${p}`);
+      if (proposed.length > 10) console.log(`  … +${proposed.length - 10} more`);
+      // Every name is PROVISIONAL and every body is EMPTY — a directory is an observed fact, not a
+      // feature. The worklist below will say each one has no body; this says what to do about it.
+      console.log('  Every name is provisional. Merge, split and rename these into real features,');
+      console.log('  fixing each `code:` list, then write what a read of the files would NOT tell you.');
+    }
     if (stamps.updated.length) console.log(`✓ stamped ${plural(stamps.updated.length, 'feature')}`);
     for (const s of stamps.skipped) console.log(`! ${s}`);
   }

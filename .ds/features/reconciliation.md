@@ -11,21 +11,25 @@ uses:
   - Model creation
   - Agent adapters
 tests: [test/reconcile/sync.test.js]
-stamp: sha256f:0f64d58e4197befb
+stamp: sha256f:11d9800cdc018ddf
 ---
 
 Reconciles the model with the checkout in **both** directions and repairs what is safe to repair:
-restores base files that have gone missing, re-stamps every feature, re-renders the artifacts, and
-reports everything only a person can settle. The loop it serves is code-first: describe, plan, build, and only then write the model —
-so the question at the end is never "what did I fail to implement" but "where do the model and the
-repo now disagree".
+creates the base files when there are none yet, restores any that have gone missing, re-stamps
+every feature, re-renders the artifacts, and reports everything only a person can settle. The loop
+it serves is code-first: describe, plan, build, and only then write the model — so the question at
+the end is never "what did I fail to implement" but "where do the model and the repo now disagree".
 
 Rules
-- **It repairs; `dspec bootstrap` creates.** This never invents a feature. Undescribed code is listed,
-  never scaffolded: which files deserve one is a judgement, and a command that quietly answered it
-  would fill a curated model with directories. Those were once one command with a flag, so "set
-  this repo up" and "the model has drifted" could not be told apart.
-- **A missing model is refused, not silently created.** Repairing nothing is not a repair.
+- **One command, two starting points, told apart by whether `.ds/` exists yet.** This used to be two
+  commands — one that created, one that repaired — split apart so "set this repo up" and "the model
+  has drifted" could not be told apart. In practice there was only ever one question, so the split
+  bought nothing but a command a user had to already know to reach for. `--write` on an empty repo
+  proposes one feature per directory of source (Model creation) exactly once; on every run after,
+  it never invents a feature — undescribed code is listed, never scaffolded, because which files
+  deserve one is a judgement.
+- **Only `--write` ever writes**, model missing or not. A dry run reports what would happen, never
+  what happened.
 - **Re-measure; do not rewrite prose.** Re-fingerprinting and re-rendering are mechanical and
   reproducible: run them twice and the answer is the same, and nothing a human wrote is lost.
   Rewriting a body so it agrees with the code looks like tidying and is actually a decision — that

@@ -24,7 +24,7 @@
 ```
 npm i -g dspec        # once, per machine
 dspec init            # in the repo you want modelled — pick your agents
-/ds-bootstrap         # then, inside the agent
+/ds-sync              # then, inside the agent — creates the model, since there is none yet
 ```
 
 <div align="center"><sub><a href="#install">What <code>dspec init</code> writes, and what it will never touch →</a></sub></div>
@@ -99,9 +99,9 @@ Everything is local: no server, no token, no network call, no telemetry, zero ru
 
 - [Install](#install)
 - [Commands](#commands)
-  - [`/ds-bootstrap` — create the model](#ds-bootstrap--create-the-model)
+  - [`/ds-sync` — create or repair the model](#ds-sync--create-or-repair-the-model)
   - [`/ds-spec` — describe it before you build it](#ds-spec--describe-it-before-you-build-it)
-  - [The other four](#the-other-four)
+  - [`/ds-plan` — plan it, then build it](#ds-plan--plan-it-then-build-it)
   - [Under the commands](#under-the-commands)
 - [dspec-lang](#dspec-lang)
   - [The shape of `.ds/`](#the-shape-of-ds)
@@ -151,7 +151,7 @@ Which agents should get the dspec commands?
 | **Codex CLI** | `/ds-sync` | `~/.codex/prompts/ds-*.md` |
 | **Cursor** | `/ds-sync` | `.agents/skills/ds-*/SKILL.md` |
 
-**The same four commands, spelled the same way in all three.** Claude Code could have had `/ds-sync`
+**The same three commands, spelled the same way in all three.** Claude Code could have had `/ds-sync`
 and deliberately does not: moving between agents should not change what you type.
 
 The Claude Code and Cursor files live in the repo, so **commit them** and a teammate gets the loop
@@ -185,8 +185,8 @@ dspec init                # add any command that is new
 
 ## Commands
 
-Four, and there is only one kind. If you cannot name it, it is not a command — its job belongs to a
-flag on one you can.
+Three, and there is only one kind. If you cannot name it, it is not a command — its job belongs to
+a flag on one you can.
 
 **Every one of them is a terminal command.** A `/ds-*` slash command is prose telling your agent
 which `dspec` command to run and what to judge in the output — so you can run any of it yourself,
@@ -194,20 +194,22 @@ and so can the agent, with or without the slash commands installed.
 
 | | |
 |---|---|
-| [`/ds-bootstrap`](#ds-bootstrap--create-the-model) | **create** the model for a repo that has none, and finish it |
-| [`/ds-sync`](#the-other-four) | **repair** an existing model — add what is missing, patch what is wrong |
+| [`/ds-sync`](#ds-sync--create-or-repair-the-model) | **create** the model for a repo that has none, or **repair** one that exists |
 | [`/ds-spec {what you want}`](#ds-spec--describe-it-before-you-build-it) | describe it in detail, checked against the model, before any code |
-| [`/ds-plan {what you want}`](#the-other-four) | the same, plus the implementation plan, then build it |
+| [`/ds-plan {what you want}`](#ds-plan--plan-it-then-build-it) | the same, plus the implementation plan, then build it |
 
-### `/ds-bootstrap` — create the model
+### `/ds-sync` — create or repair the model
 
-Run it once, in a repo that has no `.ds/` yet. It sets the repo up and then **finishes the model**,
-which is the part that matters: it does not leave you a folder of placeholders.
+The one command that writes to `.ds/`. Which of the two it does is read from the checkout, not
+typed by you: nothing there yet, and it creates; something there, and it repairs.
+
+**Run it once, in a repo that has no `.ds/` yet**, and it sets the repo up and then **finishes the
+model**, which is the part that matters: it does not leave you a folder of placeholders.
 
 ```
-> /ds-bootstrap
+> /ds-sync
 
-⏺ Bash(dspec bootstrap --here)
+⏺ Bash(dspec sync --write)
   ⎿  ✓ .ds/ — 2 files
      ✓ proposed 2 features from the code here
 ```
@@ -228,9 +230,11 @@ structure with **every body empty and every name provisional**, and your agent w
 > A body pre-filled with a transcription of the code reports as *complete* — a lie, and it buries
 > the very list that would have told you what still needs writing.
 
-Bootstrap **refuses over a model that already has features**, and points at `/ds-sync` instead.
-Scaffolding over curated work buries it, and starting over is an explicit act: remove
-`.ds/features/` yourself.
+**Run it again, any time after**, and it repairs instead: restores base files that went missing,
+re-stamps every feature, re-renders the index, and reports what only a person can settle — a
+description older than its code, a file that moved, a body nobody wrote, code no feature describes.
+Either way it **never invents a feature once one exists** — proposing is a first-run act only, and
+after that, undescribed code is only ever listed.
 
 ### `/ds-spec` — describe it before you build it
 
@@ -271,22 +275,16 @@ Three things it will not do:
 It ends with a description for you to correct. When you are happy, `/ds-plan` turns it into a plan
 and builds it.
 
-### The other four
+### `/ds-plan` — plan it, then build it
 
-**`/ds-sync`** — repair an existing model. Restores base files that went missing, re-stamps every
-feature, re-renders the index, and reports what only a person can settle: a description older than
-its code, a file that moved, a body nobody wrote, code no feature describes. It **never invents a
-feature** — that is bootstrap's job, and the two are different intentions.
-
-**`/ds-plan`** — everything `/ds-spec` does, then the implementation plan, then the build. It stays
-inside the Code Map: the feature's own files plus the files of everything it declares in `uses:`.
-
+Everything `/ds-spec` does, then the implementation plan, then the build. It stays inside the Code
+Map: the feature's own files plus the files of everything it declares in `uses:`.
 
 ### Under the commands
 
-The CLI has four verbs — `init`, `bootstrap`, `sync`, `spec` — every one named after something you
-already know. **Only `bootstrap` and `sync` write to `.ds/`**, and **nothing exits non-zero unless
-you ask for it**:
+The CLI has three verbs — `init`, `sync`, `spec` — every one named after something you already
+know. **`sync` is the only one that writes to `.ds/`** — it creates when there is nothing there and
+repairs when there is — and **nothing exits non-zero unless you ask for it**:
 
 ```yaml
 - run: dspec sync --strict     # fails only on a measured fact
@@ -516,7 +514,7 @@ people to route around it rather than write the description.
 | `dspec init` says `settings.json` is unreadable | your JSON has a syntax error | fix it and re-run — dspec wrote **nothing** to it, so the hooks are not wired yet |
 | the hooks are not wired, but everything else installed | you already had a `hooks` key, and yours wins | merge the block from `dspec init`'s output into it by hand |
 | `dspec spec` says the model does not name my request | retrieval resolves names, not words | pick from the ranked suggestions it printed, or `--touch "<Feature>"` |
-| `dspec sync` says there is no model | nothing to repair yet | run `/ds-bootstrap` — creating and repairing are different commands |
+| `dspec sync` (no `--write`) says there is no model | nothing written yet, only a dry run | `dspec sync --write` creates it |
 | `dspec sync --strict` fails right after `--write` | two features share a name | it reports `duplicate_name` — rename one |
 
 **Known limit:** a stamp covers a feature's whole file set, so editing a file two features share

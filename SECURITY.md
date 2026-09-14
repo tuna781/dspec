@@ -17,12 +17,12 @@ Worth knowing before you go looking, because it narrows the surface a lot:
   dependencies are TypeScript and `@types/node`. There is no supply chain to speak of.
 - **No network calls, and no listening socket.** Nothing is sent anywhere, there is no telemetry,
   and there is no account, token or server. Every command reads and writes local files and exits.
-- **It writes to your repo, and only these files.** `dspec bootstrap` seeds `.ds/` — skipping
-  anything already there, so it never overwrites a spec you wrote — and appends one line to
-  `.gitignore`. `dspec sync --write` re-measures the `stamp` field in your spec frontmatter and
-  re-renders the artifacts. Nothing else is created, and no file outside `.ds/` is treated as ours
-  to replace. `dspec sync` never rewrites a spec body and never deletes an element: those are
-  decisions, not measurements.
+- **It writes to your repo, and only these files.** `dspec sync --write` is the only command that
+  writes to `.ds/` — seeding it when there is nothing there yet, skipping anything already there so
+  it never overwrites a spec you wrote, and re-measuring the `stamp` field and re-rendering the
+  artifacts every time after. Nothing else is created, and no file outside `.ds/` is treated as
+  ours to replace. It never rewrites a spec body and never deletes an element: those are decisions,
+  not measurements.
 - **`dspec init` adds what is absent and never touches what is there** — not a file, not a key,
   not a line, and there is no flag that turns this off. A file that already exists is left
   byte-for-byte alone whoever wrote it. It writes into `.claude/`, `.agents/` and, for Codex only,

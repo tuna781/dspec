@@ -12,7 +12,7 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const { makeRepo, runCli, writeIn, commit } = require('../support/repo');
+const { makeRepo, runCli, writeIn, existsIn, commit } = require('../support/repo');
 
 const FEATURE = `---
 name: Adder
@@ -94,7 +94,7 @@ test('the usage states both invariants, and lists one flat set of verbs', () => 
   // when it happens to fit on one line.
   const r = runCli(repo(), '--help');
   const flat = r.stdout.replace(/\s+/g, ' ');
-  assert.match(flat, /only those two write to `\.ds\/`/);
+  assert.match(flat, /is the only command that writes to `\.ds\/`/);
   assert.match(flat, /Nothing exits non-zero unless you ask for it/);
   // ⚠️ The two-tier listing is what let `init`, `drift` and `doctor` survive as verbs that existed
   // only because something used to call them. One kind of command, one list.
@@ -108,16 +108,17 @@ test('every verb is a command a user can name', () => {
   // because the number people ask for is a flag and the health report nobody asked for was
   // burying it.
   const { VERBS } = require('../../dist/cli/index.js');
-  assert.deepStrictEqual([...VERBS].sort(), ['bootstrap', 'init', 'spec', 'sync']);
+  assert.deepStrictEqual([...VERBS].sort(), ['init', 'spec', 'sync']);
 });
 
-test('`sync` refuses to stand in for `bootstrap`', () => {
-  // They are different intentions. Repairing nothing is not a repair, and quietly creating a model
-  // here would mean "set this repo up" and "fix the drift" could not be told apart.
+test('`sync --write` creates the model when there is none, rather than refusing', () => {
+  // There is only one command now. "Set this repo up" and "the model has drifted" are told apart
+  // by whether `.ds/` exists, not by which command a user remembered to type.
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' }, git: 'committed' });
   const r = runCli(dir, 'sync', '--write');
-  assert.strictEqual(r.status, 2);
-  assert.match(r.stderr, /dspec bootstrap/);
+  assert.strictEqual(r.status, 0);
+  assert.ok(existsIn(dir, '.ds/product.md'));
+  assert.match(r.stdout, /proposed/i);
 });
 
 test('every command works from a subdirectory', () => {
