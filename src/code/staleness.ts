@@ -47,7 +47,7 @@ export const STALE_LABEL: Record<StaleKind, string> = {
  *
  * ⚠️ **`stale` is NOT one of them.** A description older than its code is the one finding this
  * tool exists to surface, and re-stamping it mechanically erased it before anyone had read it —
- * `/ds-sync` ran `--write` first, so the report never once showed drift. It is resolved by
+ * `/ds-sync` (as it was then) ran `--write` first, so the report never once showed drift. It is resolved by
  * `dspec accept`, after both sides have been read.
  */
 export const FIXED_BY_SYNC: ReadonlySet<StaleKind> = new Set<StaleKind>(['unmeasured']);

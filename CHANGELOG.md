@@ -7,12 +7,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
-## [0.0.2] — 2026-09-13
+## [0.0.2] — 2026-09-15
 
 Fixes for the two ways 0.0.1 could quietly break its own promise: a first `sync --write` could
-overwrite your `CLAUDE.md`, and every `sync --write` erased drift before it was reported.
+overwrite your `CLAUDE.md`, and every `sync --write` erased drift before it was reported. And
+updating dspec now actually updates what it installed.
+
+### Upgrading from 0.0.1
+
+```
+npm i -g dspec@latest     # once — from now on, `dspec update`
+dspec init                # in each repo
+```
+
+The slash commands are now **`/dspec-sync`, `/dspec-spec`, `/dspec-plan`** and the new
+**`/dspec-update`**. `dspec init` removes the 0.0.1 install (`/ds-*`, `.claude/skills/ds/`, hooks
+directly in `.claude/hooks/`) and writes the new one. Start a new agent session afterwards.
 
 ### Added
+- **`dspec update`** checks the installed dspec against the latest on npm and installs the newer one
+  (global installs; `--check` only reports). It is the only dspec command that uses the network, and
+  only when you run it.
+- **`/dspec-update`** does the same from inside an agent session: `dspec update`, then
+  `dspec init --yes`.
 - **`dspec accept "<Feature>"… [--all]`**. Run it after reading a drifted feature and its code. It
   re-stamps only the features you name, and it is the only command that clears *"description older
   than code"*.
@@ -21,6 +38,18 @@ overwrite your `CLAUDE.md`, and every `sync --write` erased drift before it was 
   is left as it was.
 
 ### Changed
+- **Breaking: every installed name carries the `dspec` prefix.** Commands are typed `/dspec-sync`,
+  `/dspec-spec`, `/dspec-plan` and `/dspec-update` in Claude Code, Codex and Cursor. The skill is
+  `dspec`, and Claude's hooks live in `.claude/hooks/dspec/`.
+- **`dspec init` rebuilds, instead of only adding.** Every run deletes everything dspec installed —
+  every `dspec`-prefixed command, skill and hook, and dspec's own entries in `.claude/settings.json`
+  — and writes it again from the installed version, so an upgrade leaves nothing out of date and
+  nothing a newer version dropped. Nothing without the prefix is written or removed, and the user's
+  own hooks in `settings.json` are kept. An existing `hooks` key no longer stops dspec's hooks from
+  being wired. `dspec init --yes` with no `--agent` rebuilds the agents already installed. An agent
+  that was installed and is not chosen again is removed, except Codex, whose prompts in the home
+  directory are shared by every repo.
+- **`.ds/config.json` is rewritten on every `init`**, since the CLI path and version change on upgrade.
 - **`dspec bootstrap` is gone — `dspec sync` now creates the model too.** `dspec sync --write`
   creates `.ds/` and proposes one provisional feature per directory of source the first time it
   finds no model, and repairs it every time after; which of the two it does is read from the
@@ -28,8 +57,7 @@ overwrite your `CLAUDE.md`, and every `sync --write` erased drift before it was 
   slash commands from four to three (`/ds-sync`, `/ds-spec`, `/ds-plan`). `dspec sync` no longer
   accepts a `<dir>` argument, `--here`, `--force` or `--no-git`, and no longer runs `git init` or
   appends a `.gitignore` line for `.ds/config.json` — it only ever acts on the repo already at the
-  current directory. Existing installs keep their `.claude/commands/ds-bootstrap.md` (and Codex/
-  Cursor equivalents) until deleted by hand; `dspec init` never removes a file.
+  current directory.
 - **`dspec sync --write` no longer re-stamps a feature whose code changed.** That feature stays
   stale and is listed until `dspec accept` names it. `--write` still stamps features that were never
   measured.
@@ -50,6 +78,8 @@ overwrite your `CLAUDE.md`, and every `sync --write` erased drift before it was 
   published package.
 
 ### Fixed
+- `dspec init` followed by `dspec sync --write` now proposes a model. `init` writes
+  `.ds/config.json`, and `sync` used to read the bare `.ds/` directory as an existing model.
 - A product name with a space, such as "Acme Shop", no longer makes every artifact read as copied
   from another project. Before this fix, `sync --strict` could never pass.
 - `sync` now rejects mistyped flags. `--stirct` used to pass silently in CI, and `sync --help` used

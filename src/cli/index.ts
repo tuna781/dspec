@@ -22,11 +22,14 @@ import { cmdInit } from './commands/init';
 import { cmdSync } from './commands/sync';
 import { cmdSpec } from './commands/spec';
 import { cmdAccept } from './commands/accept';
+import { cmdUpdate } from './commands/update';
 
 const USAGE = `dspec — the product model lives in your repo, and is measured against it
 
-  dspec init      [--agent a,b] [--all]      add the /ds-* commands to your AI coding agents, in
-                                             each one's own syntax. Adds only; never overwrites
+  dspec update    [--check]                  install the latest dspec from npm, if it is newer
+  dspec init      [--agent a,b] [--all]      install dspec into your AI coding agents — the
+                                             /dspec-* commands, skill and hooks — rebuilding
+                                             everything it installed before. Run after update
   dspec sync      [--write] [--strict]       create the model when there is none, repair it when
                   [--json] [--brief]         there is: restore what is missing, measure, re-render,
                                              and report what only you can settle
@@ -37,8 +40,9 @@ const USAGE = `dspec — the product model lives in your repo, and is measured a
 The model lives in \`.ds/\` at the repo root. Every command works from any subdirectory.
 \`sync\` creates and repairs, \`accept\` records a reading — only those two write to \`.ds/\`.
 Nothing exits non-zero unless you ask for it with \`sync --strict\`, which is what a CI job runs.
+\`update\` is the only command that uses the network, and only to ask npm.
 
-Every one of these is an ordinary terminal command, and the \`/ds-*\` slash commands \`init\` writes
+Every one of these is an ordinary terminal command, and the \`/dspec-*\` slash commands \`init\` writes
 are prose telling an agent which of them to run — so an agent can run any of this itself.`;
 
 type Handler = (args: string[]) => number | Promise<number>;
@@ -48,6 +52,7 @@ const COMMANDS: Record<string, Handler> = {
   sync: cmdSync,
   spec: cmdSpec,
   accept: cmdAccept,
+  update: cmdUpdate,
 };
 
 /** The verb set, exported so the surfaces that name commands are checked against it rather than

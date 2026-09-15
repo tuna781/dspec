@@ -17,14 +17,14 @@
 
 <br>
 
-<img src="demo.gif" alt="A real Claude Code session: /ds-spec is asked to let a customer stack two coupons, finds the rule in the model that forbids it, and lists what the model does not settle — without writing any code" width="820">
+<img src="demo.gif" alt="A real Claude Code session: /ds-spec (as the command was called then) is asked to let a customer stack two coupons, finds the rule in the model that forbids it, and lists what the model does not settle — without writing any code" width="820">
 
 </div>
 
 ```
 npm i -g dspec        # once, per machine
 dspec init            # in the repo you want modelled — pick your agents
-/ds-sync              # then, inside the agent — creates the model, since there is none yet
+/dspec-sync              # then, inside the agent — creates the model, since there is none yet
 ```
 
 <div align="center"><sub><a href="#install">What <code>dspec init</code> writes, and what it will never touch →</a></sub></div>
@@ -83,7 +83,7 @@ What you get for it:
   feature, or a description has gone stale, dspec says so *as a labelled guess or an explicit
   warning* instead of filling the gap with something that sounds right. A confident wrong answer is
   the failure that costs a day rather than a minute.
-- **Every feature gets described before it's built.** `/ds-spec` reads the model first and surfaces
+- **Every feature gets described before it's built.** `/dspec-spec` reads the model first and surfaces
   the rule your request would break while it is still a sentence — so specifying happens before the
   code exists, not as documentation written afterwards to match whatever shipped.
 
@@ -91,7 +91,8 @@ dspec is a toolkit; your agent is the brain. Every command either measures somet
 your checkout or writes something mechanical — none of them decides what a feature is or whether a
 description still holds. Those judgements stay yours.
 
-Everything is local: no server, no token, no network call, no telemetry, zero runtime dependencies.
+Everything is local: no server, no token, no telemetry, zero runtime dependencies — and no network
+call, except `dspec update` asking npm for a newer version when you run it.
 
 ---
 
@@ -99,9 +100,9 @@ Everything is local: no server, no token, no network call, no telemetry, zero ru
 
 - [Install](#install)
 - [Commands](#commands)
-  - [`/ds-sync` — create or repair the model](#ds-sync--create-or-repair-the-model)
-  - [`/ds-spec` — describe it before you build it](#ds-spec--describe-it-before-you-build-it)
-  - [`/ds-plan` — plan it, then build it](#ds-plan--plan-it-then-build-it)
+  - [`/dspec-sync` — create or repair the model](#dspec-sync--create-or-repair-the-model)
+  - [`/dspec-spec` — describe it before you build it](#dspec-spec--describe-it-before-you-build-it)
+  - [`/dspec-plan` — plan it, then build it](#dspec-plan--plan-it-then-build-it)
   - [Under the commands](#under-the-commands)
 - [dspec-lang](#dspec-lang)
   - [The shape of `.ds/`](#the-shape-of-ds)
@@ -131,7 +132,7 @@ It asks which agents to set up and writes each one's files in its own syntax. Ev
 is typed inside the session.
 
 ```
-Which agents should get the dspec commands?
+Which agents should get dspec?
 
   1. [x] Claude Code
         commands, skill and the three session hooks
@@ -147,23 +148,26 @@ Which agents should get the dspec commands?
 
 | Agent | Typed as | Files |
 |---|---|---|
-| **Claude Code** | `/ds-sync` | `.claude/commands/ds-*.md`, `.claude/skills/ds/`, `.claude/hooks/`, a `hooks` key in `.claude/settings.json` |
-| **Codex CLI** | `/ds-sync` | `~/.codex/prompts/ds-*.md` |
-| **Cursor** | `/ds-sync` | `.agents/skills/ds-*/SKILL.md` |
+| **Claude Code** | `/dspec-sync` | `.claude/commands/dspec-*.md`, `.claude/skills/dspec/`, `.claude/hooks/dspec/`, dspec's own entries in `.claude/settings.json` `hooks` |
+| **Codex CLI** | `/dspec-sync` | `~/.codex/prompts/dspec-*.md` |
+| **Cursor** | `/dspec-sync` | `.agents/skills/dspec-*/SKILL.md`, `.agents/skills/dspec/` |
+| every agent | | `.ds/config.json` — where this dspec is installed, for the hooks (gitignored) |
 
-**The same three commands, spelled the same way in all three.** Claude Code could have had `/ds:sync`
-and deliberately does not: moving between agents should not change what you type.
+**The same four commands, spelled the same way in all three.** Claude Code could have had
+`/dspec:sync` and deliberately does not: moving between agents should not change what you type.
+`dspec init` does **not** write `CLAUDE.md`, `AGENTS.md` or the model in `.ds/` — `/dspec-sync` does.
 
 The Claude Code and Cursor files live in the repo, so **commit them** and a teammate gets the loop
 on clone. Codex is the exception — its custom prompts load only from your home directory, so a
 teammate has to run `dspec init` themselves.
 
 > [!IMPORTANT]
-> **`dspec init` adds what is absent and never touches what is there.** Not a file, not a key, not
-> a line. There is no `--force`. That cuts both ways: a command file you already have will **never**
-> be replaced by a newer version of itself, so after `npm i -g dspec@latest` you delete the file you
-> want refreshed and run `dspec init` again. It says so every time rather than letting you wonder
-> why nothing changed.
+> **Everything with the `dspec` prefix belongs to dspec, and `dspec init` rebuilds it on every run.**
+> It deletes every `dspec`-prefixed command, skill and hook it installed — and dspec's own entries
+> in `.claude/settings.json` — then writes them again from the version you have. After an upgrade
+> nothing is left out of date, and nothing a newer version dropped is left behind. **Nothing without
+> the prefix is ever written or removed**: your own commands, skills, hooks and settings stay exactly
+> as they are. Don't edit `dspec-*` files by hand; the next `dspec init` replaces them.
 
 ### What only Claude Code gets
 
@@ -176,29 +180,41 @@ guarantee, and dspec says which one you are getting.
 ### Updating
 
 ```
-npm i -g dspec@latest
-dspec sync --write        # re-render the artifacts, re-measure stamps from an older dspec
-dspec init                # add any command that is new
+dspec update              # installs the latest dspec from npm, if it is newer
+dspec init                # in each repo: rebuild dspec's commands, skill and hooks from it
 ```
+
+Or, from inside an agent session, **`/dspec-update`** does both. Start a new session afterwards so the
+agent reads the rebuilt commands, then `/dspec-sync` brings the model up to date — stamps from an
+older dspec are re-measured there.
+
+`dspec update` is the only command that uses the network, and only to ask npm; it goes through your
+own `npm`, so your registry and proxy settings apply. It updates a global install only — a dspec in a
+project's `node_modules` is updated through that project's `package.json`.
+
+An install from dspec 0.0.1 (`/ds-sync`, `.claude/commands/ds-*.md`, hooks directly in
+`.claude/hooks/`) is removed by the first `dspec init` and replaced by the prefixed one. A file is
+only removed if it is recognisably dspec's — a `ds-deploy.md` of your own is kept.
 
 ---
 
 ## Commands
 
-Three slash commands over four CLI verbs, and there is only one kind. If you cannot name it, it is not
+Four slash commands over five CLI verbs, and there is only one kind. If you cannot name it, it is not
 a command — its job belongs to a flag on one you can.
 
-**Every one of them is a terminal command.** A `/ds-*` slash command is prose telling your agent
+**Every one of them is a terminal command.** A `/dspec-*` slash command is prose telling your agent
 which `dspec` command to run and what to judge in the output — so you can run any of it yourself,
 and so can the agent, with or without the slash commands installed.
 
 | | |
 |---|---|
-| [`/ds-sync`](#ds-sync--create-or-repair-the-model) | **create** the model for a repo that has none, or **repair** one that exists |
-| [`/ds-spec {what you want}`](#ds-spec--describe-it-before-you-build-it) | describe it in detail, checked against the model, before any code |
-| [`/ds-plan {what you want}`](#ds-plan--plan-it-then-build-it) | the same, plus the implementation plan, then build it |
+| [`/dspec-sync`](#dspec-sync--create-or-repair-the-model) | **create** the model for a repo that has none, or **repair** one that exists |
+| [`/dspec-spec {what you want}`](#dspec-spec--describe-it-before-you-build-it) | describe it in detail, checked against the model, before any code |
+| [`/dspec-plan {what you want}`](#dspec-plan--plan-it-then-build-it) | the same, plus the implementation plan, then build it |
+| [`/dspec-update`](#updating) | take the newest dspec from npm and rebuild its commands, skill and hooks in this repo |
 
-### `/ds-sync` — create or repair the model
+### `/dspec-sync` — create or repair the model
 
 The command that writes to `.ds/` (with `dspec accept`, which records a reading). Which of the two it does is read from the checkout, not
 typed by you: nothing there yet, and it creates; something there, and it repairs.
@@ -207,7 +223,7 @@ typed by you: nothing there yet, and it creates; something there, and it repairs
 model**, which is the part that matters: it does not leave you a folder of placeholders.
 
 ```
-> /ds-sync
+> /dspec-sync
 
 ⏺ Bash(dspec sync --write)
   ⎿  ✓ .ds/ — 2 files
@@ -237,14 +253,14 @@ restores base files that went missing, measures new features and re-renders the 
 Either way it **never invents a feature once one exists** — proposing is a first-run act only, and
 after that, undescribed code is only ever listed.
 
-### `/ds-spec` — describe it before you build it
+### `/dspec-spec` — describe it before you build it
 
 The command that earns its place. Describing a feature in chat gives you a description that may
 contradict a decision you made six weeks ago, and you find out after the code is written.
-`/ds-spec` reads the model first.
+`/dspec-spec` reads the model first.
 
 ```
-> /ds-spec let a customer stack two coupons
+> /dspec-spec let a customer stack two coupons
 
 ⏺ Bash(dspec spec "let a customer stack two coupons")
   ⎿  ## The model does not name this
@@ -273,18 +289,18 @@ Three things it will not do:
 - **It does not fill silence.** Where the model does not settle a point, it says *"the model does
   not settle this"* rather than sounding equally confident everywhere.
 
-It ends with a description for you to correct. When you are happy, `/ds-plan` turns it into a plan
+It ends with a description for you to correct. When you are happy, `/dspec-plan` turns it into a plan
 and builds it.
 
-### `/ds-plan` — plan it, then build it
+### `/dspec-plan` — plan it, then build it
 
-Everything `/ds-spec` does, then the implementation plan, then the build. It stays inside the Code
+Everything `/dspec-spec` does, then the implementation plan, then the build. It stays inside the Code
 Map: the feature's own files plus the files of everything it declares in `uses:`.
 
 ### Under the commands
 
-The CLI has four verbs — `init`, `sync`, `accept`, `spec` — every one named after something you
-already know. **Only `sync` and `accept` write to `.ds/`** — `sync` creates when there is nothing
+The CLI has five verbs — `update`, `init`, `sync`, `accept`, `spec` — every one named after
+something you already know. **Only `sync` and `accept` write to `.ds/`** — `sync` creates when there is nothing
 there and repairs when there is; `accept` records that a drifted feature was read — and **nothing
 exits non-zero unless you ask for it**:
 
@@ -517,12 +533,12 @@ people to route around it rather than write the description.
 
 | Symptom | Usual cause | Fix |
 |---|---|---|
-| `/ds-sync` does not appear in the agent | that agent was not chosen, or the session predates the install | `dspec init`, then restart the session — Codex in particular only reads `~/.codex/prompts` at start-up |
-| `dspec init` reports everything **left alone** and nothing changes | the files are already there, and it never overwrites | delete the file you want refreshed, then run it again |
-| a teammate has the repo but no `/ds-*` in **Codex** | Codex prompts live in the home directory, not the repo | they run `dspec init` on their own machine |
+| `/dspec-sync` does not appear in the agent | that agent was not chosen, or the session predates the install | `dspec init`, then restart the session — Codex in particular only reads `~/.codex/prompts` at start-up |
+| a `dspec-*` command you edited went back to how it was | `dspec init` rebuilds every `dspec`-prefixed file | keep your own commands under a name without the prefix |
+| a teammate has the repo but no `/dspec-*` in **Codex** | Codex prompts live in the home directory, not the repo | they run `dspec init` on their own machine |
 | Nothing happens at all — no hooks, no commands | Node is not on the PATH your agent starts processes with | install Node ≥ 20. A version manager (nvm, fnm, asdf) puts it on PATH via a shell startup file, so a spawned process can miss it even though your terminal finds it. `dspec init` records the absolute path in `.ds/config.json` as a fallback |
 | `dspec init` says `settings.json` is unreadable | your JSON has a syntax error | fix it and re-run — dspec wrote **nothing** to it, so the hooks are not wired yet |
-| the hooks are not wired, but everything else installed | you already had a `hooks` key, and yours wins | merge the block from `dspec init`'s output into it by hand |
+| the hooks do nothing after upgrading from 0.0.1 | the session predates the rebuild | start a new session — the hooks now live in `.claude/hooks/dspec/` |
 | `dspec spec` says the model does not name my request | retrieval resolves names, not words | pick from the ranked suggestions it printed, or `--touch "<Feature>"` |
 | `dspec sync` (no `--write`) says there is no model | nothing written yet, only a dry run | `dspec sync --write` creates it |
 | `dspec sync --strict` fails right after `--write` | a description is older than its code, or two features share a name | read the feature and `dspec accept "<Feature>"`, or rename one of the two |

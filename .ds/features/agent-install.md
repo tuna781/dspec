@@ -8,25 +8,30 @@ code:
 entry: cmdInit
 uses: [Agent adapters, Model loading]
 tests: [test/ship/install.test.js]
-stamp: sha256f:2a0e4a271a96677c
+stamp: sha256g:3ea71a52e6d92f7c
 ---
 
-`dspec init` — the one command a human has to type. Everything else dspec does is an ordinary
-terminal command an agent can run for itself; this one is the exception only because of the
-ordering, since it is what puts the slash commands there in the first place.
+`dspec init` — installs dspec into the agents a repository uses, and **rebuilds that install on every
+run**. The terminal has two jobs: take a newer dspec (`dspec update`) and put it into the agents
+(`dspec init`); everything else happens inside a session through the `/dspec-*` commands this writes.
 
-It asks which agents to set up, writes each one's files in its own syntax, and reports honestly
-what each agent will and will not be able to do.
+It asks which agents to set up, deletes everything dspec installed for them before, writes each
+one's files again in its own syntax, and reports what was added, rebuilt and removed.
 
 Rules
-- **Add what is absent, never touch what is there, and no flag turns that off.** A `--force` is a
-  flag people pass out of habit, and then the rule protects nobody. The cost is real and is stated
-  in the output every time: a file that already exists never receives a newer version of itself, so
-  taking an improved command means deleting the old one first. A user who upgrades and sees nothing
-  change has to be told why, not left to conclude the upgrade failed.
-- **Never guess when there is nobody to ask.** A non-TTY run with no `--agent` refuses rather than
-  choosing. Writing into somebody's `.claude/` because a CI script ran a bare `dspec init` is the
-  surprise this tool exists not to spring.
+- **Every run is a rebuild, never an accumulation.** After an upgrade, one `dspec init` leaves exactly
+  what the new version ships: no out-of-date copy, no command a newer version dropped. Editing a
+  `dspec`-prefixed file is therefore pointless, and the README says so.
+- **Plan everything before deleting anything.** Every chosen agent's files are rendered first; a
+  template that cannot be read stops the run before any install is removed.
+- **Never guess a first install when there is nobody to ask.** A non-TTY run with no `--agent`
+  rebuilds the agents already installed here — which is what `/dspec-update` runs — and refuses
+  when there are none. Writing into somebody's `.claude/` because a CI script ran a bare
+  `dspec init` is the surprise this tool exists not to spring.
+- **An agent that lives outside the repository is never uninstalled from one.** Codex prompts sit in
+  the home directory and serve every repository on the machine; not choosing Codex here is not a
+  request to remove it everywhere. A repo-scoped agent that was installed and is not chosen again
+  is removed.
 - **A typo names itself and installs nothing.** An unknown agent is an error before any file is
   written, never a silent omission that leaves half a surface behind.
 - **It installs the surface; it does not invent a model.** `dspec sync --write` creates `.ds/`, the
@@ -37,13 +42,14 @@ Rules
   tmux, and in every editor's embedded shell.
 
 Behaviour
-- Agents already visible in the repo or the home directory are preselected, so Enter is usually the
-  right answer — but preselection is a guess about what somebody uses, never a claim that dspec is
-  installed for it.
+- Agents dspec is already installed for are preselected, so after an upgrade Enter rebuilds the
+  same set. With none installed, agents already visible in the repo or the home directory are
+  preselected — a guess about what somebody uses, never a claim that dspec is installed for it.
 - The absolute path of the running CLI is recorded in `.ds/config.json`, so the Claude hooks still
   resolve when `dspec` is not on PATH — a switched nvm version, a shell that never sourced the
-  profile. A stale entry is harmless: the hook checks the path exists first. Nothing gitignores
-  this file automatically — it is machine-specific, so add `.ds/config.json` to your own
-  `.gitignore` if you would rather not commit it.
+  profile. It is rewritten on every run, because the path and the version are exactly what an
+  upgrade changes. It is machine-specific, so add `.ds/config.json` to your own `.gitignore`.
 - A repository with no model closes with the next step named — open the agent and type
-  `/ds-sync` — rather than leaving somebody with commands and nothing to run them against.
+  `/dspec-sync` — rather than leaving somebody with commands and nothing to run them against.
+- `.ds/config.json` alone is not a model: a freshly initialised repository still gets features
+  proposed by its first `dspec sync --write`.

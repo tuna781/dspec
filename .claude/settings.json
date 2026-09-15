@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.js\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/dspec/session-start.js\"",
             "timeout": 15
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit.js\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/dspec/post-edit.js\"",
             "timeout": 8
           }
         ]
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop.js\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/dspec/stop.js\"",
             "timeout": 10
           }
         ]

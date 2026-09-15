@@ -11,7 +11,7 @@ uses:
   - Model creation
   - Agent adapters
 tests: [test/reconcile/sync.test.js]
-stamp: sha256f:11d9800cdc018ddf
+stamp: sha256g:9a2acbc986893f36
 ---
 
 Reconciles the model with the checkout in **both** directions and repairs what is safe to repair:

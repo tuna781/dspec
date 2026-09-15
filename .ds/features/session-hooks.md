@@ -8,7 +8,7 @@ code:
   - templates/hooks/stop.js
 entry: retarget
 uses: [Reconciliation, Drift detection, Model loading]
-stamp: sha256g:af89d0ccd14af9c0
+stamp: sha256g:4c3c89b13d2c82bb
 ---
 
 Three hooks that run without being asked: a session can open knowing what the project owes, an edit
@@ -45,7 +45,8 @@ Behaviour
   contradicts one — rather than leaving the model describing behaviour the code no longer has.
 - On stop: an offer to reconcile, only when a description is older than its code. Never measured,
   lost files and missing tests are the sync report's to name, not a claim that code just changed.
-- The hooks are installed into `.claude/hooks/` and wired by a `hooks` key added to the project's
+- The hooks are installed into `.claude/hooks/dspec/`, a directory dspec owns and rebuilds on every
+  `dspec init`, and wired by dspec's own entries in the project's
   `settings.json`, referenced through `$CLAUDE_PROJECT_DIR` — the same file is committed and read
   on every teammate's machine, and an absolute path would be right on exactly one of them.
 - The CLI is resolved at runtime rather than bundled: `dspec` is on PATH from a global npm install,

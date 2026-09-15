@@ -1,4 +1,4 @@
-<!-- ds: project=dspec generated=2026-09-14T09:45:09.365Z -->
+<!-- ds: project="dspec" -->
 # dspec
 
 This repository's product model lives in `.ds/`, written in dspec-lang.
@@ -22,8 +22,9 @@ _Non-negotiable, and they apply to every change._
 
 - **Zero runtime dependencies.** A pull request adding one to `dependencies` has to argue for it
   first.
-- **Everything is local.** No server, no token, no network call, no telemetry. The CLI reads `.ds/`
-  and the user's own source files, and nothing else.
+- **Everything is local.** No server, no token, no telemetry, and no network call — except
+  `dspec update`, which asks npm for a newer dspec when the user runs it, through their own `npm`.
+  Every other command reads `.ds/` and the user's own source files, and nothing else.
 - **Measure, do not trust.** Anything the tool asserts about the code must be re-readable from the
   checkout. A claim nobody can check does not go in a report.
 - **Report, never block.** Nothing exits non-zero unless asked for it — `dspec sync --strict` is the
@@ -39,10 +40,11 @@ _Non-negotiable, and they apply to every change._
   adapter over frontmatter, never a second implementation — and the automatic half, session hooks,
   is Claude Code only because no other agent can run a command on a session event. That gap is
   reported, never papered over.
-- **Add what is absent, never touch what is there.** `dspec init` writes into repositories and
-  home directories it does not own. Not a file, not a key, not a line is ever replaced or deleted,
-  and there is no flag that turns this off. The cost — an improved command never reaching somebody
-  who already has one — is real, is stated to the user, and is the better failure.
+- **dspec owns what carries its prefix, and nothing else.** `dspec init` writes into repositories
+  and home directories it does not own. Everything it installs is named `dspec` — commands, skill,
+  hooks — and every run deletes all of it and writes it again, so an upgrade leaves nothing stale
+  and nothing a newer version dropped. Nothing without the prefix is ever written or removed, and
+  in a settings file only dspec's own hook entries are.
 
 ---
 

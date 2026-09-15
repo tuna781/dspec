@@ -1,5 +1,5 @@
 ---
-name: ds
+name: dspec
 description: "The spec loop for a repository whose product model lives in `.ds/` — look up what a feature is, where it lives in the code and what it touches; implement inside that scope; then reconcile the model with what was built. Use whenever this repo has a `.ds/` directory, when CLAUDE.md carries a `<!-- ds: … -->` stamp, or when the user mentions specs, the product model, drift, or the code map."
 ---
 
@@ -9,8 +9,8 @@ This repository's product model lives in `.ds/`, written in **dspec-lang**, and 
 source of truth** for what the product does, where each feature lives, and what depends on what.
 `CLAUDE.md` is a compiled pointer at it — never edit that file by hand; it is overwritten.
 
-Everything is local. There is no server, no token, no network call. The CLI reads `.ds/` and your
-actual source files.
+Everything is local. There is no server, no token, and no network call except `dspec update`, which
+asks npm for a newer dspec when it is run. The CLI reads `.ds/` and your actual source files.
 
 ⚠️ **dspec is a toolkit; you are the brain.** Every command either measures something readable from
 the checkout or writes something mechanical. None of them decides what a feature is, which files
@@ -73,23 +73,66 @@ whole name occurring in your request. It never guesses from overlapping words, s
 
 | | |
 |---|---|
-| `__DS_CMD_SYNC__` | **create** the model for a repo that has none, or **repair** one that exists — add what is missing, patch what is wrong |
-| `__DS_CMD_SPEC__` | describe what the user wants in detail, checked against the model |
-| `__DS_CMD_PLAN__` | the same, plus the implementation plan, then build it |
+| `/dspec-sync` | **create** the model for a repo that has none, or **repair** one that exists — add what is missing, patch what is wrong |
+| `/dspec-spec` | describe what the user wants in detail, checked against the model |
+| `/dspec-plan` | the same, plus the implementation plan, then build it |
+| `/dspec-update` | take the newest dspec from npm and rebuild its commands, skill and hooks here |
 
-**These three are a convenience, not the interface.** Each one is prose telling you which `dspec`
+**These four are a convenience, not the interface.** Each one is prose telling you which `dspec`
 command to run and what to judge in its output — so everything they do you can also do by running
 the CLI directly, and an agent that has read this file needs no slash command at all.
 
-**Taking a newer dspec**: `npm i -g dspec@latest`, then `dspec init` to add any command that is
-new and `dspec sync --write` to re-render the artifacts. ⚠️ `dspec init` **never overwrites a
-file that already exists**, so an improved version of a command you already have arrives only if
-you delete that file first. Say that to the user rather than letting them wonder why nothing
-changed.
+**Taking a newer dspec**: `/dspec-update`, or in a terminal `dspec update` then `dspec init`.
+`dspec init` deletes every `dspec`-prefixed command, skill and hook it installed and writes them
+again from the installed version, so nothing out of date or removed upstream is left behind. It
+touches nothing without the prefix, and never the model. The rebuilt commands take effect in a new
+session.
 
 ## Writing a feature file
 
-__DS_LANG_FULL__
+| Key | Required | Written by | Meaning |
+|---|---|---|---|
+| `name` | ✅ | you | How this feature is addressed. Unique across the model — `uses` resolves against it. |
+| `area` | ✅ | you | A label that groups the index. Free text, and NOT a boundary: nothing is filed inside an area. |
+| `code` | ✅ | you | Every file this feature lives in, repo-relative. This is the answer to "where is it". |
+| `entry` |  | you | Where to start reading — a symbol declared in one of the `code` files. |
+| `uses` |  | you | The features this one depends on, by name. These are the only edges in the model. |
+| `tests` |  | you | Tests you have actually read that prove what this file describes. Never guessed from a filename. |
+| `stamp` |  | **the CLI** | Fingerprint of the `code` files. Written by `dspec sync` — never type it. |
+
+| Label | What goes under it |
+|---|---|
+| *(lead paragraph)* | The prose before the first label: what this feature IS, in product terms. One paragraph. |
+| `Rules` | Invariants that must hold — the things a change must not break, and why. |
+| `Behaviour` | What it does, and the cases that matter: order, precedence, what it refuses. |
+
+The filter that decides what goes in: **if one read of the files in `code` would tell you, it is not worth a line.** Write what that read would NOT tell you — why a branch exists, which failure it prevents, what must never change.
+
+`code` and `uses` are **declared, never inferred**. Nothing is guessed from imports, from naming, or from word overlap: a tool that guesses a file list will one day omit the file that mattered, and present the omission as scope. `dspec sync` verifies every path and every name.
+
+A feature file:
+
+```markdown
+---
+name: Drift detection
+area: Code measurement
+code:
+  - src/code/drift.ts
+  - src/cli/commands/drift.ts
+entry: computeDrift
+uses: [Code fingerprint, Model loading]
+tests: [test/reconcile/drift.test.js]
+---
+
+Answers the question a file path cannot: is this description still true of the code it points
+at. Every answer is measured by re-reading the checkout, never by remembering.
+
+Rules
+- Drift is reported, never auto-fixed: the code is the unreviewed party.
+
+Behaviour
+- Evidence is checked first, so a lost test is reported even when the file is gone too.
+```
 
 ## Rules that are not obvious
 

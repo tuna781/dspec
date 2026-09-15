@@ -110,7 +110,7 @@ test('every verb is a command a user can name', () => {
   const { VERBS } = require('../../dist/cli/index.js');
   // `accept` earns its place as a verb: it is the one act — "I read both sides, the description is
   // current" — that no flag on `sync` could honestly stand in for.
-  assert.deepStrictEqual([...VERBS].sort(), ['accept', 'init', 'spec', 'sync']);
+  assert.deepStrictEqual([...VERBS].sort(), ['accept', 'init', 'spec', 'sync', 'update']);
 });
 
 test('`sync --write` creates the model when there is none, rather than refusing', () => {

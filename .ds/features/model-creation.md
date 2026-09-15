@@ -5,7 +5,7 @@ code: [src/cli/commands/scaffold.ts]
 entry: proposeFeatures
 uses: [Source inventory, Body vocabulary]
 tests: [test/reconcile/sync.test.js]
-stamp: sha256f:93c1bf332f538b24
+stamp: sha256g:be1b4ab992fb9554
 ---
 
 Proposes the first features for a repository that has none: one provisional feature per directory

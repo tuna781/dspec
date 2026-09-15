@@ -23,5 +23,5 @@ emitContext('SessionStart',
   + `Outstanding right now:\n${out}\n\n`
   + 'Run `dspec spec "<Feature name>"` for what the model knows about a piece of work; it resolves '
   + 'names, so if it says the model does not name your request, pick from the list it prints '
-  + 'rather than searching the source. Before relying on a feature listed above, read it; `/ds-sync` '
+  + 'rather than searching the source. Before relying on a feature listed above, read it; `/dspec-sync` '
   + 'shows the full picture. Do not invent behaviour the model does not describe — read the feature file, or ask.');

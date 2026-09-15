@@ -6,9 +6,9 @@ allowed-tools: Bash(dspec spec:*), Bash(dspec sync:*), Bash(dspec accept:*), Rea
 
 What to build: $ARGUMENTS
 
-Everything `/ds-spec` does, and then the plan and the build.
+Everything `/dspec-spec` does, and then the plan and the build.
 
-**First, produce the description.** Follow `/ds-spec` exactly — find the feature, read what
+**First, produce the description.** Follow `/dspec-spec` exactly — find the feature, read what
 it returns, ask about anything the ⚠ block flags, use the model's vocabulary, state every conflict, and
 say plainly where the model is silent. Show it to the user and get it agreed before planning
 anything. A plan built on a description nobody has corrected is a plan for the wrong thing.
@@ -29,7 +29,7 @@ anything. A plan built on a description nobody has corrected is a plan for the w
 
 **Then build.** Implement it, staying inside the Code Map. Run the tests.
 
-**Then ask: "Reconcile this into the model?"** If yes, run `/ds-sync`.
+**Then ask: "Reconcile this into the model?"** If yes, run `/dspec-sync`.
 
 > **That last step is the only point in this flow where `.ds/` is written.** Writing a description
 > earlier — while planning, or while coding — leaves the model describing behaviour that does not

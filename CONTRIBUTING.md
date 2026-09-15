@@ -44,8 +44,8 @@ same rules the tool holds itself to, and they are the reason it is worth using.
 `dspec sync` — read them there, not here.** Restating them in a third place is the drift this
 project exists to stop, so this file names the source instead of copying it. In short: zero runtime
 dependencies, everything local, measure rather than trust, report rather than block, derive rather
-than store, say what you do not know, English only, every agent one surface, and add what is absent
-but never touch what is there — with the reasoning in the file itself.
+than store, say what you do not know, English only, every agent one surface, and dspec owns
+only what carries its prefix — with the reasoning in the file itself.
 
 ## Reporting a bug
 

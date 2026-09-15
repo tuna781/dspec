@@ -13,7 +13,7 @@ const path = require('node:path');
 const { ROOT } = require('../support/repo');
 
 const COMMANDS = fs.readdirSync(path.join(ROOT, 'templates/commands'));
-const SURFACES = ['templates/skills/ds/SKILL.md', ...COMMANDS.map((f) => `templates/commands/${f}`)];
+const SURFACES = ['templates/skills/dspec/SKILL.md', ...COMMANDS.map((f) => `templates/commands/${f}`)];
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf-8');
 
 test('placeholders are the only way a surface names another command', () => {
@@ -53,7 +53,7 @@ test('nothing keeps its own copy of the verb list', () => {
 });
 
 test('every slash command the skill names exists as a file', () => {
-  const skill = read('templates/skills/ds/SKILL.md');
+  const skill = read('templates/skills/dspec/SKILL.md');
   for (const ph of skill.match(/__DS_CMD_([A-Z]+)__/g) ?? []) {
     const name = ph.replace(/__DS_CMD_|__/g, '').toLowerCase();
     assert.ok(COMMANDS.includes(`${name}.md`), `the skill names /ds-${name}, which has no command file`);
@@ -95,7 +95,7 @@ test('every agent gets every command, and types it the same way', () => {
     const planned = AGENTS[key].plan({ repo: ROOT, templates });
     for (const name of COMMAND_NAMES) {
       assert.ok(
-        planned.some((f) => f.path.includes(`ds-${name}`)),
+        planned.some((f) => f.path.includes(`dspec-${name}`)),
         `${key} is not given \`${invoke(name)}\``,
       );
     }

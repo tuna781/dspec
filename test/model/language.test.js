@@ -48,7 +48,7 @@ test('every label appears in the rendered block', () => {
 
 /** Every surface that teaches the language and must therefore generate it. */
 const SURFACES = [
-  'templates/skills/ds/SKILL.md',
+  'templates/skills/dspec/SKILL.md',
   ...fs.readdirSync(path.join(ROOT, 'templates/commands')).map((f) => `templates/commands/${f}`),
 ];
 
