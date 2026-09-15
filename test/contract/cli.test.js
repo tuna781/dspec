@@ -138,3 +138,14 @@ test('a model file with a syntax error names the file and the line, without a st
   assert.match(r.stderr, /line 3/);
   assert.ok(!r.stderr.includes('at Object.'), 'a stack trace pushes the useful line off the screen');
 });
+
+test('the published package keeps its binaries', () => {
+  // npm 11 rejects a `bin` path written `./bin/ds.js` and silently DROPS the entry at publish
+  // time — the package installs with no `dspec` command at all. It was caught once in a dry run
+  // and came back through a rebase, so it is locked here.
+  const pkg = JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', 'package.json'), 'utf-8'));
+  for (const [name, file] of Object.entries(pkg.bin)) {
+    assert.ok(!file.startsWith('./'), `bin.${name} is "${file}" — npm drops a path starting with ./`);
+  }
+  assert.ok(pkg.bin.dspec, 'the `dspec` command is what every surface tells people to run');
+});

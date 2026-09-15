@@ -26,8 +26,8 @@
   "author": "tuna <tuandv.job@gmail.com>",
   "license": "MIT",
   "bin": {
-    "dspec": "./bin/ds.js",
-    "ds": "./bin/ds.js"
+    "dspec": "bin/ds.js",
+    "ds": "bin/ds.js"
   },
   "engines": {
     "node": ">=20"
