@@ -4,7 +4,7 @@ area: Language
 code: [src/model/yaml.ts, src/model/frontmatter.ts]
 entry: parseDoc
 tests: [test/model/yaml.test.js]
-stamp: sha256f:b0cfc607c8e2ed3e
+stamp: sha256g:7a3137e4db672b6f
 ---
 
 Every file in `.ds/` is markdown with YAML frontmatter, parsed by a hand-written YAML subset with
@@ -30,8 +30,11 @@ Behaviour
 - Rejected with a line number: tab indentation, block scalars `|` and `>`, flow maps `{a: b}`,
   sequences nested inside flow sequences, duplicate keys, empty keys, unclosed quotes, and
   inconsistent indentation.
-- Only plain decimal integers and floats become numbers — `2026-08-23` and `1.2.3` stay strings,
-  which is why `Number()` is not used.
+- Only canonical decimal integers and floats become numbers — `2026-08-23`, `1.2.3`, `007` and
+  `1.10` stay strings, which is why `Number()` is not used. A leading zero read as a number was
+  written back without it on the next stamp.
+- Inside a flow sequence, an item containing `,`, `[`, `]`, `{` or `}` anywhere is quoted on
+  output: `["Cart, checkout"]` was once written back unquoted and read as two names.
 - Serialising **drops every empty value**: `code: []` reads as "an empty list was declared" when the
   truth is "none was declared", and those two must not look the same.
 - Comments do not survive a rewrite. Guidance written as a `#` comment therefore lives exactly

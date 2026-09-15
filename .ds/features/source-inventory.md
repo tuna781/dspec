@@ -2,9 +2,9 @@
 name: Source inventory
 area: Code measurement
 code: [src/code/sources.ts]
-entry: trackedSources
+entry: sourceInventory
 uses: [Git access]
-stamp: sha256f:fc26754b6b02f138
+stamp: sha256g:1d49b3e6b9aa650c
 ---
 
 Which files count as this product's source: the denominator of coverage, and the candidate set when
@@ -20,10 +20,15 @@ Rules
   into `.claude/hooks/` and they are committed, so by every other measure they are tracked source —
   and the very next `dspec sync` asked the user to describe files dspec had just written for them.
   A tool that does that teaches people its coverage report is noise.
-- **Not a git checkout means an empty answer, never an error.** Coverage then reports nothing, which
-  is honest — "I cannot see your files" must never render as "every file is described".
+- **Not a git checkout means an UNKNOWN answer, never an error and never an empty one.** It is
+  `null`, and coverage reports itself as not measured. An empty list once meant zero unclaimed
+  files, and `dspec sync` printed "the model and the code agree" about code it had never seen.
+- **Paths are read unquoted and NUL-separated.** git quotes a non-ASCII path by default, a quoted
+  name does not end in its extension, and every such file silently stopped being source.
 
 Behaviour
 - Extensions that carry behaviour only. Markdown, JSON and configuration are described by the
   features that use them, and are verified to exist when claimed.
 - Build and generated directories are excluded by name, at any depth.
+- Callers that only search the inventory — hunting a lost entry, proposing features — may treat
+  "unknown" as "nothing found"; coverage may not.

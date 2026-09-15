@@ -1,5 +1,5 @@
 // Find the repo root: the nearest ancestor holding `.ds/`, else `.git/`, else the cwd —
-// which is what lets `ds compile` run from any subdirectory, exactly as `git` does, rather
+// which is what lets every `dspec` command run from any subdirectory, exactly as `git` does, rather
 // than making the user remember where they are standing.
 import * as fs from 'node:fs';
 import * as path from 'node:path';

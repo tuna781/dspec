@@ -5,7 +5,7 @@ code: [src/compile/lint.ts, src/cli/lintMessage.ts]
 entry: lintModel
 uses: [Model loading, Body vocabulary, Coverage gap, Drift detection]
 tests: [test/model/lint.test.js]
-stamp: sha256f:3a2290cddeffba9c
+stamp: sha256g:3a2290cddeffba9c
 ---
 
 A pure function over the model that teaches the standard the way a linter does — nobody reads a

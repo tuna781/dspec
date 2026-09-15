@@ -21,22 +21,28 @@ import { packageVersion } from '../pkgRoot';
 import { cmdInit } from './commands/init';
 import { cmdSync } from './commands/sync';
 import { cmdSpec } from './commands/spec';
+import { cmdAccept } from './commands/accept';
+import { cmdUpdate } from './commands/update';
 
 const USAGE = `dspec — the product model lives in your repo, and is measured against it
 
-  dspec init      [--agent a,b] [--all]      add the /ds-* commands to your AI coding agents, in
-                                             each one's own syntax. Adds only; never overwrites
+  dspec update    [--check]                  install the latest dspec from npm, if it is newer
+  dspec init      [--agent a,b] [--all]      install dspec into your AI coding agents — the
+                                             /dspec-* commands, skill and hooks — rebuilding
+                                             everything it installed before. Run after update
   dspec sync      [--write] [--strict]       create the model when there is none, repair it when
-                                             there is: restore what is missing, re-stamp, re-render,
+                  [--json] [--brief]         there is: restore what is missing, measure, re-render,
                                              and report what only you can settle
+  dspec accept    "<Feature>"… [--all]       after reading both sides: the description is current
+                                             for its code. The only command that clears drift
   dspec spec      "<Feature>" [--touch F]    what the model already knows about a piece of work
 
 The model lives in \`.ds/\` at the repo root. Every command works from any subdirectory.
-\`sync\` is the only command that writes to \`.ds/\` — it creates when there is nothing there and
-repairs when there is. Nothing exits non-zero unless you ask for it with \`sync --strict\`, which
-is what a CI job runs.
+\`sync\` creates and repairs, \`accept\` records a reading — only those two write to \`.ds/\`.
+Nothing exits non-zero unless you ask for it with \`sync --strict\`, which is what a CI job runs.
+\`update\` is the only command that uses the network, and only to ask npm.
 
-Every one of these is an ordinary terminal command, and the \`/ds-*\` slash commands \`init\` writes
+Every one of these is an ordinary terminal command, and the \`/dspec-*\` slash commands \`init\` writes
 are prose telling an agent which of them to run — so an agent can run any of this itself.`;
 
 type Handler = (args: string[]) => number | Promise<number>;
@@ -45,6 +51,8 @@ const COMMANDS: Record<string, Handler> = {
   init: cmdInit,
   sync: cmdSync,
   spec: cmdSpec,
+  accept: cmdAccept,
+  update: cmdUpdate,
 };
 
 /** The verb set, exported so the surfaces that name commands are checked against it rather than

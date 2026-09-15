@@ -1,6 +1,6 @@
 ---
 description: Create or repair the dspec model — add what is missing, patch what is wrong
-allowed-tools: Bash(dspec sync:*), Bash(dspec spec:*), Read, Edit, Write, Grep, Glob
+allowed-tools: Bash(dspec sync:*), Bash(dspec accept:*), Bash(dspec spec:*), Read, Edit, Write, Grep, Glob
 ---
 
 Bring `.ds/` into agreement with the code. The same command whether there is nothing there yet or
@@ -30,13 +30,14 @@ body empty. Then:
 
 A feature file declares `name` · `area` · `code` in its frontmatter, and its body is a lead paragraph plus the fixed labels `Rules` · `Behaviour` — nothing else.
 
-**If `.ds/` already exists**, `dspec sync --write` repairs it instead: restores any base file that
-has gone missing, re-stamps every feature and re-renders `.ds/index.md` and `CLAUDE.md`.
-Everything it cannot decide alone comes back as a list, and all of it is judgement:
+**If `.ds/` already exists**, run `dspec sync` first — a dry run, so nothing is measured away before
+you have seen it. Everything it cannot decide alone comes back as a list, and all of it is judgement:
 
 **A description older than its code.** Read both, then ask the user which is wrong. Do **not**
 rewrite the description to match the code — the code is the unreviewed party here, and somebody may
-not yet have said whether the rule changed with it.
+not yet have said whether the rule changed with it. Once the two agree, run
+`dspec accept "<Feature>"`: it is the only thing that clears this, and it asserts that you read both.
+Never accept a feature you have not read.
 
 **A file a feature claims that is gone, or an `entry:` that moved.** Find where it went and correct
 the `code:` list. If the feature itself no longer exists in the code, say so and ask — **never
@@ -51,6 +52,10 @@ person would actually name as a feature, and **ask before writing any of them.**
 
 **A `tests:` path that is gone.** Remove it or point it at the test that replaced it. Do not
 substitute a test you have not read.
+
+Then `dspec sync --write`: it restores base files that have gone missing, measures features that have
+never been measured, and re-renders `.ds/index.md` and the agent memory file (a hand-written one only
+gains a block between `ds:begin` and `ds:end`). It never clears drift.
 
 Finish with `dspec sync --strict`: it exits non-zero only on a measured fact, so a clean run means
 every path resolves and nothing is older than its code. Never write `stamp` yourself — the CLI

@@ -15,26 +15,29 @@ Worth knowing before you go looking, because it narrows the surface a lot:
 
 - **No runtime dependencies.** `package.json` has an empty dependency set; the only dev
   dependencies are TypeScript and `@types/node`. There is no supply chain to speak of.
-- **No network calls, and no listening socket.** Nothing is sent anywhere, there is no telemetry,
-  and there is no account, token or server. Every command reads and writes local files and exits.
+- **No listening socket, no telemetry, and one network call you start yourself.** Nothing is sent
+  anywhere, and there is no account, token or server. `dspec update` asks npm for the latest version
+  and installs it, through your own `npm` and its configuration; every other command reads and
+  writes local files and exits.
 - **It writes to your repo, and only these files.** `dspec sync --write` is the only command that
   writes to `.ds/` — seeding it when there is nothing there yet, skipping anything already there so
   it never overwrites a spec you wrote, and re-measuring the `stamp` field and re-rendering the
   artifacts every time after. Nothing else is created, and no file outside `.ds/` is treated as
   ours to replace. It never rewrites a spec body and never deletes an element: those are decisions,
   not measurements.
-- **`dspec init` adds what is absent and never touches what is there** — not a file, not a key,
-  not a line, and there is no flag that turns this off. A file that already exists is left
-  byte-for-byte alone whoever wrote it. It writes into `.claude/`, `.agents/` and, for Codex only,
-  `~/.codex/prompts/` — that last one being the single case where anything is written outside the
-  repository, and it is named in the output every time.
-- **`.claude/settings.json` is the one file merged rather than created**, because a `hooks` key
-  has to be added to a file you own. Only missing keys are added; a `hooks` block you wrote wins.
+- **`dspec init` owns what carries the `dspec` prefix, and nothing else.** Every run deletes every
+  `dspec`-prefixed command, skill and hook it installed and writes them again; nothing without the
+  prefix is written or removed. An install from dspec 0.0.1 (unprefixed `ds-*` files) is removed
+  only where the file is recognisably dspec's. It writes into `.claude/`, `.agents/` and, for Codex
+  only, `~/.codex/prompts/` — the single case where anything is written outside the repository, and
+  it is named in the output every time.
+- **In `.claude/settings.json`, only dspec's own hook entries are replaced**, matched by the exact
+  command dspec writes. Your own hooks and every other key are kept.
   If it is not valid JSON, **nothing at all is written to it** and you are told. One stray comma
   must never cost somebody their whole configuration.
 - **`dspec init` installs executable JavaScript that Claude Code runs as hooks** — on session
   start, after a file edit, and on stop. They only run the CLI and print what it says; every path
-  exits 0, and none of them can block a tool call. They land in your repo at `.claude/hooks/`,
+  exits 0, and none of them can block a tool call. They land in your repo at `.claude/hooks/dspec/`,
   where you can read them before committing them — they are short enough to.
 - **The slash commands are permitted as `Bash(dspec …)`.** Approving them approves running the
   `dspec` binary on your PATH; the commands name the exact subcommand they run.
@@ -52,6 +55,6 @@ Code plugin that preceded it is retired, and anything else claiming to be dspec 
 Fixes land on the latest released version only. Take them with `npm i -g dspec@latest`; the version
 you are running is shown by `dspec --version`.
 
-⚠️ **An upgrade does not rewrite the command files already in your repo**, because `dspec init`
-never overwrites. If a fix is in the prose an agent reads, delete the affected file under
-`.claude/`, `.agents/` or `~/.codex/prompts/` and run `dspec init` again.
+Take a fix with `dspec update`, then `dspec init` in each repository (or `/dspec-update` inside
+your agent): `init` rebuilds every command, skill and hook dspec installed, so a fix in the prose an
+agent reads reaches you without deleting anything by hand.

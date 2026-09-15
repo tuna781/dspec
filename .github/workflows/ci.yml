@@ -38,7 +38,12 @@ jobs:
       # ⚠️ What `npm pack` includes is what a user actually receives. `templates/` missing from the
       # tarball would install a `dspec` whose every command reports an incomplete install — and
       # nothing else in the suite would catch it, because the checkout always has the directory.
-      - run: npm pack --dry-run --json | grep -q '"path": "templates/commands/sync.md"'
+      #
+      # ⚠️ A BLOCK scalar, not a plain one. Written inline, the `": "` inside the grep pattern is a
+      # YAML mapping separator, so the whole file failed to parse — GitHub created no job at all and
+      # every push since reported a 0-second failure that looked like CI rather than YAML.
+      - run: |
+          npm pack --dry-run --json | grep -q '"path": "templates/commands/sync.md"'
       # The model is checked against the checkout on every push: a description older than its code
       # is the one failure this whole project exists to prevent.
       - run: node bin/ds.js sync --strict

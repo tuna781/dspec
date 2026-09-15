@@ -17,7 +17,7 @@
 // ============================================================
 
 import { claims, type Model } from '../model/types';
-import { trackedSources } from './sources';
+import { sourceInventory } from './sources';
 
 /** Unclaimed files listed per directory before the rest collapse into a count. */
 export const DIR_LISTING_CAP = 8;
@@ -43,7 +43,15 @@ export interface Coverage {
   /** Files a feature claims that are not source files at all — templates, manifests, config.
    *  Not a problem: they are verified to exist, they simply do not count towards coverage. */
   extra: number;
+  /**
+   * False when the source inventory could not be read at all — no git, or git failed. Every count
+   * above is then zero because nothing was looked at, and must be reported as NOT MEASURED.
+   */
+  measured: boolean;
 }
+
+/** Coverage that looked at nothing. */
+export const UNMEASURED_COVERAGE: Coverage = { dirs: [], unclaimed: 0, claimed: 0, total: 0, extra: 0, measured: false };
 
 const dirOf = (rel: string): string => {
   const i = rel.lastIndexOf('/');
@@ -51,7 +59,9 @@ const dirOf = (rel: string): string => {
 };
 
 export function computeCoverage(repo: string, model: Model): Coverage {
-  const sources = trackedSources(repo);
+  const inventory = sourceInventory(repo);
+  if (inventory === null) return { ...UNMEASURED_COVERAGE, dirs: [] };
+  const sources = inventory;
   const claimed = claims(model.features);
 
   const byDir = new Map<string, { unclaimed: string[]; total: number }>();
@@ -84,5 +94,6 @@ export function computeCoverage(repo: string, model: Model): Coverage {
     claimed: sources.length - unclaimedTotal,
     total: sources.length,
     extra,
+    measured: true,
   };
 }

@@ -4,11 +4,11 @@ argument-hint: "[what you want to build]"
 allowed-tools: Bash(dspec spec:*), Read, Grep, Glob
 ---
 
-Turn $1 into a detailed description of **what the user wants**, checked against what the model
+Turn $ARGUMENTS into a detailed description of **what the user wants**, checked against what the model
 already says — for them to read and correct **before any code exists**.
 
 > **This command writes nothing.** No model file, no code. A description written before the code
-> exists leaves the model describing something that is not there; `/ds-sync` writes `.ds/`,
+> exists leaves the model describing something that is not there; `/dspec-sync` writes `.ds/`,
 > after the fact. Its tool list has no `Write` or `Edit` in it, so this is enforced rather than asked for.
 
 1. **Find the feature.** Read `.ds/index.md`, name the feature this touches, and run
@@ -42,4 +42,4 @@ already says — for them to read and correct **before any code exists**.
    the user cannot calibrate against.
 
 8. Show it to the user and invite corrections. **Stop there.** When they are happy,
-   `/ds-plan` turns it into a plan and builds it.
+   `/dspec-plan` turns it into a plan and builds it.

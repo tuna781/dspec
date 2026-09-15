@@ -3,7 +3,7 @@ name: Git access
 area: Code measurement
 code: [src/git/rev.ts]
 entry: isGitRepo
-stamp: sha256f:d3c40689812eaf8d
+stamp: sha256g:d3c40689812eaf8d
 ---
 
 Everything dspec needs from git: whether this is a repository at all, and how to read a model as it

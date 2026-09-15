@@ -94,7 +94,7 @@ test('the usage states both invariants, and lists one flat set of verbs', () => 
   // when it happens to fit on one line.
   const r = runCli(repo(), '--help');
   const flat = r.stdout.replace(/\s+/g, ' ');
-  assert.match(flat, /is the only command that writes to `\.ds\/`/);
+  assert.match(flat, /only those two write to `\.ds\/`/);
   assert.match(flat, /Nothing exits non-zero unless you ask for it/);
   // ⚠️ The two-tier listing is what let `init`, `drift` and `doctor` survive as verbs that existed
   // only because something used to call them. One kind of command, one list.
@@ -108,7 +108,9 @@ test('every verb is a command a user can name', () => {
   // because the number people ask for is a flag and the health report nobody asked for was
   // burying it.
   const { VERBS } = require('../../dist/cli/index.js');
-  assert.deepStrictEqual([...VERBS].sort(), ['init', 'spec', 'sync']);
+  // `accept` earns its place as a verb: it is the one act — "I read both sides, the description is
+  // current" — that no flag on `sync` could honestly stand in for.
+  assert.deepStrictEqual([...VERBS].sort(), ['accept', 'init', 'spec', 'sync', 'update']);
 });
 
 test('`sync --write` creates the model when there is none, rather than refusing', () => {
@@ -135,4 +137,15 @@ test('a model file with a syntax error names the file and the line, without a st
   assert.strictEqual(r.status, 1);
   assert.match(r.stderr, /line 3/);
   assert.ok(!r.stderr.includes('at Object.'), 'a stack trace pushes the useful line off the screen');
+});
+
+test('the published package keeps its binaries', () => {
+  // npm 11 rejects a `bin` path written `./bin/ds.js` and silently DROPS the entry at publish
+  // time — the package installs with no `dspec` command at all. It was caught once in a dry run
+  // and came back through a rebase, so it is locked here.
+  const pkg = JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', 'package.json'), 'utf-8'));
+  for (const [name, file] of Object.entries(pkg.bin)) {
+    assert.ok(!file.startsWith('./'), `bin.${name} is "${file}" — npm drops a path starting with ./`);
+  }
+  assert.ok(pkg.bin.dspec, 'the `dspec` command is what every surface tells people to run');
 });

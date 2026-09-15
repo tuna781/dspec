@@ -1,23 +1,29 @@
 // ============================================================
-// `dspec init` — the one command a human has to type
+// `dspec init` — install dspec into your agents, and rebuild that install on every run
 //
-// Everything else in dspec is reachable from inside an agent session, because everything else is
-// an ordinary terminal command the agent can run. This one is the exception, and only because of
-// the ordering: it is what puts the slash commands there in the first place.
+// The terminal has two jobs and only two: put dspec's commands, skill and hooks into the agents
+// (`init`), and take a newer dspec from npm (`update`). Everything else happens inside an agent
+// session, through the `/dspec-*` commands this writes.
 //
-// ⚠️ **One rule, no exceptions: add what is absent, never touch what is there.** See
-// `install/apply.ts` for why there is no `--force` and what that costs.
+// ⚠️ **Every run deletes everything dspec installed, then writes it again.** Ownership is the
+// `dspec` prefix — see `install/agents.ts` — plus the unprefixed files an older dspec wrote that are
+// recognisably dspec's. So after `npm i -g dspec@latest` (or `dspec update`), one `dspec init`
+// leaves the repo holding exactly what the new version ships: nothing out of date, nothing a newer
+// version dropped. Nothing outside the prefix is touched, and in `.claude/settings.json` only
+// dspec's own hook entries are.
 //
-// ⚠️ **It does not create the model.** `dspec sync --write` does, the first time it runs. This
-// command installs the surface; a repo with no `.ds/` gets the commands and a closing line naming
-// `/ds-sync`. Keeping them apart matters for the same reason it always did: "set the tooling up"
-// and "invent a model" are different intentions, and one must not silently carry the other's power.
+// ⚠️ **It does not create the model.** `dspec sync --write` does, the first time it runs. Keeping
+// them apart matters: "set the tooling up" and "invent a model" are different intentions, and one
+// must not silently carry the other's power.
 // ============================================================
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { AGENTS, AGENT_KEYS, COMMAND_NAMES, claudeHooksBlock, isAgentKey, type Agent, type AgentKey } from '../../install/agents';
-import { addFiles, mergeJson, type Applied, type PlannedFile } from '../../install/apply';
+import {
+  AGENTS, AGENT_KEYS, CLAUDE_HOOK_SCRIPTS, claudeHookCommand, claudeHooksBlock, invoke, isAgentKey,
+  legacyClaudeHookCommand, type Agent, type AgentKey,
+} from '../../install/agents';
+import { rebuild, replaceHooks, type PlannedFile, type Rebuilt } from '../../install/apply';
 import { canPrompt, pick } from '../../install/prompt';
 import { hasModel, SPEC_DIR } from '../../model/load';
 import { packageRoot, packageVersion } from '../../pkgRoot';
@@ -26,15 +32,16 @@ import { plural } from '../../text';
 
 const USAGE = `dspec init [--agent claude,codex,cursor] [--all] [--yes]
 
-  Add the dspec commands to the AI coding agents you choose, in each one's own syntax. After
-  this, \`/ds-spec\`, \`/ds-plan\` and \`/ds-sync\` are typed inside the session.
+  Install dspec into the AI coding agents you choose: the ${invoke('sync')}, ${invoke('spec')},
+  ${invoke('plan')} and ${invoke('update')} commands, the dspec skill, and (Claude Code) the session hooks.
 
-  It ADDS ONLY. A file that already exists is left exactly as it is, whoever wrote it — so to
-  take a newer version of a command, delete that file and run this again.
+  Every run REBUILDS the install: everything dspec wrote before — every \`dspec\`-prefixed command,
+  skill and hook, and dspec's own entries in .claude/settings.json — is deleted and written again
+  from this version. Run it after \`dspec update\`. Nothing without the prefix is ever touched.
 
   --agent   claude, codex, cursor — comma separated
   --all     every supported agent
-  --yes     never prompt (needs --agent or --all)`;
+  --yes     never prompt: rebuild the agents already installed here (or those named)`;
 
 interface InitFlags {
   agent?: string | string[];
@@ -57,6 +64,7 @@ export async function cmdInit(argv: string[]): Promise<number> {
   }
 
   const repo = process.cwd();
+  const installed = AGENT_KEYS.filter((k) => isInstalled(AGENTS[k], repo));
 
   // ---- which agents ----------------------------------------------------
   const named = csv(values.agent);
@@ -72,19 +80,24 @@ export async function cmdInit(argv: string[]): Promise<number> {
   } else if (named.length) {
     chosen = named.filter(isAgentKey);
   } else if (values.yes || !canPrompt()) {
-    // ⚠️ **Never guess when we cannot ask.** Writing into someone's `.claude/` because a CI
-    // script ran a bare `dspec init` is exactly the kind of surprise this tool must not spring.
-    console.error(`✗ needs --agent or --all when there is nobody to ask\n\n${USAGE}`);
-    return 2;
+    // With nobody to ask, rebuild what is already here — that is what `/dspec-update` relies on.
+    // ⚠️ **Never guess a FIRST install.** Writing into someone's `.claude/` because a CI script ran
+    // a bare `dspec init` is exactly the kind of surprise this tool must not spring.
+    if (!installed.length) {
+      console.error(`✗ dspec is not installed for any agent here — name one with --agent or --all\n\n${USAGE}`);
+      return 2;
+    }
+    chosen = installed;
   } else {
     chosen = (await pick(
-      'Which agents should get the dspec commands?',
+      'Which agents should get dspec?',
       AGENT_KEYS.map((k) => {
         const a = AGENTS[k];
         return {
           key: k,
           label: a.label,
-          preselected: a.detect(repo),
+          // An upgrade is Enter: whatever is installed now is what gets rebuilt.
+          preselected: installed.length ? installed.includes(k) : a.detect(repo),
           note: describe(a),
         };
       }),
@@ -96,60 +109,66 @@ export async function cmdInit(argv: string[]): Promise<number> {
     return 0;
   }
 
-  // ---- write -----------------------------------------------------------
   const templates = path.join(packageRoot(), 'templates');
   if (!fs.existsSync(templates)) {
     console.error(`✗ this dspec has no \`templates/\` at ${templates} — the install is incomplete`);
     return 2;
   }
 
-  const applied: Applied[] = [];
-  const notes: string[] = [];
+  // ---- plan everything before deleting anything ------------------------
+  // A template that cannot be read must not leave the agent with its old install deleted and no
+  // new one written.
+  const plans = new Map<AgentKey, PlannedFile[]>();
   for (const key of chosen) {
-    const agent = AGENTS[key];
-    let planned: PlannedFile[];
     try {
-      planned = agent.plan({ repo, templates });
+      plans.set(key, AGENTS[key].plan({ repo, templates }));
     } catch (err) {
-      notes.push(`${agent.label}: could not read the templates — ${err instanceof Error ? err.message : String(err)}`);
-      continue;
+      console.error(`✗ ${AGENTS[key].label}: could not read the templates — ${err instanceof Error ? err.message : String(err)}`);
+      return 2;
     }
-    applied.push(...addFiles(repo, planned));
   }
 
-  // Claude's hooks have to be declared in a file the user owns, so this is the one place
-  // anything is merged rather than created. `mergeJson` adds only missing keys and writes
-  // nothing at all when it cannot parse what is there.
-  if (chosen.includes('claude')) {
-    const settings = path.join(repo, '.claude', 'settings.json');
-    const merged = mergeJson(settings, { hooks: claudeHooksBlock() });
-    if (!merged.ok) {
+  // ---- rebuild -----------------------------------------------------------
+  const results: Rebuilt[] = [];
+  const notes: string[] = [];
+  for (const key of AGENT_KEYS) {
+    const agent = AGENTS[key];
+    const planned = plans.get(key);
+    // ⚠️ An agent that lives outside the repo (Codex, in the home directory) is shared by every
+    // repo on the machine. Not choosing it HERE is not a request to uninstall it everywhere.
+    if (!planned && agent.outsideRepo) continue;
+    if (!planned && !installed.includes(key)) continue;
+    results.push(rebuild(repo, key, [...agent.owned(repo), ...agent.legacy(repo)], planned ?? []));
+  }
+
+  if (chosen.includes('claude') || installed.includes('claude')) {
+    const add = chosen.includes('claude') ? claudeHooksBlock() : {};
+    const ours = new Set([...CLAUDE_HOOK_SCRIPTS.flatMap((f) => [claudeHookCommand(f), legacyClaudeHookCommand(f)])]);
+    const outcome = replaceHooks(path.join(repo, '.claude', 'settings.json'), add as never, (c) => ours.has(c));
+    if (!outcome.ok) {
       notes.push(
-        `.claude/settings.json could not be parsed (${merged.detail}) — NOTHING was written to it.\n`
-        + '    The three session hooks are not wired. Fix the JSON and run `dspec init` again.',
+        `.claude/settings.json could not be parsed (${outcome.detail}) — NOTHING was written to it.\n`
+        + '    The session hooks are not wired. Fix the JSON and run `dspec init` again.',
       );
-    } else if (!merged.changed) {
-      notes.push('.claude/settings.json already declares `hooks` — left exactly as it is.');
     }
   }
 
-  // ⚠️ Asked BEFORE anything writes into `.ds/`. `writeConfigIfAbsent` creates that directory, so
-  // reading this afterwards would report every fresh repo as already having a model and swallow
-  // the one line telling the user what to do next.
+  // Asked BEFORE `.ds/config.json` is written, though `hasModel` no longer mistakes that file for a
+  // model — the order keeps the question honest either way.
   const modelExists = hasModel(repo);
+  writeConfig(repo);
 
-  // The absolute path of this CLI, for the hooks to fall back on when `dspec` is not on PATH —
-  // a switched nvm version, a login shell that never sourced the profile. Same rule as every
-  // other file: written only when absent. A stale entry is harmless because the hook checks the
-  // path exists before using it.
-  writeConfigIfAbsent(repo);
-
-  report(chosen.map((k) => AGENTS[k]), applied, notes);
+  report(chosen, results, notes);
 
   if (!modelExists) {
-    console.log(`\nThis repository has no \`${SPEC_DIR}/\` yet. Open your agent and type \`/ds-sync\`.`);
+    console.log(`\nThis repository has no \`${SPEC_DIR}/\` model yet. Open your agent and type \`${invoke('sync')}\`.`);
   }
   return 0;
+}
+
+/** Installed now, or by a dspec from before the prefix. Derived from the files, never stored. */
+function isInstalled(a: Agent, repo: string): boolean {
+  return fs.existsSync(a.marker(repo)) || fs.existsSync(a.legacyMarker(repo));
 }
 
 /** The one line each agent owes the user about what it cannot do. */
@@ -160,7 +179,8 @@ function describe(a: Agent): string {
 }
 
 /**
- * Record where this dspec lives, for the hooks to fall back on.
+ * Record where this dspec lives, for the hooks to fall back on — rewritten on every run, because
+ * the path and the version are exactly what an upgrade changes.
  *
  * Two fields, and they answer two different questions:
  *   `cli`  — what to SPAWN. A `bin/dspec` shim is perfectly good for that.
@@ -171,48 +191,45 @@ function describe(a: Agent): string {
  * a symlink npm made; its parent's parent is `<prefix>`, which holds no `dist/`. The package is at
  * `<prefix>/lib/node_modules/dspec`. `packageRoot()` already walks up from this compiled file, so
  * it is right in every layout — global, local, or a checkout somebody is hacking on.
- *
- * The failure this prevents is silent: the post-edit hook catches its own `require` error and
- * exits 0, so the hook simply stops speaking and nothing says why.
  */
-function writeConfigIfAbsent(repo: string): void {
+function writeConfig(repo: string): void {
   const file = path.join(repo, SPEC_DIR, 'config.json');
-  if (fs.existsSync(file)) return;
+  const body = JSON.stringify({ cli: process.argv[1], root: packageRoot(), dspec: packageVersion() }, null, 2) + '\n';
   try {
+    if (fs.existsSync(file) && fs.readFileSync(file, 'utf-8') === body) return;
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    const config = { cli: process.argv[1], root: packageRoot(), dspec: packageVersion() };
-    fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+    fs.writeFileSync(file, body, 'utf-8');
   } catch {
     /* not fatal: the hooks fall through to `dspec` on PATH, which is the usual case anyway */
   }
 }
 
-function report(agents: Agent[], applied: Applied[], notes: string[]): void {
-  console.log('');
-  for (const agent of agents) {
-    const mine = applied.filter((a) => a.agent === agent.key);
-    if (!mine.length) continue;
-    const added = mine.filter((a) => a.verdict === 'added').length;
-    const kept = mine.length - added;
-    const counts = [`${added} added`, kept ? `${kept} left alone` : null].filter(Boolean).join(', ');
-    console.log(`  ✓ ${agent.label.padEnd(12)} ${plural(COMMAND_NAMES.length, 'command')} · ${counts}`);
+function report(chosen: AgentKey[], results: Rebuilt[], notes: string[]): void {
+  console.log(`\ndspec ${packageVersion()}`);
+  for (const r of results) {
+    const agent = AGENTS[r.agent as AgentKey];
+    if (!chosen.includes(agent.key)) {
+      if (r.removed.length) console.log(`  − ${agent.label.padEnd(12)} not chosen — removed ${plural(r.removed.length, 'file')}`);
+      continue;
+    }
+    const counts = [
+      r.added.length ? `${r.added.length} added` : null,
+      r.updated.length ? `${r.updated.length} rebuilt` : null,
+      r.removed.length ? `${r.removed.length} removed` : null,
+    ].filter(Boolean).join(', ');
+    console.log(`  ✓ ${agent.label.padEnd(12)} ${counts}`);
     console.log(`    ${' '.repeat(12)} → ${home(agent)}`);
     console.log(`    ${' '.repeat(12)} ${describe(agent)}`);
+    // Named, because a removal is the one outcome somebody might not expect: a command an older
+    // dspec had and this one does not.
+    for (const p of r.removed.slice(0, 8)) console.log(`    ${' '.repeat(12)} − ${p}`);
+    if (r.removed.length > 8) console.log(`    ${' '.repeat(12)} … +${r.removed.length - 8} more`);
   }
 
   for (const n of notes) console.log(`\n  ! ${n}`);
 
-  const kept = applied.filter((a) => a.verdict === 'left alone').length;
-  if (kept) {
-    // ⚠️ Said out loud, every time. Somebody who upgrades dspec and sees nothing change must be
-    // told why here, not left to conclude the upgrade failed.
-    console.log(
-      `\n${plural(kept, 'file')} already existed and ${kept === 1 ? 'was' : 'were'} not touched.`
-      + ' To take a newer version of one, delete it and run `dspec init` again.',
-    );
-  }
-  console.log(`\nType \`/ds-sync\` in your agent to start. Every one of these commands just runs \`dspec\` —
-you can run it yourself, and so can the agent.`);
+  console.log(`\nType \`${invoke('sync')}\` in your agent to start — start a new session if one is already open, so it
+reads the rebuilt commands. Every one of these commands just runs \`dspec\`: you can run it yourself.`);
 }
 
 /**
@@ -220,16 +237,13 @@ you can run it yourself, and so can the agent.`);
  *
  * ⚠️ Derived from the agent's own marker rather than from the list of files written, which is
  * how this line used to print `/private/tmp` for Codex and five sibling directories for Cursor.
- * The marker is by definition inside the tree we want to name.
  */
 function home(a: Agent): string {
-  const marker = a.marker(process.cwd());
+  const cwd = process.cwd();
+  const marker = a.marker(cwd);
   const dir = a.key === 'cursor' ? path.dirname(path.dirname(marker)) : path.dirname(marker);
-  const home = process.env.HOME;
-  const shown = home && dir.startsWith(home) ? `~${dir.slice(home.length)}` : dir;
-  // Repo-relative for anything inside the repo: an absolute path here is noise the user already
-  // knows, and it pushes the interesting part off the right of the terminal.
-  return path.isAbsolute(shown) && shown.startsWith(process.cwd())
-    ? path.relative(process.cwd(), shown) || '.'
-    : shown;
+  // Repo-relative first: a repo under $HOME would otherwise be shown as `~/…` and never relative.
+  if (dir === cwd || dir.startsWith(cwd + path.sep)) return path.relative(cwd, dir) || '.';
+  const homeDir = process.env.HOME;
+  return homeDir && dir.startsWith(homeDir) ? `~${dir.slice(homeDir.length)}` : dir;
 }

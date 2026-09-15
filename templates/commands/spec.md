@@ -4,7 +4,7 @@ argument-hint: "[what you want to build]"
 allowed-tools: Bash(dspec spec:*), Read, Grep, Glob
 ---
 
-Turn $1 into a detailed description of **what the user wants**, checked against what the model
+Turn $ARGUMENTS into a detailed description of **what the user wants**, checked against what the model
 already says — for them to read and correct **before any code exists**.
 
 > **This command writes nothing.** No model file, no code. A description written before the code

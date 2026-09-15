@@ -1,22 +1,19 @@
 // ============================================================
-// Writing files into somebody else's repository
+// Writing dspec's own files into somebody else's repository
 //
-// ⚠️ **One rule, and it has no exceptions: add what is absent, never touch what is there.**
-// Not a file, not a key, not a line. A file that already exists is left byte-for-byte alone
-// whoever wrote it — dspec included.
+// ⚠️ **dspec owns exactly what carries its prefix, and rebuilds exactly that.** `dspec init` is how
+// a user installs dspec into their agents and how they take a newer version: it deletes every
+// `dspec`-prefixed command, skill and hook, and every hook entry pointing at them, then writes them
+// again from the dspec that is installed now. An upgrade therefore leaves nothing stale — no
+// out-of-date prose, no command that was removed upstream.
 //
-// This is deliberately weaker than the manifest-and-sha scheme that used to live here. That one
-// could tell "the user edited this" from "this is still ours" and overwrite the second kind
-// safely. It was correct, and it was still a machine deciding to replace a file in a repository
-// it does not own. The cost of dropping it is real and is stated where the user can see it: an
-// improved `ds-sync.md` never reaches somebody who already has one, unless they delete theirs
-// first. That cost is preferable to the failure in the other direction, which is silent and
-// unrecoverable.
+// The add-only rule this replaced protected files dspec wrote from dspec itself, and the cost was
+// that no improvement ever reached anybody who already had a copy. The protection that matters is
+// kept, and made checkable from the checkout: **nothing without the prefix is ever written or
+// removed**, and neither is any part of `settings.json` that is not one of dspec's own hook entries.
 //
-// The one thing that is not create-or-skip is a JSON settings file, because dspec has to ADD a
-// key to a file the user owns — see `mergeJson`. It still adds only what is missing, and on a
-// parse failure it writes NOTHING AT ALL: one stray comma must never cost somebody their whole
-// configuration.
+// On a `settings.json` that does not parse, NOTHING is written: one stray comma must never cost
+// somebody their whole configuration.
 // ============================================================
 
 import * as fs from 'node:fs';
@@ -31,36 +28,43 @@ export interface PlannedFile {
   executable?: boolean;
 }
 
-export type Verdict =
-  /** Was not there; written. */
-  | 'added'
-  /** Was there; untouched, whoever wrote it. */
-  | 'left alone';
-
-export interface Applied {
-  path: string;
+/** What one agent's rebuild did, as paths the user can recognise. */
+export interface Rebuilt {
   agent: string;
-  verdict: Verdict;
+  /** Written, and not there before. */
+  added: string[];
+  /** Written over a copy dspec had put there before. */
+  updated: string[];
+  /** Removed and not written again — stale files from an older dspec, or an agent no longer chosen. */
+  removed: string[];
 }
 
-function resolve(repo: string, p: string): string {
+export function resolvePath(repo: string, p: string): string {
   return path.isAbsolute(p) ? p : path.join(repo, ...p.split('/'));
 }
 
+/** Every file under `p` (or `p` itself), as absolute paths. */
+function filesUnder(p: string): string[] {
+  let st: fs.Stats;
+  try { st = fs.lstatSync(p); } catch { return []; }
+  if (!st.isDirectory()) return [p];
+  return fs.readdirSync(p).flatMap((n) => filesUnder(path.join(p, n)));
+}
+
 /**
- * Write every planned file that does not exist yet.
+ * Delete everything one agent's install occupies, then write `planned`.
  *
- * There is no `force` parameter and there must not be one. A flag that turns the rule off is a
- * flag somebody passes habitually, and then the rule protects nobody.
+ * `occupied` is what the agent owns now plus what an older dspec left without a prefix — see
+ * `Agent.owned` and `Agent.legacy`. Pass an empty `planned` to uninstall.
  */
-export function addFiles(repo: string, planned: PlannedFile[]): Applied[] {
-  const out: Applied[] = [];
+export function rebuild(repo: string, agent: string, occupied: string[], planned: PlannedFile[]): Rebuilt {
+  const before = new Set(occupied.flatMap(filesUnder));
+  // The parent directories are left in place: `.claude/commands/` is the user's as much as dspec's.
+  for (const p of occupied) fs.rmSync(p, { recursive: true, force: true });
+
+  const written = new Set<string>();
   for (const f of planned) {
-    const abs = resolve(repo, f.path);
-    if (fs.existsSync(abs)) {
-      out.push({ path: f.path, agent: f.agent, verdict: 'left alone' });
-      continue;
-    }
+    const abs = resolvePath(repo, f.path);
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, f.content, 'utf-8');
     if (f.executable) {
@@ -70,26 +74,42 @@ export function addFiles(repo: string, planned: PlannedFile[]): Applied[] {
         /* Windows, or a filesystem without the bit — hooks still run via `node <file>` */
       }
     }
-    out.push({ path: f.path, agent: f.agent, verdict: 'added' });
+    written.add(abs);
   }
-  return out;
+
+  const show = (abs: string) => (abs.startsWith(repo + path.sep) ? path.relative(repo, abs).split(path.sep).join('/') : abs);
+  return {
+    agent,
+    added: [...written].filter((p) => !before.has(p)).map(show),
+    updated: [...written].filter((p) => before.has(p)).map(show),
+    removed: [...before].filter((p) => !written.has(p)).map(show),
+  };
 }
 
-export type MergeOutcome =
+export type HooksOutcome =
   | { ok: true; changed: boolean }
   /** The file is there and cannot be parsed ⇒ nothing was written. */
   | { ok: false; detail: string };
 
+type HookEntry = { command?: unknown; [k: string]: unknown };
+type HookGroup = { hooks?: HookEntry[]; [k: string]: unknown };
+
 /**
- * Add top-level keys to a JSON file, keeping everything already in it.
+ * Replace dspec's own entries in a Claude `settings.json` `hooks` block, and nothing else.
  *
- * ⚠️ **A key that already exists is never replaced.** If the user has their own `hooks` block,
- * theirs wins and dspec says so — the same rule as `addFiles`, applied one level deeper.
+ * - Every entry whose `command` is one dspec writes (`isOurs`) is removed, from every event.
+ * - A matcher group or an event left empty BY THAT removal is dropped; one that was already empty
+ *   is the user's and stays.
+ * - `add` is then appended, so the user's own hooks keep their position and run first.
+ * - Every other key in the file is kept, and the file is written only when something changed.
  *
- * ⚠️ **On a parse failure, write nothing.** The file belongs to the user. Rewriting a settings
- * file we could not read would replace configuration we never saw.
+ * Pass `add = {}` to remove dspec's hooks entirely.
  */
-export function mergeJson(file: string, add: Record<string, unknown>): MergeOutcome {
+export function replaceHooks(
+  file: string,
+  add: Record<string, HookGroup[]>,
+  isOurs: (command: string) => boolean,
+): HooksOutcome {
   let raw: string | null = null;
   try {
     raw = fs.readFileSync(file, 'utf-8');
@@ -111,12 +131,39 @@ export function mergeJson(file: string, add: Record<string, unknown>): MergeOutc
     current = parsed as Record<string, unknown>;
   }
 
-  const missing = Object.keys(add).filter((k) => !Object.prototype.hasOwnProperty.call(current, k));
-  if (!missing.length) return { ok: true, changed: false };
+  const existing = current.hooks;
+  if (existing !== undefined && (existing === null || typeof existing !== 'object' || Array.isArray(existing))) {
+    return { ok: false, detail: '`hooks` is not an object' };
+  }
 
-  const next = { ...current };
-  for (const k of missing) next[k] = add[k];
+  const hooks: Record<string, HookGroup[]> = {};
+  for (const [event, groups] of Object.entries((existing ?? {}) as Record<string, unknown>)) {
+    if (!Array.isArray(groups)) { hooks[event] = groups as HookGroup[]; continue; }
+    const kept: HookGroup[] = [];
+    let removedHere = false;
+    for (const g of groups as HookGroup[]) {
+      if (!g || !Array.isArray(g.hooks)) { kept.push(g); continue; }
+      const entries = g.hooks.filter((h) => !(typeof h?.command === 'string' && isOurs(h.command)));
+      if (entries.length === g.hooks.length) { kept.push(g); continue; }
+      removedHere = true;
+      if (entries.length) kept.push({ ...g, hooks: entries });
+    }
+    if (kept.length || !removedHere) hooks[event] = kept;
+  }
+  for (const [event, groups] of Object.entries(add)) {
+    hooks[event] = [...(hooks[event] ?? []), ...groups];
+  }
+
+  const next: Record<string, unknown> = { ...current };
+  // A `hooks: {}` the user wrote is theirs; only a block emptied by removing dspec's entries goes.
+  const userEmpty = existing !== undefined && !Object.keys(existing as object).length;
+  if (Object.keys(hooks).length || userEmpty) next.hooks = hooks;
+  else delete next.hooks;
+
+  const out = JSON.stringify(next, null, 2) + '\n';
+  if (raw !== null && out === raw) return { ok: true, changed: false };
+  if (raw === null && !Object.keys(add).length) return { ok: true, changed: false };
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(next, null, 2) + '\n', 'utf-8');
+  fs.writeFileSync(file, out, 'utf-8');
   return { ok: true, changed: true };
 }

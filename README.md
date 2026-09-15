@@ -17,14 +17,14 @@
 
 <br>
 
-<img src="demo.gif" alt="A real Claude Code session: /ds-spec is asked to let a customer stack two coupons, finds the rule in the model that forbids it, and lists what the model does not settle — without writing any code" width="820">
+<img src="demo.gif" alt="A real Claude Code session: /ds-spec (as the command was called then) is asked to let a customer stack two coupons, finds the rule in the model that forbids it, and lists what the model does not settle — without writing any code" width="820">
 
 </div>
 
 ```
 npm i -g dspec        # once, per machine
 dspec init            # in the repo you want modelled — pick your agents
-/ds-sync              # then, inside the agent — creates the model, since there is none yet
+/dspec-sync              # then, inside the agent — creates the model, since there is none yet
 ```
 
 <div align="center"><sub><a href="#install">What <code>dspec init</code> writes, and what it will never touch →</a></sub></div>
@@ -58,7 +58,7 @@ code: [src/billing/discount.ts]
 entry: applyDiscount
 uses: [Place order]
 tests: [test/billing/discount.spec.ts]
-stamp: sha256f:2600b7f1a5269ae9    # written by `dspec sync` — never typed
+stamp: sha256g:2600b7f1a5269ae9    # written by `dspec sync` / `dspec accept` — never typed
 ---
 
 Applies a coupon code to an order that has not been paid for yet.
@@ -83,7 +83,7 @@ What you get for it:
   feature, or a description has gone stale, dspec says so *as a labelled guess or an explicit
   warning* instead of filling the gap with something that sounds right. A confident wrong answer is
   the failure that costs a day rather than a minute.
-- **Every feature gets described before it's built.** `/ds-spec` reads the model first and surfaces
+- **Every feature gets described before it's built.** `/dspec-spec` reads the model first and surfaces
   the rule your request would break while it is still a sentence — so specifying happens before the
   code exists, not as documentation written afterwards to match whatever shipped.
 
@@ -91,7 +91,8 @@ dspec is a toolkit; your agent is the brain. Every command either measures somet
 your checkout or writes something mechanical — none of them decides what a feature is or whether a
 description still holds. Those judgements stay yours.
 
-Everything is local: no server, no token, no network call, no telemetry, zero runtime dependencies.
+Everything is local: no server, no token, no telemetry, zero runtime dependencies — and no network
+call, except `dspec update` asking npm for a newer version when you run it.
 
 ---
 
@@ -99,9 +100,9 @@ Everything is local: no server, no token, no network call, no telemetry, zero ru
 
 - [Install](#install)
 - [Commands](#commands)
-  - [`/ds-sync` — create or repair the model](#ds-sync--create-or-repair-the-model)
-  - [`/ds-spec` — describe it before you build it](#ds-spec--describe-it-before-you-build-it)
-  - [`/ds-plan` — plan it, then build it](#ds-plan--plan-it-then-build-it)
+  - [`/dspec-sync` — create or repair the model](#dspec-sync--create-or-repair-the-model)
+  - [`/dspec-spec` — describe it before you build it](#dspec-spec--describe-it-before-you-build-it)
+  - [`/dspec-plan` — plan it, then build it](#dspec-plan--plan-it-then-build-it)
   - [Under the commands](#under-the-commands)
 - [dspec-lang](#dspec-lang)
   - [The shape of `.ds/`](#the-shape-of-ds)
@@ -131,7 +132,7 @@ It asks which agents to set up and writes each one's files in its own syntax. Ev
 is typed inside the session.
 
 ```
-Which agents should get the dspec commands?
+Which agents should get dspec?
 
   1. [x] Claude Code
         commands, skill and the three session hooks
@@ -147,23 +148,26 @@ Which agents should get the dspec commands?
 
 | Agent | Typed as | Files |
 |---|---|---|
-| **Claude Code** | `/ds-sync` | `.claude/commands/ds-*.md`, `.claude/skills/ds/`, `.claude/hooks/`, a `hooks` key in `.claude/settings.json` |
-| **Codex CLI** | `/ds-sync` | `~/.codex/prompts/ds-*.md` |
-| **Cursor** | `/ds-sync` | `.agents/skills/ds-*/SKILL.md` |
+| **Claude Code** | `/dspec-sync` | `.claude/commands/dspec-*.md`, `.claude/skills/dspec/`, `.claude/hooks/dspec/`, dspec's own entries in `.claude/settings.json` `hooks` |
+| **Codex CLI** | `/dspec-sync` | `~/.codex/prompts/dspec-*.md` |
+| **Cursor** | `/dspec-sync` | `.agents/skills/dspec-*/SKILL.md`, `.agents/skills/dspec/` |
+| every agent | | `.ds/config.json` — where this dspec is installed, for the hooks (gitignored) |
 
-**The same three commands, spelled the same way in all three.** Claude Code could have had `/ds-sync`
-and deliberately does not: moving between agents should not change what you type.
+**The same four commands, spelled the same way in all three.** Claude Code could have had
+`/dspec:sync` and deliberately does not: moving between agents should not change what you type.
+`dspec init` does **not** write `CLAUDE.md`, `AGENTS.md` or the model in `.ds/` — `/dspec-sync` does.
 
 The Claude Code and Cursor files live in the repo, so **commit them** and a teammate gets the loop
 on clone. Codex is the exception — its custom prompts load only from your home directory, so a
 teammate has to run `dspec init` themselves.
 
 > [!IMPORTANT]
-> **`dspec init` adds what is absent and never touches what is there.** Not a file, not a key, not
-> a line. There is no `--force`. That cuts both ways: a command file you already have will **never**
-> be replaced by a newer version of itself, so after `npm i -g dspec@latest` you delete the file you
-> want refreshed and run `dspec init` again. It says so every time rather than letting you wonder
-> why nothing changed.
+> **Everything with the `dspec` prefix belongs to dspec, and `dspec init` rebuilds it on every run.**
+> It deletes every `dspec`-prefixed command, skill and hook it installed — and dspec's own entries
+> in `.claude/settings.json` — then writes them again from the version you have. After an upgrade
+> nothing is left out of date, and nothing a newer version dropped is left behind. **Nothing without
+> the prefix is ever written or removed**: your own commands, skills, hooks and settings stay exactly
+> as they are. Don't edit `dspec-*` files by hand; the next `dspec init` replaces them.
 
 ### What only Claude Code gets
 
@@ -176,38 +180,50 @@ guarantee, and dspec says which one you are getting.
 ### Updating
 
 ```
-npm i -g dspec@latest
-dspec sync --write        # re-render the artifacts
-dspec init                # add any command that is new
+dspec update              # installs the latest dspec from npm, if it is newer
+dspec init                # in each repo: rebuild dspec's commands, skill and hooks from it
 ```
+
+Or, from inside an agent session, **`/dspec-update`** does both. Start a new session afterwards so the
+agent reads the rebuilt commands, then `/dspec-sync` brings the model up to date — stamps from an
+older dspec are re-measured there.
+
+`dspec update` is the only command that uses the network, and only to ask npm; it goes through your
+own `npm`, so your registry and proxy settings apply. It updates a global install only — a dspec in a
+project's `node_modules` is updated through that project's `package.json`.
+
+An install from dspec 0.0.1 (`/ds-sync`, `.claude/commands/ds-*.md`, hooks directly in
+`.claude/hooks/`) is removed by the first `dspec init` and replaced by the prefixed one. A file is
+only removed if it is recognisably dspec's — a `ds-deploy.md` of your own is kept.
 
 ---
 
 ## Commands
 
-Three, and there is only one kind. If you cannot name it, it is not a command — its job belongs to
-a flag on one you can.
+Four slash commands over five CLI verbs, and there is only one kind. If you cannot name it, it is not
+a command — its job belongs to a flag on one you can.
 
-**Every one of them is a terminal command.** A `/ds-*` slash command is prose telling your agent
+**Every one of them is a terminal command.** A `/dspec-*` slash command is prose telling your agent
 which `dspec` command to run and what to judge in the output — so you can run any of it yourself,
 and so can the agent, with or without the slash commands installed.
 
 | | |
 |---|---|
-| [`/ds-sync`](#ds-sync--create-or-repair-the-model) | **create** the model for a repo that has none, or **repair** one that exists |
-| [`/ds-spec {what you want}`](#ds-spec--describe-it-before-you-build-it) | describe it in detail, checked against the model, before any code |
-| [`/ds-plan {what you want}`](#ds-plan--plan-it-then-build-it) | the same, plus the implementation plan, then build it |
+| [`/dspec-sync`](#dspec-sync--create-or-repair-the-model) | **create** the model for a repo that has none, or **repair** one that exists |
+| [`/dspec-spec {what you want}`](#dspec-spec--describe-it-before-you-build-it) | describe it in detail, checked against the model, before any code |
+| [`/dspec-plan {what you want}`](#dspec-plan--plan-it-then-build-it) | the same, plus the implementation plan, then build it |
+| [`/dspec-update`](#updating) | take the newest dspec from npm and rebuild its commands, skill and hooks in this repo |
 
-### `/ds-sync` — create or repair the model
+### `/dspec-sync` — create or repair the model
 
-The one command that writes to `.ds/`. Which of the two it does is read from the checkout, not
+The command that writes to `.ds/` (with `dspec accept`, which records a reading). Which of the two it does is read from the checkout, not
 typed by you: nothing there yet, and it creates; something there, and it repairs.
 
 **Run it once, in a repo that has no `.ds/` yet**, and it sets the repo up and then **finishes the
 model**, which is the part that matters: it does not leave you a folder of placeholders.
 
 ```
-> /ds-sync
+> /dspec-sync
 
 ⏺ Bash(dspec sync --write)
   ⎿  ✓ .ds/ — 2 files
@@ -230,20 +246,21 @@ structure with **every body empty and every name provisional**, and your agent w
 > A body pre-filled with a transcription of the code reports as *complete* — a lie, and it buries
 > the very list that would have told you what still needs writing.
 
-**Run it again, any time after**, and it repairs instead: restores base files that went missing,
-re-stamps every feature, re-renders the index, and reports what only a person can settle — a
-description older than its code, a file that moved, a body nobody wrote, code no feature describes.
+**Run it again, any time after**, and it repairs instead. It reports what only a person can settle —
+a description older than its code, a file that moved, a body nobody wrote, code no feature describes
+— and walks through each: read both sides, fix whichever is wrong, then `dspec accept` it. Then it
+restores base files that went missing, measures new features and re-renders the index.
 Either way it **never invents a feature once one exists** — proposing is a first-run act only, and
 after that, undescribed code is only ever listed.
 
-### `/ds-spec` — describe it before you build it
+### `/dspec-spec` — describe it before you build it
 
 The command that earns its place. Describing a feature in chat gives you a description that may
 contradict a decision you made six weeks ago, and you find out after the code is written.
-`/ds-spec` reads the model first.
+`/dspec-spec` reads the model first.
 
 ```
-> /ds-spec let a customer stack two coupons
+> /dspec-spec let a customer stack two coupons
 
 ⏺ Bash(dspec spec "let a customer stack two coupons")
   ⎿  ## The model does not name this
@@ -272,19 +289,20 @@ Three things it will not do:
 - **It does not fill silence.** Where the model does not settle a point, it says *"the model does
   not settle this"* rather than sounding equally confident everywhere.
 
-It ends with a description for you to correct. When you are happy, `/ds-plan` turns it into a plan
+It ends with a description for you to correct. When you are happy, `/dspec-plan` turns it into a plan
 and builds it.
 
-### `/ds-plan` — plan it, then build it
+### `/dspec-plan` — plan it, then build it
 
-Everything `/ds-spec` does, then the implementation plan, then the build. It stays inside the Code
+Everything `/dspec-spec` does, then the implementation plan, then the build. It stays inside the Code
 Map: the feature's own files plus the files of everything it declares in `uses:`.
 
 ### Under the commands
 
-The CLI has three verbs — `init`, `sync`, `spec` — every one named after something you already
-know. **`sync` is the only one that writes to `.ds/`** — it creates when there is nothing there and
-repairs when there is — and **nothing exits non-zero unless you ask for it**:
+The CLI has five verbs — `update`, `init`, `sync`, `accept`, `spec` — every one named after
+something you already know. **Only `sync` and `accept` write to `.ds/`** — `sync` creates when there is nothing
+there and repairs when there is; `accept` records that a drifted feature was read — and **nothing
+exits non-zero unless you ask for it**:
 
 ```yaml
 - run: dspec sync --strict     # fails only on a measured fact
@@ -376,7 +394,8 @@ for the entire product in one read:
 
 `CLAUDE.md` at your repo root — and `AGENTS.md`, which Codex and Cursor read — is **not** a copy of
 the model. It is a pointer at `.ds/index.md` plus your product rules, so it does not grow as the
-model does. `AGENTS.md` carries one extra paragraph asking the agent to run `dspec sync --brief`
+model does. **If you already have one, it is never replaced**: dspec adds a block between
+`<!-- ds:begin -->` and `<!-- ds:end -->` and from then on rewrites only that block. `AGENTS.md` carries one extra paragraph asking the agent to run `dspec sync --brief`
 when a session opens, because it has no hook to do that for it.
 
 ## The rules of the language
@@ -384,8 +403,9 @@ when a session opens, because it has no hook to do that for it.
 1. **Declared, not inferred.** `code` and `uses` are written by a person and verified by the tool.
    A tool that guesses a file list will one day omit the file that mattered — and present the
    omission as scope.
-2. **The tool writes exactly one field.** `stamp`, and nothing else. `dspec sync` re-measures; only a
-   person may re-decide.
+2. **The tool writes exactly one field.** `stamp`, and nothing else. `dspec sync` measures what was
+   never measured; only `dspec accept` — run by somebody who read both sides — re-stamps a
+   description its code has overtaken.
 3. **Never invent evidence.** `tests` lists tests you have actually read. Guessing `discount.ts` →
    `discount.spec.ts` turns *"nobody proved this"* into *"this is proven"* — the dangerous
    direction, and it fails silently.
@@ -444,7 +464,7 @@ description is current._
 
 ### Reconciliation runs in both directions
 
-`dspec sync --write` reports:
+`dspec sync` reports:
 
 - **model → code** — a description naming files that moved, vanished or changed
 - **code → model** — source files nothing in the model describes
@@ -462,21 +482,27 @@ Code no feature describes — 3 files in 1 directory:
   Decide which of these are real features worth describing — most are not.
 ```
 
-**`--write` only re-measures.** It restores what is missing, writes stamps and re-renders artifacts.
-It never rewrites a description and never deletes a feature: a description the code has overtaken is
-where **the code is the unreviewed party**, and rewriting it would discard a decision somebody made.
+**`--write` measures; it never accepts.** It restores what is missing, stamps features that were
+never measured and re-renders artifacts — writing only files whose content changed, so a second run
+leaves `git diff` empty. It never re-stamps a feature whose code changed, never rewrites a
+description and never deletes a feature: a description the code has overtaken is where **the code is
+the unreviewed party**. Once somebody has read both, `dspec accept "<Feature>"` records it.
 
 ### The fingerprint
 
 `stamp` is a sha256 over `path:hash` lines for every file in `code`, sorted by path, each file
 normalised: line endings, comments, trailing whitespace, blank lines and indentation *width*
-removed; indentation *structure* and in-line spacing kept. **Running a formatter is not drift.**
+removed; indentation *structure* and in-line spacing kept. Comments are only what the file's own
+language calls one — `#` in Python, Ruby and shell; `//` and `/* */` in the brace languages; nothing
+at all in Markdown or any format dspec does not know — and binary files are hashed byte for byte.
+**Re-indenting and re-commenting are not drift**; a formatter that changes quotes or wraps lines is.
 
 Three states, and the middle one is the point:
 
 - **measured and matching** — as true as it was when written
 - **not measured** — no stamp, or one from an older dspec. *Nothing is known.* Never reported as fine.
-- **stale** — the code changed after the description was written. Reported, never auto-fixed.
+- **stale** — the code changed after the description was written. Reported, never auto-fixed:
+  cleared only by `dspec accept`, after reading.
 
 A feature with **no body is never stamped**: a stamp asserts a description is current, and one that
 says nothing cannot be.
@@ -507,18 +533,18 @@ people to route around it rather than write the description.
 
 | Symptom | Usual cause | Fix |
 |---|---|---|
-| `/ds-sync` does not appear in the agent | that agent was not chosen, or the session predates the install | `dspec init`, then restart the session — Codex in particular only reads `~/.codex/prompts` at start-up |
-| `dspec init` reports everything **left alone** and nothing changes | the files are already there, and it never overwrites | delete the file you want refreshed, then run it again |
-| a teammate has the repo but no `/ds-*` in **Codex** | Codex prompts live in the home directory, not the repo | they run `dspec init` on their own machine |
+| `/dspec-sync` does not appear in the agent | that agent was not chosen, or the session predates the install | `dspec init`, then restart the session — Codex in particular only reads `~/.codex/prompts` at start-up |
+| a `dspec-*` command you edited went back to how it was | `dspec init` rebuilds every `dspec`-prefixed file | keep your own commands under a name without the prefix |
+| a teammate has the repo but no `/dspec-*` in **Codex** | Codex prompts live in the home directory, not the repo | they run `dspec init` on their own machine |
 | Nothing happens at all — no hooks, no commands | Node is not on the PATH your agent starts processes with | install Node ≥ 20. A version manager (nvm, fnm, asdf) puts it on PATH via a shell startup file, so a spawned process can miss it even though your terminal finds it. `dspec init` records the absolute path in `.ds/config.json` as a fallback |
 | `dspec init` says `settings.json` is unreadable | your JSON has a syntax error | fix it and re-run — dspec wrote **nothing** to it, so the hooks are not wired yet |
-| the hooks are not wired, but everything else installed | you already had a `hooks` key, and yours wins | merge the block from `dspec init`'s output into it by hand |
+| the hooks do nothing after upgrading from 0.0.1 | the session predates the rebuild | start a new session — the hooks now live in `.claude/hooks/dspec/` |
 | `dspec spec` says the model does not name my request | retrieval resolves names, not words | pick from the ranked suggestions it printed, or `--touch "<Feature>"` |
 | `dspec sync` (no `--write`) says there is no model | nothing written yet, only a dry run | `dspec sync --write` creates it |
-| `dspec sync --strict` fails right after `--write` | two features share a name | it reports `duplicate_name` — rename one |
+| `dspec sync --strict` fails right after `--write` | a description is older than its code, or two features share a name | read the feature and `dspec accept "<Feature>"`, or rename one of the two |
 
 **Known limit:** a stamp covers a feature's whole file set, so editing a file two features share
-marks both stale. Re-stamping is one command, and the loop already ends in `sync`.
+marks both stale. Accepting both is one command — `dspec accept "A" "B"` — once both are read.
 
 ---
 
@@ -526,7 +552,7 @@ marks both stale. Re-stamping is one command, and the loop already ends in `sync
 
 Node **≥ 20**, no runtime dependencies, `npm install && npm run build && npm test`.
 
-Everything else — the three rules that are easy to get wrong, where things live, and how a change
+Everything else — the four rules that are easy to get wrong, where things live, and how a change
 reaches users — is in **[CONTRIBUTING.md](CONTRIBUTING.md)**. Bugs go through the
 [issue forms](https://github.com/tuna781/dspec/issues/new/choose); questions go to
 [Discussions](https://github.com/tuna781/dspec/discussions).

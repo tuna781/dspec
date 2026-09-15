@@ -119,8 +119,10 @@ function parseScalar(s: string, no: number, where?: string): YamlValue {
 
   // Numbers: plain decimal only. `2026-08-23` and `1.2.3` must stay strings, so bare `Number()`
   // is not used (it happily swallows `0x10`, `1e5` and whitespace).
-  if (/^-?\d+$/.test(t)) return parseInt(t, 10);
-  if (/^-?\d+\.\d+$/.test(t)) return parseFloat(t);
+  // ⚠️ Only a CANONICAL number: `007` and `1.10` are not the numbers 7 and 1.1 somebody meant to
+  // write, and the next stamp would write the rewritten value back into their file.
+  if (/^-?(0|[1-9]\d*)$/.test(t)) return parseInt(t, 10);
+  if (/^-?(0|[1-9]\d*)\.\d*[1-9]$/.test(t)) return parseFloat(t);
   return t;
 }
 
@@ -256,12 +258,20 @@ function quote(s: string): string {
   return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`;
 }
 
-function scalarOut(v: YamlValue): string {
+/**
+ * ⚠️ **Inside `[…]`, a `,` or a bracket anywhere splits or ends the item.** `needsQuote` only looks
+ * for them at the START of a value, which is right for a block item and wrong here:
+ * `uses: ["Cart, checkout"]` was written back as `[Cart, checkout]` and read as two names.
+ */
+function scalarOut(v: YamlValue, inFlow = false): string {
   if (v === null || v === undefined) return 'null';
   if (typeof v === 'boolean' || typeof v === 'number') return String(v);
   const s = String(v);
-  return needsQuote(s) ? quote(s) : s;
+  return needsQuote(s) || (inFlow && /[,[\]{}]/.test(s)) ? quote(s) : s;
 }
+
+/** One scalar, quoted exactly when the parser would otherwise misread it. For hand-built YAML. */
+export const yamlScalar = (v: string): string => scalarOut(v);
 
 const isScalar = (v: YamlValue): boolean => v === null || typeof v !== 'object';
 
@@ -278,7 +288,7 @@ function emit(v: YamlValue, indent: number, out: string[]): void {
     // A short, all-scalar sequence ⇒ one flow line. Purely cosmetic, but the cosmetics here
     // decide whether frontmatter scans at a glance or becomes a 20-line column.
     if (v.every(isScalar)) {
-      const flat = `[${v.map(scalarOut).join(', ')}]`;
+      const flat = `[${v.map((x) => scalarOut(x, true)).join(', ')}]`;
       if (flat.length + indent <= 72) { out[out.length - 1] += ` ${flat}`; return; }
     }
     for (const item of v) {

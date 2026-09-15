@@ -5,7 +5,7 @@ code: [src/install/agents.ts, src/install/render.ts, src/install/apply.ts]
 entry: plan
 uses: [Body vocabulary, Slash commands and skill]
 tests: [test/ship/install.test.js, test/contract/invariants.test.js]
-stamp: sha256f:f546c0c50fc8cea3
+stamp: sha256g:cc9ee48efd6987aa
 ---
 
 The one place anything is agent-specific. Claude Code, Codex and Cursor each read commands from a
@@ -17,10 +17,10 @@ a description of where files go and what their frontmatter is called. Three copi
 would be three chances for one agent to be taught something another was not.
 
 Rules
-- **One spelling in every agent: `/ds-<name>`.** Claude Code could give `/ds:sync` by nesting the
-  files in `.claude/commands/ds/`, and deliberately does not. Somebody who moves between two agents
+- **One spelling in every agent: `/dspec-<name>`.** Claude Code could give `/dspec:sync` by nesting
+  the files in `.claude/commands/dspec/`, and deliberately does not. Somebody who moves between two agents
   must not have to remember which one takes a colon.
-- **Never promise a fence the agent does not have.** `/ds-spec` must be unable to write, and in
+- **Never promise a fence the agent does not have.** `/dspec-spec` must be unable to write, and in
   Claude Code the tool list enforces that. Codex and Cursor honour no tool list, so the prose there
   says the restraint is the reader's own. The sentence *"it has no `Write` or `Edit` tool for that
   reason"* was true in one agent and false in two, which is the failure `__DS_FENCE__` exists to
@@ -30,9 +30,21 @@ Rules
   agent reads as a real variable and asks the user about.
 - **The frontmatter an agent ignores is dropped, not left in.** A key nobody reads still reads to
   a human as a mechanism that is running.
-- **Add what is absent, never touch what is there.** Every file goes through `addFiles`, which has
-  two outcomes and no third. A JSON settings file is the single exception, because a `hooks` key
-  has to be added to a file the user owns — and on a parse failure it writes nothing at all.
+- **The `dspec` prefix is ownership, and ownership means rebuild.** Each adapter lists what its
+  install occupies — every `dspec`-prefixed command, skill and hook directory — and `rebuild`
+  deletes all of it before writing the new version. The add-only rule this replaced meant no
+  improved command ever reached anybody who already had one, and a command removed upstream stayed
+  installed forever. The prefix is the product's own name so that nothing a user or another tool
+  would name is caught by it.
+- **An install from before the prefix is removed only when it is recognisably dspec's.** Its names
+  — `ds-sync.md`, `stop.js` — are ones a user could also have chosen, so each is checked first for a
+  sign only dspec's files carry: the word dspec, the `.ds/` directory, one of its old `/ds-*`
+  commands, or its hook helper. A look-alike is kept. The word alone was not enough — checked against
+  the published 0.0.1 package, its `ds-plan` prompt for Codex and Cursor never says "dspec", and it
+  survived the upgrade.
+- **In `settings.json`, only dspec's own hook entries are replaced.** They are matched by the exact
+  command dspec writes; the user's hooks keep their place and run first, every other key is kept,
+  and on a parse failure nothing is written at all.
 
 Behaviour
 - Codex is the one adapter that writes **outside the repository**: its custom prompts load only

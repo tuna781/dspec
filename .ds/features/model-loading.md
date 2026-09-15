@@ -5,7 +5,7 @@ code: [src/model/load.ts, src/model/types.ts]
 entry: loadModel
 uses: [Spec file format, Body vocabulary]
 tests: [test/model/load.test.js]
-stamp: sha256f:5525554a6407f4da
+stamp: sha256g:09ae8a8f13afd940
 ---
 
 Turns `.ds/` into the one structure every other feature reads. One element is one file and the path
@@ -31,3 +31,7 @@ Behaviour
 - A feature identifies its own file by object identity, never by name. Keying by name collapses two
   same-named features onto one file, and the stamp writer would then put one feature's fingerprint
   into the other's — a wrong value that reads exactly like a right one.
+- **A model exists when `.ds/` holds a model file** — `product.md`, `glossary.md`, `index.md` or
+  `features/` — not merely when the directory exists. `dspec init` writes `.ds/config.json`, which
+  is machine-local and not a model, and a bare directory check made every freshly initialised repo
+  look modelled, so its first `sync --write` repaired an empty model instead of proposing one.

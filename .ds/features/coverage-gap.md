@@ -5,7 +5,7 @@ code: [src/code/coverage.ts]
 entry: computeCoverage
 uses: [Source inventory, Model loading]
 tests: [test/reconcile/gap.test.js]
-stamp: sha256f:0ddad6bc5582dd12
+stamp: sha256g:978670f2d1361251
 ---
 
 The mirror of drift — **code nobody described**. Drift only ever finds problems in things somebody
@@ -24,6 +24,8 @@ Rules
   nobody can read teaches people to skim past the one line that mattered.
 
 Behaviour
+- When the source inventory cannot be read, coverage says it was **not measured** — and the work
+  list says so — rather than reporting zero undescribed files.
 - Counts are always exact; the per-directory listing is capped and the remainder collapsed into a
   number.
 - A file claimed by more than one feature is still covered once — shared infrastructure is a fact,

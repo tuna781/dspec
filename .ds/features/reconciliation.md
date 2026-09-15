@@ -1,7 +1,7 @@
 ---
 name: Reconciliation
 area: The loop
-code: [src/cli/commands/sync.ts]
+code: [src/cli/commands/sync.ts, src/cli/commands/accept.ts]
 entry: cmdSync
 uses:
   - Code fingerprint
@@ -11,12 +11,14 @@ uses:
   - Model creation
   - Agent adapters
 tests: [test/reconcile/sync.test.js]
-stamp: sha256f:11d9800cdc018ddf
+stamp: sha256g:9a2acbc986893f36
 ---
 
 Reconciles the model with the checkout in **both** directions and repairs what is safe to repair:
-creates the base files when there are none yet, restores any that have gone missing, re-stamps
-every feature, re-renders the artifacts, and reports everything only a person can settle. The loop
+creates the base files when there are none yet, restores any that have gone missing, measures
+features never measured, re-renders the artifacts, and reports everything only a person can settle
+— then `dspec accept` records, by name, that somebody read a drifted feature and its code and the
+two agree again. The loop
 it serves is code-first: describe, plan, build, and only then write the model — so the question at
 the end is never "what did I fail to implement" but "where do the model and the repo now disagree".
 
@@ -30,7 +32,11 @@ Rules
   deserve one is a judgement.
 - **Only `--write` ever writes**, model missing or not. A dry run reports what would happen, never
   what happened.
-- **Re-measure; do not rewrite prose.** Re-fingerprinting and re-rendering are mechanical and
+- **Measure; never accept.** `--write` stamps only features that have no current stamp. A feature
+  whose code changed after its stamp stays stale until `dspec accept` names it: re-stamping it
+  mechanically erased every "description older than its code" before the report that would have
+  shown it was built, so the finding this tool exists for never once reached anybody.
+- **Do not rewrite prose.** Fingerprinting and re-rendering are mechanical and
   reproducible: run them twice and the answer is the same, and nothing a human wrote is lost.
   Rewriting a body so it agrees with the code looks like tidying and is actually a decision — that
   the code is right and the description was wrong — taken silently on behalf of whoever wrote it.
@@ -47,6 +53,15 @@ Behaviour
   artifact from values that are about to change.
 - The report is built **after** the writes, so what is reported is the state the user is left in,
   not the one they arrived with.
-- A brief mode skips the slowest half for the session hook, and deliberately keeps drift — the most
-  valuable thing a session can open with. Skipping both to save time would hand back a hook that
-  opens every session by announcing nothing is wrong.
+- A brief mode skips reading the code for the session hook, and that includes drift: it reports
+  uncommitted model edits, features with no body and artifacts that have fallen behind. It cannot be
+  combined with `--strict`, because a gate over a report that never looked at the code would pass on
+  drift it never measured.
+- A second `--write` over an unchanged checkout writes nothing: an artifact is written only when its
+  content differs.
+- Flags are parsed strictly: a mistyped `--stirct` is an error, never a silent pass. Under `--json`
+  progress goes to stderr, so stdout is one parseable document.
+- Accepting takes exact names, as `dspec spec` resolves them, and refuses a name the model does not
+  have: accepting a guessed feature would assert freshness for a description nobody read. `--all`
+  accepts every stale feature, for the reviewed-refactor case, and is spelled out so nobody reaches
+  it by accident.

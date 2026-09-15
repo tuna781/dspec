@@ -44,8 +44,8 @@ same rules the tool holds itself to, and they are the reason it is worth using.
 `dspec sync` — read them there, not here.** Restating them in a third place is the drift this
 project exists to stop, so this file names the source instead of copying it. In short: zero runtime
 dependencies, everything local, measure rather than trust, report rather than block, derive rather
-than store, say what you do not know, English only, every agent one surface, and add what is absent
-but never touch what is there — with the reasoning in the file itself.
+than store, say what you do not know, English only, every agent one surface, and dspec owns
+only what carries its prefix — with the reasoning in the file itself.
 
 ## Reporting a bug
 
@@ -58,14 +58,15 @@ Security issues go through [SECURITY.md](SECURITY.md), not the issue tracker.
 
 ## Sending a pull request
 
-**Users install from the `v1` tag, not from `master`, so landing a commit is not yet shipping it.**
-`npm run release` moves `v1` onto the new release, and that is the moment it reaches everybody.
+**Users install from npm, not from `master`, so landing a commit is not yet shipping it.** A
+release reaches everybody at `npm publish`, after `npm run release <tag>` has been reviewed.
 
 - Open an issue first for anything larger than a fix.
 - Add a test.
 - Note user-visible changes in `CHANGELOG.md` under `## [Unreleased]`.
 - Do not bump the version and do not tag — **the git tag is the version**, cut at release time by
-  `npm run release <tag>` and published with `node scripts/publish-release.js <tag>`.
+  `npm run release <tag>`, published with `npm publish`, and given a GitHub Release with
+  `node scripts/publish-release.js <tag>`.
 
 **House style:** English only, everywhere. Comments explain the decision, not the syntax.
 

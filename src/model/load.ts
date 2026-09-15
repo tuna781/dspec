@@ -127,7 +127,14 @@ export function loadModel(repo: string): Loaded {
   return { model, sourceOf };
 }
 
-/** Does this repo hold a model at all? Asked before every command that reads one. */
+/**
+ * Does this repo hold a model at all? Asked before every command that reads one.
+ *
+ * ⚠️ **Not "does `.ds/` exist".** `dspec init` writes `.ds/config.json` — machine-local, gitignored,
+ * and not a model — so a bare directory check made every freshly initialised repo look modelled,
+ * and the first `sync --write` then repaired an empty model instead of proposing one.
+ */
 export function hasModel(repo: string): boolean {
-  return fs.existsSync(path.join(repo, SPEC_DIR));
+  const root = path.join(repo, SPEC_DIR);
+  return [PRODUCT_FILE, FEATURES_DIR, INDEX_FILE, GLOSSARY_FILE].some((f) => fs.existsSync(path.join(root, f)));
 }

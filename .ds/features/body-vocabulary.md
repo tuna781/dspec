@@ -4,7 +4,7 @@ area: Language
 code: [src/model/language.ts, src/model/sections.ts]
 entry: renderLanguageBlock
 tests: [test/model/language.test.js]
-stamp: sha256f:8b2da491df3c4f5f
+stamp: sha256g:f0c006a2afc63e35
 ---
 
 The single declaration of dspec-lang's own vocabulary — the frontmatter keys a feature file may

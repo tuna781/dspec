@@ -13,7 +13,7 @@ const path = require('node:path');
 const { ROOT } = require('../support/repo');
 
 const COMMANDS = fs.readdirSync(path.join(ROOT, 'templates/commands'));
-const SURFACES = ['templates/skills/ds/SKILL.md', ...COMMANDS.map((f) => `templates/commands/${f}`)];
+const SURFACES = ['templates/skills/dspec/SKILL.md', ...COMMANDS.map((f) => `templates/commands/${f}`)];
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf-8');
 
 test('placeholders are the only way a surface names another command', () => {
@@ -53,7 +53,7 @@ test('nothing keeps its own copy of the verb list', () => {
 });
 
 test('every slash command the skill names exists as a file', () => {
-  const skill = read('templates/skills/ds/SKILL.md');
+  const skill = read('templates/skills/dspec/SKILL.md');
   for (const ph of skill.match(/__DS_CMD_([A-Z]+)__/g) ?? []) {
     const name = ph.replace(/__DS_CMD_|__/g, '').toLowerCase();
     assert.ok(COMMANDS.includes(`${name}.md`), `the skill names /ds-${name}, which has no command file`);
@@ -95,7 +95,7 @@ test('every agent gets every command, and types it the same way', () => {
     const planned = AGENTS[key].plan({ repo: ROOT, templates });
     for (const name of COMMAND_NAMES) {
       assert.ok(
-        planned.some((f) => f.path.includes(`ds-${name}`)),
+        planned.some((f) => f.path.includes(`dspec-${name}`)),
         `${key} is not given \`${invoke(name)}\``,
       );
     }
@@ -165,15 +165,14 @@ test('a hook uses no binding it has not imported', () => {
   }
 });
 
-test('the stop hook only offers sync for what sync can actually fix', () => {
-  const { FIXED_BY_SYNC } = require('../../dist/code/staleness.js');
+test('the stop hook speaks about drift and nothing else', () => {
+  // A description older than its code is what `/ds-sync` walks a person through. Offering it for a
+  // lost file or an unmeasured feature would describe code changing that did not change.
   const body = read('templates/hooks/stop.js');
-  for (const kind of FIXED_BY_SYNC) {
-    assert.ok(body.includes(`'${kind}'`), `stop.js does not offer sync for \`${kind}\``);
-  }
+  assert.ok(body.includes(`'stale'`), 'stop.js does not look for drift');
   const { STALE_LABEL } = require('../../dist/code/staleness.js');
   for (const kind of Object.keys(STALE_LABEL)) {
-    if (FIXED_BY_SYNC.has(kind)) continue;
-    assert.ok(!body.includes(`'${kind}'`), `stop.js offers sync for \`${kind}\`, which sync cannot resolve`);
+    if (kind === 'stale') continue;
+    assert.ok(!body.includes(`'${kind}'`), `stop.js speaks about \`${kind}\`, which is not drift`);
   }
 });

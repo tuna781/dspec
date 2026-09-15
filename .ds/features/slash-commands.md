@@ -5,13 +5,14 @@ code:
   - templates/commands/spec.md
   - templates/commands/plan.md
   - templates/commands/sync.md
-  - templates/skills/ds/SKILL.md
+  - templates/commands/update.md
+  - templates/skills/dspec/SKILL.md
 uses: [Body vocabulary]
 tests: [test/contract/invariants.test.js]
-stamp: sha256f:7d949803f4d886d9
+stamp: sha256g:464468fc716ac2a2
 ---
 
-The prose that reaches the user's agent: three commands and one skill, written once and read by
+The prose that reaches the user's agent: four commands and one skill, written once and read by
 every adapter. **This is the product's real interface.** dspec is a toolkit and the agent is the
 brain, so everything else here only measures — these files are what turn a measurement into a
 decision somebody acts on.
@@ -43,3 +44,11 @@ Behaviour
   it does is read from the checkout, never typed by the user.
 - Describe → plan → build → reconcile. Only the last step writes to the model, and it is offered
   after the code exists rather than before.
+- Reconciling starts with a dry run, never with `--write`: drift is read, each side is judged, and
+  only then is a feature accepted by name. A command that opened with a write measured the drift
+  away before the agent saw it.
+- A command receives the whole request as `$ARGUMENTS`. `$1` is its first word only, so
+  `/dspec-spec add a coupon field` once reached the agent as "Turn add into…".
+- `update` is the one command about dspec itself rather than the model: it runs `dspec update`
+  and then `dspec init --yes`, stops rather than working around an npm permissions error, and
+  says the rebuilt commands take effect in a new session.

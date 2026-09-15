@@ -10,7 +10,7 @@ code:
   - src/text.ts
 entry: main
 tests: [test/contract/cli.test.js, test/contract/suite.test.js]
-stamp: sha256f:09cd74068001a02d
+stamp: sha256g:d73ab702d1e3ed31
 ---
 
 The `dspec` command itself: argument parsing, subcommand dispatch, locating the repository root,
@@ -30,13 +30,19 @@ Rules
   npm, the same binary answers a hook, a slash command and a person typing in a terminal. The
   Claude Code plugin that preceded this existed only to bundle the CLI beside its own hooks; a
   global install removes that reason, and with it the need for Claude Code to be a special case.
-- **`sync` is the only command that writes to the model** — it creates when there is nothing there
-  and repairs when there is. The help text states it, and the command surface is where that
-  invariant is visible.
+- **`sync` creates and repairs, and `accept` records a reading — only those two write to the
+  model.** The help text states it, and the command surface is where that invariant is visible.
+  `accept` earns its place as a verb because no flag on `sync` can honestly say "a person read both
+  sides"; a flag would make clearing drift one keystroke away from repairing.
+- **Every command parses its flags strictly.** A mistyped flag is an error, never ignored.
 - **Every command works from any subdirectory** — the repository root is the nearest ancestor
   holding the model directory.
 - **Nothing exits non-zero unless asked.** `sync --strict` is the CI gate and nothing else turns
-  it on: a command that failed by default would make every other use of it a hazard.
+  it on: a command that failed by default would make every other use of it a hazard. A command that
+  could not do the thing it was asked — `update` unable to reach npm, a usage error — is a
+  different case, and says so with its exit code.
+- **The terminal installs and updates; the session works.** `update` takes a newer dspec and `init`
+  puts it into the agents; everything about the model is reachable from inside a session.
 
 Behaviour
 - An unknown subcommand prints the usage rather than failing silently, since that text is what an

@@ -42,8 +42,15 @@ export const STALE_LABEL: Record<StaleKind, string> = {
   stale: 'description older than code',
 };
 
-/** Which kinds a re-stamp actually resolves. The rest need a person. */
-export const FIXED_BY_SYNC: ReadonlySet<StaleKind> = new Set<StaleKind>(['unmeasured', 'stale']);
+/**
+ * Which kinds `dspec sync --write` resolves on its own. The rest need a person.
+ *
+ * ⚠️ **`stale` is NOT one of them.** A description older than its code is the one finding this
+ * tool exists to surface, and re-stamping it mechanically erased it before anyone had read it —
+ * `/ds-sync` (as it was then) ran `--write` first, so the report never once showed drift. It is resolved by
+ * `dspec accept`, after both sides have been read.
+ */
+export const FIXED_BY_SYNC: ReadonlySet<StaleKind> = new Set<StaleKind>(['unmeasured']);
 
 export function computeStaleness(repo: string, model: Model): StaleItem[] {
   const items: StaleItem[] = [];
@@ -67,7 +74,7 @@ export function computeStaleness(repo: string, model: Model): StaleItem[] {
       }
     }
 
-    const { stamp, missing } = stampFiles(repo, f.code, cache);
+    const { stamp, missing, unreadable } = stampFiles(repo, f.code, cache);
 
     if (missing.length) {
       items.push({
@@ -76,6 +83,14 @@ export function computeStaleness(repo: string, model: Model): StaleItem[] {
       });
       // No stamp can be computed, and none should be: see `stampFiles`. Freshness is unknowable
       // until the file list is corrected, so saying anything about it here would be a guess.
+      continue;
+    }
+    if (unreadable?.length) {
+      // Say so rather than let a missing stamp read as "nothing to report".
+      items.push({
+        kind: 'unmeasured', feature: f.name, subject: unreadable[0],
+        detail: `cannot be fingerprinted — unreadable: ${unreadable.join(', ')}`,
+      });
       continue;
     }
 
@@ -123,7 +138,7 @@ export function computeStaleness(repo: string, model: Model): StaleItem[] {
     if (stamp && f.stamp !== stamp) {
       items.push({
         kind: 'stale', feature: f.name,
-        detail: `the code changed after this was written (${f.code.length === 1 ? f.code[0] : `${f.code.length} files`})`,
+        detail: `the code changed after this was written (${f.code.length === 1 ? f.code[0] : `${f.code.length} files`}) — read both, fix whichever is wrong, then \`dspec accept "${f.name}"\``,
       });
     }
   }
