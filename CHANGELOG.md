@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
+## [0.0.3] — 2026-09-17
+
+### Fixed
+- **`dspec update` could refuse a real global install as "not a global npm install".** It compared
+  its own path with the output of `npm root -g`, and npm hides any path segment that looks like a
+  UUID (`***`), so the two never matched under such a directory. A global install is now recognised
+  by the layout npm creates (`<prefix>/lib/node_modules/dspec` with `<prefix>/bin/dspec`), and the
+  update installs with `--prefix` into exactly that prefix, so it cannot land in a different one.
+- The first `dspec sync --write` in a repo with no model says it **created** `.ds/product.md` and
+  `.ds/glossary.md`, not that it restored them.
+
 ## [0.0.2] — 2026-09-15
 
 Fixes for the two ways 0.0.1 could quietly break its own promise: a first `sync --write` could

@@ -11,7 +11,7 @@ uses:
   - Model creation
   - Agent adapters
 tests: [test/reconcile/sync.test.js]
-stamp: sha256g:9a2acbc986893f36
+stamp: sha256g:195500c27edc8ea4
 ---
 
 Reconciles the model with the checkout in **both** directions and repairs what is safe to repair:
@@ -57,6 +57,8 @@ Behaviour
   uncommitted model edits, features with no body and artifacts that have fallen behind. It cannot be
   combined with `--strict`, because a gate over a report that never looked at the code would pass on
   drift it never measured.
+- A first run reports the base files as **created**, and a later one as **restored** — a brand-new
+  model was once announced as repaired.
 - A second `--write` over an unchanged checkout writes nothing: an artifact is written only when its
   content differs.
 - Flags are parsed strictly: a mistyped `--stirct` is an error, never a silent pass. Under `--json`
