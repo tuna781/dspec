@@ -4,8 +4,9 @@ name: dspec
 
 dspec keeps a product's model in the repository, so that an AI coding agent can learn what a
 feature is, where it lives in the code, and what it touches — without reading the codebase. The
-model is internal: the agent builds it, reads it and keeps it current, and the user only ever types
-three commands — `/ds-bootstrap`, `/ds` and `/ds-update`.
+model is internal: the agent builds it, reads it and keeps it current. Spec-driven development is
+one command, `/ds {anything}`; `/ds-bootstrap` and `/ds-update` only exist so that it always has a
+current model and a current dspec to work with.
 
 The problem it exists for: `CLAUDE.md` is what carries knowledge across an empty context window,
 and nothing checks that it is still true. dspec binds every description to real files and

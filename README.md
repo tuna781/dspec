@@ -2,30 +2,30 @@
 
 # 📐 dspec
 
-### Spec-driven development for AI coding agents — three commands, and a product model that keeps itself true
+### Spec-driven development in one command: `/ds {anything}`
 
-**Your agent reads what your product is instead of guessing it from the code — and keeps that knowledge up to date on its own.**
+**Say what you want. Your agent specs it against what your product already is, plans the build, and waits for your go — then builds it and keeps the product model true on its own.**
 
 [![CI](https://github.com/tuna781/dspec/actions/workflows/ci.yml/badge.svg)](https://github.com/tuna781/dspec/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/tuna781/dspec?label=release&color=blue)](https://github.com/tuna781/dspec/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-brightgreen.svg)](https://nodejs.org)
 [![Dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen.svg)](package.json)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-8A2BE2.svg)](#the-three-commands)
-[![Codex](https://img.shields.io/badge/Codex-000000.svg)](#the-three-commands)
-[![Cursor](https://img.shields.io/badge/Cursor-1a1a1a.svg)](#the-three-commands)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-8A2BE2.svg)](#ds--the-one-command)
+[![Codex](https://img.shields.io/badge/Codex-000000.svg)](#ds--the-one-command)
+[![Cursor](https://img.shields.io/badge/Cursor-1a1a1a.svg)](#ds--the-one-command)
 
 <br>
 
-<img src="demo.gif" alt="A real Claude Code session: asked to let a customer stack two coupons, dspec finds the product rule that forbids it and lists what is not settled — before any code is written" width="820">
+<img src="demo.gif" alt="A real Claude Code session: /ds let a customer stack two coupons — the agent finds the product rule the request breaks, lists what is not settled, plans the build and waits for a decision before writing any code" width="820">
 
 </div>
 
 ```
-npm i -g dspec                          # once, per machine
-dspec init                              # in your repo — pick your agents
-/ds-bootstrap                           # inside the agent — builds the product model, once
-/ds let customers stack two coupons     # every feature from here on
+npm i -g dspec && dspec init            # once: install, pick your agents
+/ds-bootstrap                           # once per repo, inside the agent
+
+/ds let customers stack two coupons     # ← this is dspec. Every feature, every change, from here on.
 ```
 
 ---
@@ -42,6 +42,8 @@ every change, and **keeps it up to date itself** after every change. You never e
 your agent about features.
 
 - **Discovery gets cheap.** The agent reads the one feature a request touches, not your source tree.
+- **One command is the whole loop.** `/ds {anything}` turns a sentence into a detailed spec, a
+  build plan, a decision for you, and — once you say go — working code and an up-to-date model.
 - **Broken rules surface while they are still a sentence.** `/ds` checks what you ask for against the
   product's rules and says *"this contradicts X — you decide"* before any code exists.
 - **Guesses are labelled, not smoothed over.** When nothing in the model decides a question, the
@@ -57,7 +59,8 @@ call, except `dspec update` asking npm for a newer version when you run it.
 ## Contents
 
 - [Install](#install)
-- [The three commands](#the-three-commands)
+- [`/ds` — the one command](#ds--the-one-command)
+- [Supporting commands](#supporting-commands)
 - [Terminal commands](#terminal-commands)
 - [Updating](#updating)
 - [How the model stays true](#how-the-model-stays-true)
@@ -78,7 +81,8 @@ Then, in any repository:
 dspec init
 ```
 
-It asks which agents to set up and installs the three commands into each, in its own syntax.
+It asks which agents to set up and installs `/ds` — and its two supporting commands — into each,
+in its own syntax.
 
 ```
 Which agents should get dspec?
@@ -112,71 +116,74 @@ product model is committed with your code too — you never need to open it.
 
 ---
 
-## The three commands
+## `/ds` — the one command
 
-Typed inside your agent — the same in Claude Code, Codex and Cursor.
-
-| | |
-|---|---|
-| **`/ds-bootstrap`** | builds the product model the first time; brings it fully up to date every time after |
-| **`/ds {what you want}`** | the core: a detailed spec, a build plan, and — once you approve — the build |
-| **`/ds-update`** | takes the newest dspec from npm and reinstalls its commands, from inside the session |
-
-### `/ds-bootstrap`
-
-Run once in a repository. The agent reads the code, names the product's features by what they do —
-not by folder — writes what each one is for and the rules the product keeps, and tells you what it
-found. Run it again any time: it finds everything the model no longer agrees with and fixes it.
+**Spec-driven development is one command.** Whatever you want — a feature, a change, a fix — you
+type it after `/ds`, in plain words:
 
 ```
-> /ds-bootstrap
-
-⏺ Product model ready: 14 features — Checkout, Apply discount, Place order, Refunds, …
-  Not settled from the code alone: whether partial refunds may exceed the discount.
+/ds let a customer stack two coupons
+/ds refunds should go back to the original card
+/ds why can a cart be checked out twice?
 ```
 
-### `/ds {what you want}`
+Every time, the same loop:
 
-The whole spec-driven loop in one command:
-
-1. **Understands the request** against the features it touches, their rules, and what they depend on.
-2. **Describes what you want in detail** — behaviour, edge cases, errors — in your product's own
-   words, quoting every rule the request would break and naming everything the model does not
-   settle.
-3. **Plans the build** — where, the steps, what breaks if it is wrong, which tests.
-4. **Stops and waits for your decision.** Nothing is written until you approve.
-5. On approval: **builds it, runs the tests, updates the product model**, and tells you which
+1. **Understand** the request against the features it touches, their rules, and what they depend on.
+2. **Spec it in detail** — behaviour, edge cases, errors — in your product's own words, quoting every
+   rule the request would break and naming everything the product does not settle yet.
+3. **Plan the build** — where, the steps, what breaks if it is wrong, which tests.
+4. **Stop and wait for your decision.** Nothing is written — no code, no model — until you approve.
+   Ask questions, change the spec, change the plan.
+5. **On your go:** build it, run the tests, bring the product model up to date, and tell you which
    features changed.
+
+From the session in the demo above:
 
 ```
 > /ds let a customer stack two coupons
 
-⏺ Conflict: "Only one coupon may be applied to an order." (Apply discount) — one of the two has to
-  change; that is your call.
-  Not settled: whether stacked coupons apply before or after shipping.
-  Plan: …
-  Waiting for your decision.
+⚠ Conflict: this breaks a current rule
+
+Apply discount has this rule: "Only one coupon may be applied to an order."
+Your request directly contradicts it, so one of them has to give. That's your call. Either:
+- (a) change the rule to "At most two coupons may be applied to an order", or
+- (b) keep the one-coupon rule and drop the request.
+
+Not settled: you decide
+1. How the two discounts combine. …
+2. The same code twice. …
+5. A gap you already have. The product rule says "Every write is idempotent by request id." …
+
+How I'd build it — Where · Steps · What breaks if this is wrong · Tests
+
+Before I build, tell me: (a) or (b), and your answers to 1–5.
 ```
 
-`/ds` with nothing after it summarises the product's features and anything outstanding. In a repo
-with no model yet, it asks you to run `/ds-bootstrap` first.
+`/ds` with nothing after it summarises the product's features and anything outstanding.
 
-### `/ds-update`
+---
 
-Runs `dspec update`, then `dspec init`, and reports what changed. Start a new session afterwards so
-the agent reads the new commands.
+## Supporting commands
+
+Two more commands exist so that `/ds` always has a product model to work from — you run them rarely.
+
+| | |
+|---|---|
+| **`/ds-bootstrap`** | **Once per repository.** The agent reads the code, names the product's features by what they do, and writes what each is for and the rules the product keeps. Run it again any time to bring the whole model up to date — `/ds` asks you to, in a repo that has none. |
+| **`/ds-update`** | **When a new dspec is out.** Runs `dspec update` and `dspec init` from inside the session; start a new session afterwards. |
 
 ---
 
 ## Terminal commands
 
-Everything the three commands do is an ordinary terminal command the agent runs — so you can run
-them yourself, and a CI job can too.
+Everything `/ds` and its supporting commands do is an ordinary terminal command the agent runs — so
+you can run them yourself, and a CI job can too.
 
 | Command | |
 |---|---|
 | `dspec update [--check]` | install the latest dspec from npm, if it is newer |
-| `dspec init [--agent a,b] [--all] [--yes]` | install the three commands into your agents, rebuilding everything dspec installed before |
+| `dspec init [--agent a,b] [--all] [--yes]` | install `/ds` and its supporting commands into your agents, rebuilding everything dspec installed before |
 | `dspec sync [--write] [--strict] [--json]` | measure the model against the code; `--write` records what is mechanical |
 | `dspec accept "<Feature>"…` | record that a feature's description is current for its code |
 | `dspec spec "<Feature>" [--touch F]` | what the model knows about a piece of work |

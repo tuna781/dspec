@@ -11,8 +11,9 @@ stamp: sha256g:17b15f81b336f412
 ---
 
 The prose that reaches the user's agent: exactly three commands, written once and read by every
-adapter. **This is the product's real interface** — the only surface the user types — and the
-product model behind it is never explained to the user at all.
+adapter. **`/ds {anything}` is the product** — spec-driven development in one command — and the
+other two only support it: `/ds-bootstrap` gives it a model to work from, `/ds-update` a current
+dspec. The product model behind them is never explained to the user at all.
 
 **A slash command is not a separate kind of thing.** Every one of them is prose telling the agent
 which `dspec` command to run and what to judge in its output; porting to a new agent is frontmatter
