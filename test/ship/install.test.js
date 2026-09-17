@@ -2,10 +2,10 @@
 // ============================================================
 // What a user's repository actually receives — and, far more importantly, what it does not.
 //
-// ⚠️ **`dspec init` owns exactly what carries the `dspec` prefix, and rebuilds exactly that.** Every
-// run deletes what dspec installed and writes it again, so an upgrade leaves nothing stale. Most of
-// this file defends the other half of that sentence: nothing WITHOUT the prefix is ever written or
-// removed — not a user's own command, not their hooks, not their memory file.
+// ⚠️ **`dspec init` owns exactly what carries the `dspec:managed` mark, and rebuilds exactly that.**
+// Every run deletes what dspec installed and writes it again, so an upgrade leaves nothing stale.
+// Most of this file defends the other half of that sentence: nothing dspec did not write is ever
+// written or removed — not a user's own `ds-deploy.md`, not their hooks, not their memory file.
 //
 // ⚠️ **`sync` owns `.ds/` and nothing else.** Installing the agent surface is `init`'s job.
 // Keeping them apart is what stops "set the tooling up" from carrying the power to invent a model.
@@ -33,23 +33,25 @@ function init(dir, ...args) {
   });
 }
 
-const CODEX_PROMPT = '.codex-home/prompts/dspec-sync.md';
+const CODEX_PROMPT = '.codex-home/prompts/ds.md';
 
 // ─── each agent gets its own shape ──────────────────────────────────────────
 
-test('every agent receives all four commands, in its own syntax', () => {
+test('every agent receives exactly the three commands, and no skill', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   assert.strictEqual(init(dir, '--all', '--yes').status, 0);
 
-  for (const name of ['spec', 'plan', 'sync', 'update']) {
-    assert.ok(existsIn(dir, `.claude/commands/dspec-${name}.md`), `claude is missing /dspec-${name}`);
-    assert.ok(existsIn(dir, `.agents/skills/dspec-${name}/SKILL.md`), `cursor is missing /dspec-${name}`);
-    assert.ok(existsIn(dir, `.codex-home/prompts/dspec-${name}.md`), `codex is missing /dspec-${name}`);
+  for (const name of ['ds', 'ds-bootstrap', 'ds-update']) {
+    assert.ok(existsIn(dir, `.claude/commands/${name}.md`), `claude is missing /${name}`);
+    assert.ok(existsIn(dir, `.agents/skills/${name}/SKILL.md`), `cursor is missing /${name}`);
+    assert.ok(existsIn(dir, `.codex-home/prompts/${name}.md`), `codex is missing /${name}`);
   }
-  assert.ok(existsIn(dir, '.claude/skills/dspec/SKILL.md'));
-  assert.ok(existsIn(dir, '.agents/skills/dspec/SKILL.md'));
+  assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude/commands')).sort(), ['ds-bootstrap.md', 'ds-update.md', 'ds.md']);
+  assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.agents/skills')).sort(), ['ds', 'ds-bootstrap', 'ds-update']);
+  assert.ok(!existsIn(dir, '.claude/skills'), 'a skill is a fourth slash command');
   for (const h of ['_ds.js', 'session-start.js', 'post-edit.js', 'stop.js']) {
     assert.ok(existsIn(dir, `.claude/hooks/dspec/${h}`), `claude is missing the ${h} hook`);
+    assert.match(readIn(dir, `.claude/hooks/dspec/${h}`), /dspec:managed/);
   }
 });
 
@@ -59,13 +61,14 @@ test('the frontmatter is translated, not copied', () => {
 
   // Claude honours a tool list; the other two have no such thing, and a key they ignore would
   // read as a fence that is not there.
-  assert.match(readIn(dir, '.claude/commands/dspec-spec.md'), /allowed-tools:/);
+  assert.match(readIn(dir, '.claude/commands/ds.md'), /allowed-tools:/);
   assert.ok(!/allowed-tools:/.test(readIn(dir, CODEX_PROMPT)), 'codex honours no tool list');
-  assert.ok(!/allowed-tools:/.test(readIn(dir, '.agents/skills/dspec-spec/SKILL.md')), 'cursor honours no tool list');
+  assert.ok(!/allowed-tools:/.test(readIn(dir, '.agents/skills/ds/SKILL.md')), 'cursor honours no tool list');
 
   // Cursor identifies a skill by `name`, and it has to match the directory or the slash command
   // is not the one we told the user to type.
-  assert.match(readIn(dir, '.agents/skills/dspec-spec/SKILL.md'), /^---\nname: dspec-spec\n/);
+  assert.match(readIn(dir, '.agents/skills/ds/SKILL.md'), /^---\nname: ds\n/);
+  assert.match(readIn(dir, '.agents/skills/ds-bootstrap/SKILL.md'), /^---\nname: ds-bootstrap\n/);
 });
 
 test('an argument reaches every agent in a form it understands', () => {
@@ -73,24 +76,19 @@ test('an argument reaches every agent in a form it understands', () => {
   init(dir, '--all', '--yes');
 
   // Claude and Codex both expand `$ARGUMENTS` — the WHOLE request. `$1` is its first word only, so
-  // `/dspec-spec add a coupon field` used to reach the agent as "Turn add into…". A Cursor skill has
-  // no variable at all, so leaving a token there would have the agent asking about nothing.
-  assert.match(readIn(dir, '.claude/commands/dspec-spec.md'), /\$ARGUMENTS/);
-  assert.match(readIn(dir, '.codex-home/prompts/dspec-spec.md'), /\$ARGUMENTS/);
-  assert.ok(!/\$1\b/.test(readIn(dir, '.claude/commands/dspec-spec.md')), 'the first word is not the request');
-  assert.ok(!/\$ARGUMENTS|\$1\b/.test(readIn(dir, '.agents/skills/dspec-spec/SKILL.md')), 'cursor has no variable to expand');
+  // `/ds add a coupon field` would reach the agent as "add". A Cursor skill has no variable at all,
+  // so leaving a token there would have the agent asking about nothing.
+  assert.match(readIn(dir, '.claude/commands/ds.md'), /\$ARGUMENTS/);
+  assert.match(readIn(dir, CODEX_PROMPT), /\$ARGUMENTS/);
+  assert.ok(!/\$1\b/.test(readIn(dir, '.claude/commands/ds.md')), 'the first word is not the request');
+  assert.ok(!/\$ARGUMENTS|\$1\b/.test(readIn(dir, '.agents/skills/ds/SKILL.md')), 'cursor has no variable to expand');
 });
 
-test('no agent is promised a fence it does not have', () => {
-  // `/dspec-spec` must not write. In Claude that is enforced by the tool list; in the other two
-  // nothing enforces it, and the prose has to say so rather than describing a mechanism that is
-  // not running.
+test('the commands name each other the way they are typed', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--all', '--yes');
-
-  assert.match(readIn(dir, '.claude/commands/dspec-spec.md'), /enforced/);
-  for (const rel of ['.codex-home/prompts/dspec-spec.md', '.agents/skills/dspec-spec/SKILL.md']) {
-    assert.match(readIn(dir, rel), /no tool list to enforce it/, `${rel} must admit there is no fence`);
+  for (const rel of ['.claude/commands/ds.md', CODEX_PROMPT, '.agents/skills/ds/SKILL.md']) {
+    assert.match(readIn(dir, rel), /`\/ds-bootstrap`/, `${rel} must point at /ds-bootstrap`);
   }
 });
 
@@ -99,18 +97,19 @@ test('no agent is promised a fence it does not have', () => {
 test('a re-run rebuilds everything dspec installed — edits and stale files do not survive', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--all', '--yes');
-  const fresh = readIn(dir, '.claude/commands/dspec-sync.md');
+  const fresh = readIn(dir, '.claude/commands/ds.md');
 
-  writeIn(dir, '.claude/commands/dspec-sync.md', 'EDITED\n');
-  writeIn(dir, '.claude/commands/dspec-gone.md', 'a command an older dspec had\n');
+  const mark = '\n<!-- dspec:managed -->\n';
+  writeIn(dir, '.claude/commands/ds.md', `EDITED${mark}`);
+  writeIn(dir, '.claude/commands/ds-gone.md', `a command an older dspec had${mark}`);
   writeIn(dir, '.claude/hooks/dspec/old-hook.js', '// dropped upstream\n');
-  writeIn(dir, '.agents/skills/dspec-gone/SKILL.md', 'stale\n');
-  writeIn(dir, '.codex-home/prompts/dspec-gone.md', 'stale\n');
+  writeIn(dir, '.agents/skills/ds-gone/SKILL.md', `stale${mark}`);
+  writeIn(dir, '.codex-home/prompts/ds-gone.md', `stale${mark}`);
 
   const r = init(dir, '--all', '--yes');
   assert.strictEqual(r.status, 0, r.stderr);
-  assert.strictEqual(readIn(dir, '.claude/commands/dspec-sync.md'), fresh, 'rebuilt from the template');
-  for (const rel of ['.claude/commands/dspec-gone.md', '.claude/hooks/dspec/old-hook.js', '.agents/skills/dspec-gone', '.codex-home/prompts/dspec-gone.md']) {
+  assert.strictEqual(readIn(dir, '.claude/commands/ds.md'), fresh, 'rebuilt from the template');
+  for (const rel of ['.claude/commands/ds-gone.md', '.claude/hooks/dspec/old-hook.js', '.agents/skills/ds-gone', '.codex-home/prompts/ds-gone.md']) {
     assert.ok(!existsIn(dir, rel), `${rel} is dspec's and no longer shipped — it must be gone`);
   }
   assert.match(r.stdout, /removed/);
@@ -125,10 +124,12 @@ test('a second run with the same version leaves every file byte-identical', () =
   assert.deepStrictEqual(snapshot(dir), before, 'rebuilding what is already current changes nothing');
 });
 
-test('nothing without the prefix is ever touched', () => {
+test('nothing dspec did not write is ever touched — a ds-* name included', () => {
   const dir = makeRepo({ files: {
     'src/a.ts': 'export const a = 1;\n',
     '.claude/commands/mine.md': 'my own command\n',
+    '.claude/commands/ds-deploy.md': 'my own deploy command, no mark\n',
+    '.agents/skills/ds-lint/SKILL.md': 'my own lint skill\n',
     '.claude/skills/mine/SKILL.md': 'my own skill\n',
     '.claude/hooks/mine.js': '// my own hook\n',
     '.agents/skills/mine/SKILL.md': 'mine\n',
@@ -140,6 +141,8 @@ test('nothing without the prefix is ever touched', () => {
   init(dir, '--all', '--yes');
 
   assert.strictEqual(readIn(dir, '.claude/commands/mine.md'), 'my own command\n');
+  assert.strictEqual(readIn(dir, '.claude/commands/ds-deploy.md'), 'my own deploy command, no mark\n');
+  assert.strictEqual(readIn(dir, '.agents/skills/ds-lint/SKILL.md'), 'my own lint skill\n');
   assert.strictEqual(readIn(dir, '.claude/skills/mine/SKILL.md'), 'my own skill\n');
   assert.strictEqual(readIn(dir, '.claude/hooks/mine.js'), '// my own hook\n');
   assert.strictEqual(readIn(dir, '.agents/skills/mine/SKILL.md'), 'mine\n');
@@ -148,7 +151,31 @@ test('nothing without the prefix is ever touched', () => {
   assert.strictEqual(readIn(dir, 'CLAUDE.md'), 'my own claude notes\n');
 });
 
-test('an install from before the prefix is replaced — and a look-alike the user wrote is kept', () => {
+test('a 0.0.3 install (dspec-* commands and a dspec skill) is replaced in one run', () => {
+  const dir = makeRepo({ files: {
+    'src/a.ts': 'export const a = 1;\n',
+    '.claude/commands/dspec-sync.md': 'old\n',
+    '.claude/commands/dspec-spec.md': 'old\n',
+    '.claude/skills/dspec/SKILL.md': 'old skill\n',
+    '.agents/skills/dspec-sync/SKILL.md': 'old\n',
+    '.agents/skills/dspec-plan/SKILL.md': 'old\n',
+    '.agents/skills/dspec/SKILL.md': 'old skill\n',
+    '.codex-home/prompts/dspec-sync.md': 'old\n',
+    '.codex-home/prompts/dspec-update.md': 'old\n',
+    '.claude/hooks/dspec/stop.js': '// old hook\n',
+  } });
+  const r = init(dir, '--yes');
+  assert.strictEqual(r.status, 0, r.stderr);
+  for (const rel of ['.claude/commands/dspec-sync.md', '.claude/commands/dspec-spec.md', '.claude/skills/dspec', '.agents/skills/dspec-plan', '.agents/skills/dspec', '.codex-home/prompts/dspec-update.md']) {
+    assert.ok(!existsIn(dir, rel), `${rel} is a 0.0.3 install and must be gone`);
+  }
+  for (const rel of ['.claude/commands/ds.md', '.agents/skills/ds/SKILL.md', '.codex-home/prompts/ds.md']) {
+    assert.ok(existsIn(dir, rel), `${rel} must be installed in its place`);
+  }
+  assert.ok(!/old hook/.test(readIn(dir, '.claude/hooks/dspec/stop.js')), 'the hooks were rebuilt');
+});
+
+test('an install from 0.0.1 is replaced — and a look-alike the user wrote is kept', () => {
   const dspecHook = "const { readInput } = require('./_ds');\n";
   const dir = makeRepo({ files: {
     'src/a.ts': 'export const a = 1;\n',
@@ -169,7 +196,10 @@ test('an install from before the prefix is replaced — and a look-alike the use
   const r = init(dir, '--all', '--yes');
   assert.strictEqual(r.status, 0, r.stderr);
 
-  for (const rel of ['.claude/commands/ds-sync.md', '.claude/commands/ds-bootstrap.md', '.claude/skills/ds', '.claude/hooks/_ds.js', '.claude/hooks/stop.js', '.agents/skills/ds-spec', '.codex-home/prompts/ds-plan.md']) {
+  // `ds-bootstrap.md` is a 0.0.1 name AND a current one: the old copy goes, a marked one takes its place.
+  assert.match(readIn(dir, '.claude/commands/ds-bootstrap.md'), /dspec:managed/);
+  assert.ok(!/Create the dspec model\n---\nRun/.test(readIn(dir, '.claude/commands/ds-bootstrap.md')));
+  for (const rel of ['.claude/commands/ds-sync.md', '.claude/skills/ds', '.claude/hooks/_ds.js', '.claude/hooks/stop.js', '.agents/skills/ds-spec', '.codex-home/prompts/ds-plan.md']) {
     assert.ok(!existsIn(dir, rel), `${rel} was written by an older dspec and must be gone`);
   }
   assert.strictEqual(readIn(dir, '.claude/commands/ds-deploy.md'), 'my own deploy command\n', 'a `ds-` name alone proves nothing');
@@ -186,8 +216,8 @@ test('an agent no longer chosen is removed; Codex, shared by every repo, is left
   init(dir, '--all', '--yes');
   init(dir, '--agent', 'claude', '--yes');
 
-  assert.ok(existsIn(dir, '.claude/commands/dspec-sync.md'));
-  assert.ok(!existsIn(dir, '.agents/skills/dspec-sync'), 'cursor was installed here and not chosen again');
+  assert.ok(existsIn(dir, '.claude/commands/ds.md'));
+  assert.ok(!existsIn(dir, '.agents/skills/ds'), 'cursor was installed here and not chosen again');
   assert.ok(existsIn(dir, CODEX_PROMPT), 'codex lives in the home directory — not this repo’s to uninstall');
 });
 
@@ -259,18 +289,18 @@ test('only the agents chosen are written', () => {
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--agent', 'cursor', '--yes');
 
-  assert.ok(existsIn(dir, '.agents/skills/dspec-sync/SKILL.md'));
+  assert.ok(existsIn(dir, '.agents/skills/ds/SKILL.md'));
   assert.ok(!existsIn(dir, '.claude/commands'), 'claude was not asked for');
   assert.ok(!existsIn(dir, '.codex-home'), 'codex was not asked for');
 });
 
 test('with nobody to ask, a repo that has dspec gets the same agents rebuilt', () => {
-  // This is what `/dspec-update` runs from inside a session.
+  // This is what `/ds-update` runs from inside a session.
   const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
   init(dir, '--agent', 'cursor', '--yes');
   const r = init(dir, '--yes');
   assert.strictEqual(r.status, 0, r.stderr);
-  assert.ok(existsIn(dir, '.agents/skills/dspec-sync/SKILL.md'));
+  assert.ok(existsIn(dir, '.agents/skills/ds/SKILL.md'));
   assert.ok(!existsIn(dir, '.claude/commands'), 'only what was installed is rebuilt');
 });
 
@@ -281,7 +311,7 @@ test('init installs the surface and does not invent a model', () => {
   const r = init(dir, '--all', '--yes');
 
   assert.ok(!existsIn(dir, '.ds/product.md'), '`sync --write` creates the model, and only it');
-  assert.match(r.stdout, /\/dspec-sync/, 'and the next step has to be named');
+  assert.match(r.stdout, /\/ds-bootstrap/, 'and the next step has to be named');
 });
 
 test('`sync --write` seeds the model and touches no agent directory', () => {

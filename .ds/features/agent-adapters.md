@@ -3,9 +3,9 @@ name: Agent adapters
 area: Agent surface
 code: [src/install/agents.ts, src/install/render.ts, src/install/apply.ts]
 entry: plan
-uses: [Body vocabulary, Slash commands and skill]
+uses: [Body vocabulary, Slash commands]
 tests: [test/ship/install.test.js, test/contract/invariants.test.js]
-stamp: sha256g:cc9ee48efd6987aa
+stamp: sha256g:7048f8c26e07fe7a
 ---
 
 The one place anything is agent-specific. Claude Code, Codex and Cursor each read commands from a
@@ -17,26 +17,24 @@ a description of where files go and what their frontmatter is called. Three copi
 would be three chances for one agent to be taught something another was not.
 
 Rules
-- **One spelling in every agent: `/dspec-<name>`.** Claude Code could give `/dspec:sync` by nesting
-  the files in `.claude/commands/dspec/`, and deliberately does not. Somebody who moves between two agents
-  must not have to remember which one takes a colon.
-- **Never promise a fence the agent does not have.** `/dspec-spec` must be unable to write, and in
-  Claude Code the tool list enforces that. Codex and Cursor honour no tool list, so the prose there
-  says the restraint is the reader's own. The sentence *"it has no `Write` or `Edit` tool for that
-  reason"* was true in one agent and false in two, which is the failure `__DS_FENCE__` exists to
-  stop — a stated guarantee that is not running is worse than no guarantee.
+- **Three commands, one spelling in every agent: `/ds`, `/ds-bootstrap`, `/ds-update`.** Somebody
+  who moves between two agents must not have to remember which one takes a colon. No skill is
+  installed: in Claude Code and Cursor a skill is also a slash command.
+- **Never promise a fence the agent does not have.** Codex and Cursor honour no tool list, so no
+  command may state a tool restriction as a guarantee. The sentence *"it has no `Write` or `Edit`
+  tool for that reason"* was once true in one agent and false in two.
 - **Where an agent has no argument variable, substitute prose.** Their variable syntaxes shift
   between releases, and an unresolved placeholder reaches the prompt as `${input:args}` — which an
   agent reads as a real variable and asks the user about.
 - **The frontmatter an agent ignores is dropped, not left in.** A key nobody reads still reads to
   a human as a mechanism that is running.
-- **The `dspec` prefix is ownership, and ownership means rebuild.** Each adapter lists what its
-  install occupies — every `dspec`-prefixed command, skill and hook directory — and `rebuild`
-  deletes all of it before writing the new version. The add-only rule this replaced meant no
-  improved command ever reached anybody who already had one, and a command removed upstream stayed
-  installed forever. The prefix is the product's own name so that nothing a user or another tool
-  would name is caught by it.
-- **An install from before the prefix is removed only when it is recognisably dspec's.** Its names
+- **The `dspec:managed` mark is ownership, and ownership means rebuild.** Every installed file
+  carries the mark. Each adapter lists what its install occupies — every `ds`/`ds-*` entry that
+  carries the mark, plus `.claude/hooks/dspec/` — and `rebuild` deletes all of it before writing the
+  new version. The names are short enough that a user may own a `ds-deploy.md`, so the name alone
+  proves nothing; without the mark a file is never removed.
+- **An install from 0.0.2 – 0.0.3 is removed by its `dspec-` prefix**, which nothing else uses.
+- **An install from 0.0.1 is removed only when it is recognisably dspec's.** Its names
   — `ds-sync.md`, `stop.js` — are ones a user could also have chosen, so each is checked first for a
   sign only dspec's files carry: the word dspec, the `.ds/` directory, one of its old `/ds-*`
   commands, or its hook helper. A look-alike is kept. The word alone was not enough — checked against

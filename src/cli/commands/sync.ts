@@ -45,8 +45,12 @@ import { buildWorkList, type WorkItem } from '../../compile/worklist';
 import { memoryFilesFor } from '../../install/agents';
 import { materialise, renderAll } from '../../compile/renderers';
 import { parseFlags } from '../args';
+import { renderGuide } from '../../model/language';
 import { proposeFeatures, writeProposals } from './scaffold';
 import { findRepo } from '../repo';
+import { changedFiles } from '../../git/rev';
+import { isSourceFile } from '../../code/sources';
+import { claims, type Model } from '../../model/types';
 import { plural } from '../../text';
 import { writeStamps } from './stamp';
 
@@ -58,6 +62,12 @@ export interface SyncReport {
   /** Every measured disagreement between a description and its code. Read by the Stop hook. */
   staleness: StaleItem[];
   findings: Finding[];
+  /**
+   * Source files added or modified in the working tree that no feature claims. The Stop hook asks
+   * the agent to describe these before it ends a turn; code that was undescribed BEFORE this work
+   * is left to `/ds-bootstrap`, so a repo's old debt is not dumped on every turn.
+   */
+  changedUnclaimed: string[];
 }
 
 export interface SyncOptions {
@@ -75,7 +85,14 @@ export function buildSyncReport(repo: string, opts: SyncOptions = {}): SyncRepor
     restored: [],
     staleness: opts.skipCode ? [] : computeStaleness(repo, model),
     findings: opts.skipCode ? [] : lintRepo(repo, model),
+    changedUnclaimed: opts.skipCode ? [] : unclaimedChanges(repo, model),
   };
+}
+
+function unclaimedChanges(repo: string, model: Model): string[] {
+  const changed = changedFiles(repo) ?? [];
+  const claimed = claims(model.features);
+  return changed.filter((f) => isSourceFile(f) && !claimed.has(f));
 }
 
 /**
@@ -189,19 +206,22 @@ const USAGE = `dspec sync [--write] [--strict] [--json] [--brief]
              Never re-stamps a feature whose code changed — that is drift; see \`dspec accept\`
   --strict   exit 1 when the model and the code disagree about something measurable (for CI)
   --json     the report as JSON on stdout
-  --brief    the short, fast view the session hook prints (skips reading the code)`;
+  --brief    the short, fast view the session hook prints (skips reading the code)
+  --guide    how to write the model — what an agent reads before it writes under .ds/`;
 
 export function cmdSync(args: string[]): number {
   const { values, positionals } = parseFlags<{
-    write?: boolean; strict?: boolean; json?: boolean; brief?: boolean; help?: boolean;
+    write?: boolean; strict?: boolean; json?: boolean; brief?: boolean; guide?: boolean; help?: boolean;
   }>(args, {
     write: { type: 'boolean' },
     strict: { type: 'boolean' },
     json: { type: 'boolean' },
     brief: { type: 'boolean' },
+    guide: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   });
   if (values.help) { console.log(USAGE); return 0; }
+  if (values.guide) { console.log(renderGuide()); return 0; }
   if (positionals.length) throw new Error(`sync takes no arguments (got \`${positionals.join(' ')}\`)`);
   const { write = false, json = false, brief = false } = values;
   // ⚠️ **The only way this command exits non-zero**, and it is opt-in. A pipeline chooses its own

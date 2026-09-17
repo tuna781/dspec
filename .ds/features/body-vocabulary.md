@@ -4,18 +4,19 @@ area: Language
 code: [src/model/language.ts, src/model/sections.ts]
 entry: renderLanguageBlock
 tests: [test/model/language.test.js]
-stamp: sha256g:f0c006a2afc63e35
+stamp: sha256g:786764d603e0b472
 ---
 
-The single declaration of dspec-lang's own vocabulary — the frontmatter keys a feature file may
+The single declaration of the model's vocabulary — the frontmatter keys a feature file may
 declare, the body labels it may use, their glosses and their examples — and the generator that
-renders them into every surface that teaches an agent to write. Before this file the label set
+renders them for an agent: `dspec sync --guide` in full, and one line in the bootstrap command. Before this file the label set
 was hand-written in seven places: seven copies of a vocabulary the linter penalises against, and a
 user who read a drifted copy was penalised for following the documentation.
 
 Rules
-- **Declared once, generated everywhere.** Every document teaching the vocabulary is rendered from
-  this file. A hand-written copy is caught by `test/model/language.test.js`, which is the point.
+- **Declared once, generated on demand.** No document teaches the vocabulary — the model is internal
+  — so the only full rendering is `dspec sync --guide`, printed when an agent is about to write. A
+  hand-written copy in a command is caught by `test/model/language.test.js`.
 - **The labels are parsed vocabulary, not interface text, and are always English.** Recognition
   lowercases a line and compares it against this set, so translating a label would change the
   syntax of the language and every existing model would stop parsing.

@@ -202,7 +202,8 @@ export function renderMemoryFile(
 /** What a memory file says, whether it owns the file or only a block inside somebody else's. */
 function memoryBody(model: Model, sessionStart: boolean, h: string): string[] {
   const lines: string[] = [
-    `This repository's product model lives in \`${SPEC_DIR}/\`, written in dspec-lang.`,
+    `This project keeps an internal product model in \`${SPEC_DIR}/\`, and you maintain it. The user`,
+    'never reads or edits it: talk to them about features and behaviour, never about these files.',
     '',
     `**Start at \`${SPEC_DIR}/${INDEX_FILE}\`** — every feature, what it is, and which files it`,
     'lives in. Then read the one feature file you need; do not read the whole model, and do not',
@@ -217,6 +218,27 @@ function memoryBody(model: Model, sessionStart: boolean, h: string): string[] {
     lines.push(...model.product.rules);
     lines.push('');
   }
+
+  // ⚠️ **The one instruction that makes the model maintain itself**, carried by every agent's memory
+  // file. Claude Code's Stop hook enforces it; for agents with no hook, this paragraph is the whole
+  // mechanism, and it is written as an instruction rather than dressed up as a guarantee.
+  lines.push(
+    `${h} Keeping the product model current`,
+    '',
+    'After any work that changed code — yours or anyone else\'s — and before you finish, without',
+    'asking the user:',
+    '',
+    '1. `dspec sync` lists what the model owes.',
+    '2. For each description older than its code: read the code and the description, rewrite the',
+    '   description so it is true of the code now, then `dspec accept "<Feature>"`.',
+    '3. For a claimed file that is gone, or code no feature claims: fix that feature\'s `code:`, or',
+    '   add a feature named for what it does for the product. Run `dspec sync --guide` before',
+    `   writing anything under \`${SPEC_DIR}/\`.`,
+    '4. For a feature with no description: read its files and write one.',
+    '5. `dspec sync --write`, then `dspec sync --strict` until it is clean.',
+    '6. Tell the user in one line which features you updated.',
+    '',
+  );
 
   if (sessionStart) {
     lines.push(

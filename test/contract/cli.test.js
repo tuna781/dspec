@@ -149,3 +149,13 @@ test('the published package keeps its binaries', () => {
   }
   assert.ok(pkg.bin.dspec, 'the `dspec` command is what every surface tells people to run');
 });
+
+test('`sync --guide` prints how to write the model, and writes nothing', () => {
+  // A repo with no model yet: the guide is what an agent reads BEFORE it writes the first file.
+  const dir = makeRepo({ files: { 'src/a.ts': 'export const a = 1;\n' } });
+  const r = runCli(dir, 'sync', '--guide');
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Writing the product model/);
+  assert.match(r.stdout, /Never write `stamp`/);
+  assert.ok(!require('node:fs').existsSync(require('node:path').join(dir, '.ds')), 'a guide is not a write');
+});

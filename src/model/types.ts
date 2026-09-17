@@ -2,11 +2,11 @@
 // The read model — what `.ds/` becomes once it is loaded
 //
 // One structure, read by every other layer: the linter, the renderers, the pack, the coverage
-// walk. It is deliberately small. dspec-lang has one authored element — the feature — so this
+// walk. It is deliberately small. The model has one authored element — the feature — so this
 // file has one interesting type, and everything else is the product wrapper around it.
 // ============================================================
 
-/** The unit of dspec-lang: one feature, one file, one name. */
+/** The unit of the model: one feature, one file, one name. */
 export interface Feature {
   /** The address. Unique across the model, and what `uses` resolves against. */
   name: string;

@@ -7,11 +7,11 @@ Generated from `.ds/features/` — do not edit by hand.
 ## Agent surface
 
 - **Agent adapters** — The one place anything is agent-specific
-  → `src/install/agents.ts`, `src/install/render.ts`, `src/install/apply.ts` · uses: Body vocabulary, Slash commands and skill
-- **Session hooks** — Three hooks that run without being asked: a session can open knowing what the project owes, an edit can surface the description bound to the file, and leaving with a…
+  → `src/install/agents.ts`, `src/install/render.ts`, `src/install/apply.ts` · uses: Body vocabulary, Slash commands
+- **Session hooks** — Three hooks that run without being asked: a session opens knowing what the project owes, an edit surfaces the description bound to the file, and a turn that leaves the…
   → `templates/hooks/_ds.js`, `templates/hooks/session-start.js`, `templates/hooks/post-edit.js`, `templates/hooks/stop.js` · uses: Reconciliation, Drift detection, Model loading
-- **Slash commands and skill** — The prose that reaches the user's agent: four commands and one skill, written once and read by every adapter
-  → `templates/commands/spec.md`, `templates/commands/plan.md`, `templates/commands/sync.md`, `templates/commands/update.md`, `templates/skills/dspec/SKILL.md` · uses: Body vocabulary
+- **Slash commands** — The prose that reaches the user's agent: exactly three commands, written once and read by every adapter
+  → `templates/commands/ds.md`, `templates/commands/bootstrap.md`, `templates/commands/update.md` · uses: Body vocabulary
 
 ## Artifacts
 
@@ -40,7 +40,7 @@ Generated from `.ds/features/` — do not edit by hand.
 
 ## Language
 
-- **Body vocabulary** — The single declaration of dspec-lang's own vocabulary — the frontmatter keys a feature file may declare, the body labels it may use, their glosses and their examples —…
+- **Body vocabulary** — The single declaration of the model's vocabulary — the frontmatter keys a feature file may declare, the body labels it may use, their glosses and their examples — and…
   → `src/model/language.ts`, `src/model/sections.ts`
 - **Model loading** — Turns `.ds/` into the one structure every other feature reads
   → `src/model/load.ts`, `src/model/types.ts` · uses: Spec file format, Body vocabulary

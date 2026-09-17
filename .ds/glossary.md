@@ -3,7 +3,7 @@
 Words that mean something specific in dspec. Where a word is used loosely elsewhere, the
 definition here is the one the code implements.
 
-**Feature** — the unit of dspec-lang. One file under `.ds/features/`, one name, one list of the
+**Feature** — the unit of the model. One file under `.ds/features/`, one name, one list of the
 files it lives in. The thing a person names when they say "feature A".
 
 **Area** — a label that groups features in the index. Free text, and *not* a boundary: nothing is

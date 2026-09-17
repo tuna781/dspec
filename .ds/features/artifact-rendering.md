@@ -5,7 +5,7 @@ code: [src/compile/renderers.ts, src/compile/artifacts.ts]
 entry: renderAll
 uses: [Model loading, Agent adapters]
 tests: [test/render/renderers.test.js, test/render/artifacts.test.js]
-stamp: sha256g:6798869427eae1a8
+stamp: sha256g:b9811aa8f64eb7eb
 ---
 
 Turns the model into the files an agent actually reads — `.ds/index.md`, the entry point, and one
@@ -41,6 +41,12 @@ Rules
   the whole file over one once wiped a team's memory file on its first sync.
 - **An index with no stamp is left alone.** Inside `.ds/` it is reported, never overwritten by the
   check.
+- **Every memory file carries the model upkeep steps.** After any change the agent reads each
+  description older than its code, rewrites it and accepts it, and describes new code — without
+  asking. For Claude Code the Stop hook enforces it; for Codex and Cursor this paragraph is the whole
+  mechanism, written as an instruction rather than dressed up as a guarantee.
+- **The memory file never names the model's format**, and tells the agent the user never reads or
+  edits the model.
 
 Behaviour
 - A stamp naming a different project is reported as foreign — that catches a file copied in from

@@ -11,15 +11,15 @@
 // output. That is why porting to another agent is frontmatter work: the behaviour was never in
 // the agent, it was in the CLI.
 //
-// ⚠️ **One spelling in every agent: `/dspec-<name>`.** Claude Code could give `/dspec:sync` by
-// putting the files in `.claude/commands/dspec/`, and it deliberately does not. A user who moves
-// between two agents must not have to remember which one takes a colon.
+// ⚠️ **Three commands, one spelling in every agent: `/ds`, `/ds-bootstrap`, `/ds-update`.** There is
+// no skill: in Claude Code and Cursor a skill is also a slash command, and a fourth name in the menu
+// is exactly the surface this was cut down to avoid. What the skill used to teach lives in the
+// memory file's dspec block and in `dspec sync --guide`.
 //
-// ⚠️ **The `dspec` prefix is what makes a file dspec's.** `dspec init` deletes everything under it
-// and writes it again from the installed version, so an upgrade leaves nothing stale behind — no
-// out-of-date command, no command that no longer exists. Nothing outside the prefix is touched, and
-// that is the whole reason the prefix is the product's own name rather than something shorter a
-// user or another tool might also pick.
+// ⚠️ **Ownership is a MARK, not a name.** `ds` and `ds-*` are short enough that a user or another
+// tool may already have a `ds-deploy.md`. Every file dspec installs therefore carries
+// `dspec:managed`, and `dspec init` deletes only files that carry it — plus the hook directory
+// `.claude/hooks/dspec/`, and the installs of older versions, recognised by name or by content.
 // ============================================================
 
 import * as fs from 'node:fs';
@@ -36,17 +36,23 @@ export function isAgentKey(s: string): s is AgentKey {
   return (AGENT_KEYS as string[]).includes(s);
 }
 
-/** The three commands, in the order they are reported. Read from disk, never listed twice. */
-export const COMMAND_NAMES = ['spec', 'plan', 'sync', 'update'] as const;
+/** The three commands, in the order they are reported. `ds` is the core; the other two are `ds-*`. */
+export const COMMAND_NAMES = ['ds', 'bootstrap', 'update'] as const;
 
-/** The prefix every installed name carries. */
-export const PREFIX = 'dspec';
-
-/** What 0.0.1 and earlier installed under, with no prefix of its own. Removed on the next init. */
-const LEGACY_COMMANDS = ['spec', 'plan', 'sync', 'bootstrap'];
+/** The name a command is installed under — a file name, a directory name, and what follows `/`. */
+export const installedName = (name: string): string => (name === 'ds' ? 'ds' : `ds-${name}`);
 
 /** How a command is typed once installed. The same in every agent — see the header. */
-export const invoke = (name: string): string => `/${PREFIX}-${name}`;
+export const invoke = (name: string): string => `/${installedName(name)}`;
+
+/** Carried by every file dspec installs. `dspec init` deletes only what carries it. */
+export const MANAGED_MARK = 'dspec:managed';
+
+/** 0.0.2 and 0.0.3 installed under this prefix, which nothing else uses. Removed by name. */
+const OLD_PREFIX = 'dspec';
+
+/** 0.0.1 installed these, unprefixed and unmarked. Removed only when recognisably dspec's. */
+const LEGACY_COMMANDS = ['spec', 'plan', 'sync', 'bootstrap'];
 
 export interface Agent {
   key: AgentKey;
@@ -64,14 +70,14 @@ export interface Agent {
    * repo that chose Claude alone would still be handed an `AGENTS.md`.
    */
   marker(repo: string): string;
-  /** The same question for an install made before the prefix (0.0.1). */
-  legacyMarker(repo: string): string;
+  /** The same question for an install made by an older dspec (0.0.1 – 0.0.3). */
+  legacyMarkers(repo: string): string[];
   /**
    * Every path this agent's install occupies right now — what `dspec init` deletes before writing.
    * Directories are listed as directories and removed whole.
    */
   owned(repo: string): string[];
-  /** Paths an older dspec wrote with no prefix, that are recognisably dspec's. Removed too. */
+  /** Paths an older dspec wrote, recognised by their old prefix or their content. Removed too. */
   legacy(repo: string): string[];
   /** The file this agent reads at the start of a session. */
   memoryFile: 'CLAUDE.md' | 'AGENTS.md';
@@ -98,12 +104,32 @@ function template(ctx: PlanContext, ...parts: string[]): string {
 
 // ─── what an install occupies ───────────────────────────────────────────────
 
-/** Entries of `dir` whose name starts with `dspec-` (or is exactly `dspec`, when `exact` is given). */
-function prefixed(dir: string, opts: { suffix?: string; exact?: boolean } = {}): string[] {
+/** Does this file (or this skill directory's SKILL.md) carry dspec's mark? */
+export function isManaged(p: string): boolean {
+  try {
+    const file = fs.statSync(p).isDirectory() ? path.join(p, 'SKILL.md') : p;
+    return fs.readFileSync(file, 'utf-8').includes(MANAGED_MARK);
+  } catch {
+    return false;
+  }
+}
+
+/** Entries of `dir` named `ds` / `ds-*` (optionally ending in `suffix`) that carry the mark. */
+function managed(dir: string, suffix = ''): string[] {
   let names: string[];
   try { names = fs.readdirSync(dir); } catch { return []; }
   return names
-    .filter((n) => (n.startsWith(`${PREFIX}-`) && (!opts.suffix || n.endsWith(opts.suffix))) || (opts.exact && n === PREFIX))
+    .filter((n) => n.endsWith(suffix) && (n.slice(0, n.length - suffix.length) === 'ds' || n.startsWith('ds-')))
+    .map((n) => path.join(dir, n))
+    .filter(isManaged);
+}
+
+/** Entries of `dir` from the 0.0.2 – 0.0.3 install: `dspec-*` (with `suffix`) or exactly `dspec`. */
+function oldPrefixed(dir: string, suffix = ''): string[] {
+  let names: string[];
+  try { names = fs.readdirSync(dir); } catch { return []; }
+  return names
+    .filter((n) => (n.startsWith(`${OLD_PREFIX}-`) && n.endsWith(suffix)) || n === OLD_PREFIX)
     .map((n) => path.join(dir, n));
 }
 
@@ -127,7 +153,17 @@ function writtenByDspec(p: string): boolean {
   }
 }
 
-const existingLegacy = (paths: string[]): string[] => paths.filter((p) => fs.existsSync(p) && writtenByDspec(p));
+const existingLegacy = (paths: string[]): string[] =>
+  paths.filter((p) => fs.existsSync(p) && !isManaged(p) && writtenByDspec(p));
+
+/** Mark an installed file. Markdown takes an HTML comment an agent never renders; a script, a line comment. */
+const withMark = (content: string, kind: 'md' | 'js'): string =>
+  `${content.replace(/\n*$/, '\n')}${kind === 'md' ? `\n<!-- ${MANAGED_MARK} -->` : `// ${MANAGED_MARK}`}\n`;
+
+/** Installed now, or by an older dspec. Derived from the files, never stored. */
+export function isInstalled(agent: Agent, repo: string): boolean {
+  return isManaged(agent.marker(repo)) || agent.legacyMarkers(repo).some((m) => fs.existsSync(m));
+}
 
 /**
  * Resolve one template into final prose: command names, the language block, and arguments.
@@ -154,16 +190,11 @@ function commandFiles(
   return COMMAND_NAMES.map((name) => {
     const { meta, body } = prose(template(ctx, 'commands', `${name}.md`), argForm, fence);
     return {
-      path: target(name),
+      path: target(installedName(name)),
       agent,
-      content: renderDoc({ meta: frontmatter(meta, name) as never, body }),
+      content: withMark(renderDoc({ meta: frontmatter(meta, installedName(name)) as never, body }), 'md'),
     };
   });
-}
-
-function skillFile(ctx: PlanContext, agent: AgentKey, at: string, argForm: string | null, fence: boolean): PlannedFile {
-  const { meta, body } = prose(template(ctx, 'skills', PREFIX, 'SKILL.md'), argForm, fence);
-  return { path: at, agent, content: renderDoc({ meta: meta as never, body }) };
 }
 
 // ─── Claude Code ────────────────────────────────────────────────────────────
@@ -171,7 +202,7 @@ function skillFile(ctx: PlanContext, agent: AgentKey, at: string, argForm: strin
 const HOOK_SCRIPTS = ['_ds.js', 'session-start.js', 'post-edit.js', 'stop.js'];
 
 /** Where Claude's hook scripts live — a directory dspec owns outright. */
-export const CLAUDE_HOOK_DIR = `.claude/hooks/${PREFIX}`;
+export const CLAUDE_HOOK_DIR = '.claude/hooks/dspec';
 
 /** The command a hook entry runs. One definition, so removing ours matches exactly what added it. */
 export const claudeHookCommand = (file: string): string => `node "$CLAUDE_PROJECT_DIR/${CLAUDE_HOOK_DIR}/${file}"`;
@@ -206,28 +237,34 @@ const claude: Agent = {
   memoryFile: 'CLAUDE.md',
   hooks: true,
   detect: (repo) => fs.existsSync(path.join(repo, '.claude')),
-  marker: (repo) => path.join(repo, '.claude', 'commands', `${PREFIX}-sync.md`),
-  legacyMarker: (repo) => path.join(repo, '.claude', 'commands', 'ds-sync.md'),
-  owned: (repo) => [
-    ...prefixed(path.join(repo, '.claude', 'commands'), { suffix: '.md' }),
-    ...prefixed(path.join(repo, '.claude', 'skills'), { exact: true }),
-    ...prefixed(path.join(repo, '.claude', 'hooks'), { exact: true }),
+  marker: (repo) => path.join(repo, '.claude', 'commands', 'ds.md'),
+  legacyMarkers: (repo) => [
+    path.join(repo, '.claude', 'commands', `${OLD_PREFIX}-sync.md`),
+    path.join(repo, '.claude', 'commands', 'ds-sync.md'),
   ],
-  legacy: (repo) => existingLegacy([
-    ...LEGACY_COMMANDS.map((n) => path.join(repo, '.claude', 'commands', `ds-${n}.md`)),
-    path.join(repo, '.claude', 'skills', 'ds'),
-    ...HOOK_SCRIPTS.map((f) => path.join(repo, '.claude', 'hooks', f)),
-  ]),
+  owned: (repo) => [
+    ...managed(path.join(repo, '.claude', 'commands'), '.md'),
+    ...managed(path.join(repo, '.claude', 'skills')),
+    ...[path.join(repo, CLAUDE_HOOK_DIR)].filter((p) => fs.existsSync(p)),
+  ],
+  legacy: (repo) => [
+    ...oldPrefixed(path.join(repo, '.claude', 'commands'), '.md').filter((p) => path.basename(p) !== OLD_PREFIX),
+    ...oldPrefixed(path.join(repo, '.claude', 'skills')),
+    ...existingLegacy([
+      ...LEGACY_COMMANDS.map((n) => path.join(repo, '.claude', 'commands', `ds-${n}.md`)),
+      path.join(repo, '.claude', 'skills', 'ds'),
+      ...HOOK_SCRIPTS.map((f) => path.join(repo, '.claude', 'hooks', f)),
+    ]),
+  ],
   plan(ctx) {
     // Claude keeps the frontmatter as written: it is the only one of the three that HONOURS
     // `allowed-tools`, and that list is the only instruction here anybody actually enforces.
-    const files = commandFiles(ctx, 'claude', '$ARGUMENTS', true, (n) => `.claude/commands/${PREFIX}-${n}.md`, (meta) => meta);
-    files.push(skillFile(ctx, 'claude', `.claude/skills/${PREFIX}/SKILL.md`, '$ARGUMENTS', true));
+    const files = commandFiles(ctx, 'claude', '$ARGUMENTS', true, (n) => `.claude/commands/${n}.md`, (meta) => meta);
     for (const file of HOOK_SCRIPTS) {
       files.push({
         path: `${CLAUDE_HOOK_DIR}/${file}`,
         agent: 'claude',
-        content: template(ctx, 'hooks', file),
+        content: withMark(template(ctx, 'hooks', file), 'js'),
         executable: true,
       });
     }
@@ -244,7 +281,7 @@ const claude: Agent = {
  * reported rather than hidden: a teammate who clones gets nothing for Codex until they run
  * `dspec init` themselves, and a second `dspec init` in another repo finds these files already
  * there. Repo-scoped skills exist (`.agents/skills/`) but are invoked as `$name` or through the
- * `/skills` picker — not as `/dspec-sync`, which is the thing being preserved.
+ * `/skills` picker — not as `/ds`, which is the thing being preserved.
  */
 export function codexPromptsDir(): string {
   return path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'prompts');
@@ -257,10 +294,13 @@ const codex: Agent = {
   hooks: false,
   outsideRepo: true,
   detect: () => fs.existsSync(path.dirname(codexPromptsDir())),
-  marker: () => path.join(codexPromptsDir(), `${PREFIX}-sync.md`),
-  legacyMarker: () => path.join(codexPromptsDir(), 'ds-sync.md'),
-  owned: () => prefixed(codexPromptsDir(), { suffix: '.md' }),
-  legacy: () => existingLegacy(LEGACY_COMMANDS.map((n) => path.join(codexPromptsDir(), `ds-${n}.md`))),
+  marker: () => path.join(codexPromptsDir(), 'ds.md'),
+  legacyMarkers: () => [path.join(codexPromptsDir(), `${OLD_PREFIX}-sync.md`), path.join(codexPromptsDir(), 'ds-sync.md')],
+  owned: () => managed(codexPromptsDir(), '.md'),
+  legacy: () => [
+    ...oldPrefixed(codexPromptsDir(), '.md').filter((p) => path.basename(p) !== OLD_PREFIX),
+    ...existingLegacy(LEGACY_COMMANDS.map((n) => path.join(codexPromptsDir(), `ds-${n}.md`))),
+  ],
   plan(ctx) {
     const dir = codexPromptsDir();
     // Codex documents exactly two frontmatter keys and ignores subdirectories, so the files are
@@ -271,7 +311,7 @@ const codex: Agent = {
       'codex',
       '$ARGUMENTS',
       false,
-      (n) => path.join(dir, `${PREFIX}-${n}.md`),
+      (n) => path.join(dir, `${n}.md`),
       (meta) => onlyMeta({ meta: meta as never, body: '' }, ['description', 'argument-hint']).meta,
     );
   },
@@ -284,9 +324,8 @@ const codex: Agent = {
  * command, committed to the repo, shared on clone.
  *
  * ⚠️ **A skill takes no arguments and honours no tool list.** `argForm: null` therefore puts a
- * plain English phrase where `$ARGUMENTS` was, and `/dspec-spec`'s promise that it "writes nothing" drops
- * from enforced to merely instructed. Both are stated in the install report rather than left for
- * somebody to discover.
+ * plain English phrase where `$ARGUMENTS` was, and `/ds`'s promise that it builds nothing before the
+ * user approves is instructed, never enforced.
  */
 const cursor: Agent = {
   key: 'cursor',
@@ -294,34 +333,38 @@ const cursor: Agent = {
   memoryFile: 'AGENTS.md',
   hooks: false,
   detect: (repo) => fs.existsSync(path.join(repo, '.cursor')) || fs.existsSync(path.join(repo, '.agents')),
-  marker: (repo) => path.join(repo, '.agents', 'skills', `${PREFIX}-sync`, 'SKILL.md'),
-  legacyMarker: (repo) => path.join(repo, '.agents', 'skills', 'ds-sync', 'SKILL.md'),
-  owned: (repo) => prefixed(path.join(repo, '.agents', 'skills'), { exact: true }),
-  legacy: (repo) => existingLegacy([
-    ...LEGACY_COMMANDS.map((n) => path.join(repo, '.agents', 'skills', `ds-${n}`)),
-    path.join(repo, '.agents', 'skills', 'ds'),
-  ]),
+  marker: (repo) => path.join(repo, '.agents', 'skills', 'ds', 'SKILL.md'),
+  legacyMarkers: (repo) => [
+    path.join(repo, '.agents', 'skills', `${OLD_PREFIX}-sync`, 'SKILL.md'),
+    path.join(repo, '.agents', 'skills', 'ds-sync', 'SKILL.md'),
+  ],
+  owned: (repo) => managed(path.join(repo, '.agents', 'skills')),
+  legacy: (repo) => [
+    ...oldPrefixed(path.join(repo, '.agents', 'skills')),
+    ...existingLegacy([
+      ...LEGACY_COMMANDS.map((n) => path.join(repo, '.agents', 'skills', `ds-${n}`)),
+      path.join(repo, '.agents', 'skills', 'ds'),
+    ]),
+  ],
   plan(ctx) {
-    const files = commandFiles(
+    return commandFiles(
       ctx,
       'cursor',
       null,
       false,
-      (n) => `.agents/skills/${PREFIX}-${n}/SKILL.md`,
+      (n) => `.agents/skills/${n}/SKILL.md`,
       // `name` first, then `description`: those are the only two keys Cursor documents, and a
       // skill is identified by its name — a reader scanning the directory should meet it first.
       (meta, name) =>
         onlyMeta(
           withMeta({ meta: meta as never, body: '' }, {
-            name: `${PREFIX}-${name}`,
+            name,
             'argument-hint': undefined,
             'allowed-tools': undefined,
           }),
           ['name', 'description'],
         ).meta,
     );
-    files.push(skillFile(ctx, 'cursor', `.agents/skills/${PREFIX}/SKILL.md`, null, false));
-    return files;
   },
 };
 
@@ -331,7 +374,7 @@ export const AGENTS: { [K in AgentKey]: Agent } = { claude, codex, cursor };
 
 /** Every agent dspec has actually been installed for. Derived from the files, never stored. */
 export function installedAgents(repo: string): Agent[] {
-  return AGENT_KEYS.map((k) => AGENTS[k]).filter((a) => fs.existsSync(a.marker(repo)) || fs.existsSync(a.legacyMarker(repo)));
+  return AGENT_KEYS.map((k) => AGENTS[k]).filter((a) => isInstalled(a, repo));
 }
 
 /**
