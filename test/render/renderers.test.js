@@ -106,3 +106,15 @@ test('a file dspec wrote, or no file at all, gets the whole render', () => {
   assert.strictEqual(materialise(claude, null), claude.content);
   assert.strictEqual(materialise(claude, '<!-- ds: project="Shop" -->\n# old\n'), claude.content);
 });
+
+test('every memory file carries the model upkeep steps, and never names the format', () => {
+  for (const f of renderAll(model(), P, ['CLAUDE.md', 'AGENTS.md']).filter((x) => x.format === 'memory')) {
+    for (const text of [f.content, f.block]) {
+      assert.match(text, /Keeping the product model current/);
+      assert.match(text, /dspec accept/);
+      assert.match(text, /dspec sync --guide/);
+      assert.match(text, /never reads or edits it/);
+      assert.ok(!/-lang\b/.test(text), `${f.file} names the model's format`);
+    }
+  }
+});

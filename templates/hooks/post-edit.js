@@ -48,5 +48,6 @@ const lines = features.map((f) => {
 
 emitContext('PostToolUse',
   `Features that claim this file:\n${lines.join('\n')}\n\n`
-  + 'If what you just changed contradicts one of them, say so — do not leave the model '
-  + 'describing behaviour the code no longer has.');
+  + 'If what you changed alters what one of them does, update its description before you finish '
+  + '(read it in .ds/features/, then `dspec accept`) — never leave the model describing behaviour '
+  + 'the code no longer has.');

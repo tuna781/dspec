@@ -43,7 +43,7 @@ jobs:
       # YAML mapping separator, so the whole file failed to parse — GitHub created no job at all and
       # every push since reported a 0-second failure that looked like CI rather than YAML.
       - run: |
-          npm pack --dry-run --json | grep -q '"path": "templates/commands/sync.md"'
+          npm pack --dry-run --json | grep -q '"path": "templates/commands/ds.md"'
       # The model is checked against the checkout on every push: a description older than its code
       # is the one failure this whole project exists to prevent.
       - run: node bin/ds.js sync --strict

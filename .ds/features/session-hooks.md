@@ -8,11 +8,13 @@ code:
   - templates/hooks/stop.js
 entry: retarget
 uses: [Reconciliation, Drift detection, Model loading]
-stamp: sha256g:4c3c89b13d2c82bb
+stamp: sha256g:67f4894a5b491a35
 ---
 
-Three hooks that run without being asked: a session can open knowing what the project owes, an edit
-can surface the description bound to the file, and leaving with a stale model earns one reminder.
+Three hooks that run without being asked: a session opens knowing what the project owes, an edit
+surfaces the description bound to the file, and a turn that leaves the model behind the code is
+held — once — until the agent has brought it up to date. **This is what makes the model maintain
+itself in Claude Code.**
 
 **Claude Code alone gets these**, because no other agent can run a command on a session event. That
 is the honest shape of the product now: every agent gets the same three commands, and only one gets
@@ -21,10 +23,18 @@ the automatic half. On Codex and Cursor the loop degrades to what somebody remem
 hook, and reported as the weaker thing it is.
 
 Rules
-- **Every hook only adds context, and always exits 0.** None of them can block a tool call. A gate
-  here would teach people to click past it.
-- **The stop reminder is a message for a human, not context for an agent**, and it fires once. If it
-  becomes annoying the thing to fix is the model, not the hook.
+- **No hook blocks the user or a tool call, and every hook exits 0.** A gate here would teach people
+  to click past it.
+- **The Stop hook holds the agent, not the user, and exactly once.** When the model owes work —
+  a description older than its code, a claimed file gone, an `entry:` lost, a feature with no
+  description, an artifact behind, or source changed in the working tree that no feature claims —
+  it returns `decision: block` with the list and the upkeep steps, so the agent finishes before it
+  hands back. When Claude Code reports `stop_hook_active`, it only leaves a note: a hook that holds
+  every continuation loops forever.
+- **Old undescribed code does not hold a turn.** Only source added or modified in the working tree
+  counts; a repository's existing backlog is `/ds-bootstrap`'s, or every turn would be endless.
+- **"Not measured" does not hold a turn** — `sync --write` records it mechanically, in the upkeep
+  steps the agent is already following.
 - **The edit hook speaks rarely, and that is where its value comes from.** It runs after every edit
   and is silent whenever no description points at the file — which is the overwhelming majority of
   the time. Something that speaks on every edit is something nobody reads.
@@ -41,10 +51,10 @@ Behaviour
   the CLI itself. A hand-kept copy of that list outlived two rounds of command changes, rewriting
   `ds compile` and `ds map` long after both were deleted.
 - On session start: what the project owes right now, plus where to look for more.
-- After an edit: the descriptions bound to that file, and the instruction to say so if the change
-  contradicts one — rather than leaving the model describing behaviour the code no longer has.
-- On stop: an offer to reconcile, only when a description is older than its code. Never measured,
-  lost files and missing tests are the sync report's to name, not a claim that code just changed.
+- After an edit: the features bound to that file, and the instruction to update a description the
+  change alters before the turn ends.
+- On stop: see the rules above. The reason names the commands through the same retargeting as every
+  other hook, so an install reached through `.ds/config.json` is told the command that works.
 - The hooks are installed into `.claude/hooks/dspec/`, a directory dspec owns and rebuilds on every
   `dspec init`, and wired by dspec's own entries in the project's
   `settings.json`, referenced through `$CLAUDE_PROJECT_DIR` — the same file is committed and read

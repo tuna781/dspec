@@ -1,15 +1,15 @@
 // ============================================================
 // `dspec init` — install dspec into your agents, and rebuild that install on every run
 //
-// The terminal has two jobs and only two: put dspec's commands, skill and hooks into the agents
+// The terminal has two jobs and only two: put dspec's commands and hooks into the agents
 // (`init`), and take a newer dspec from npm (`update`). Everything else happens inside an agent
-// session, through the `/dspec-*` commands this writes.
+// session, through the `/ds`, `/ds-bootstrap` and `/ds-update` commands this writes.
 //
 // ⚠️ **Every run deletes everything dspec installed, then writes it again.** Ownership is the
-// `dspec` prefix — see `install/agents.ts` — plus the unprefixed files an older dspec wrote that are
-// recognisably dspec's. So after `npm i -g dspec@latest` (or `dspec update`), one `dspec init`
+// `dspec:managed` mark — see `install/agents.ts` — plus the files an older dspec wrote, recognised
+// by their old prefix or their content. So after `npm i -g dspec@latest` (or `dspec update`), one `dspec init`
 // leaves the repo holding exactly what the new version ships: nothing out of date, nothing a newer
-// version dropped. Nothing outside the prefix is touched, and in `.claude/settings.json` only
+// version dropped. Nothing without dspec's mark is touched, and in `.claude/settings.json` only
 // dspec's own hook entries are.
 //
 // ⚠️ **It does not create the model.** `dspec sync --write` does, the first time it runs. Keeping
@@ -21,7 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   AGENTS, AGENT_KEYS, CLAUDE_HOOK_SCRIPTS, claudeHookCommand, claudeHooksBlock, invoke, isAgentKey,
-  legacyClaudeHookCommand, type Agent, type AgentKey,
+  isInstalled, legacyClaudeHookCommand, type Agent, type AgentKey,
 } from '../../install/agents';
 import { rebuild, replaceHooks, type PlannedFile, type Rebuilt } from '../../install/apply';
 import { canPrompt, pick } from '../../install/prompt';
@@ -32,12 +32,12 @@ import { plural } from '../../text';
 
 const USAGE = `dspec init [--agent claude,codex,cursor] [--all] [--yes]
 
-  Install dspec into the AI coding agents you choose: the ${invoke('sync')}, ${invoke('spec')},
-  ${invoke('plan')} and ${invoke('update')} commands, the dspec skill, and (Claude Code) the session hooks.
+  Install dspec into the AI coding agents you choose: the ${invoke('ds')}, ${invoke('bootstrap')} and
+  ${invoke('update')} commands, and (Claude Code) the session hooks.
 
-  Every run REBUILDS the install: everything dspec wrote before — every \`dspec\`-prefixed command,
-  skill and hook, and dspec's own entries in .claude/settings.json — is deleted and written again
-  from this version. Run it after \`dspec update\`. Nothing without the prefix is ever touched.
+  Every run REBUILDS the install: every command and hook dspec wrote before, and dspec's own entries
+  in .claude/settings.json, is deleted and written again from this version. Run it after
+  \`dspec update\`. Nothing dspec did not write is ever touched.
 
   --agent   claude, codex, cursor — comma separated
   --all     every supported agent
@@ -161,21 +161,16 @@ export async function cmdInit(argv: string[]): Promise<number> {
   report(chosen, results, notes);
 
   if (!modelExists) {
-    console.log(`\nThis repository has no \`${SPEC_DIR}/\` model yet. Open your agent and type \`${invoke('sync')}\`.`);
+    console.log(`\nThis repository has no product model yet. Open your agent and type \`${invoke('bootstrap')}\`.`);
   }
   return 0;
-}
-
-/** Installed now, or by a dspec from before the prefix. Derived from the files, never stored. */
-function isInstalled(a: Agent, repo: string): boolean {
-  return fs.existsSync(a.marker(repo)) || fs.existsSync(a.legacyMarker(repo));
 }
 
 /** The one line each agent owes the user about what it cannot do. */
 function describe(a: Agent): string {
   if (a.outsideRepo) return 'commands live in your home directory — not shared when a teammate clones';
   if (!a.hooks) return 'no session hooks: it cannot run a command on a session event';
-  return 'commands, skill and the three session hooks';
+  return 'commands and the three session hooks';
 }
 
 /**
@@ -228,8 +223,8 @@ function report(chosen: AgentKey[], results: Rebuilt[], notes: string[]): void {
 
   for (const n of notes) console.log(`\n  ! ${n}`);
 
-  console.log(`\nType \`${invoke('sync')}\` in your agent to start — start a new session if one is already open, so it
-reads the rebuilt commands. Every one of these commands just runs \`dspec\`: you can run it yourself.`);
+  console.log(`\nIn your agent: \`${invoke('bootstrap')}\` sets the product model up, \`${invoke('ds')} <what you want>\` specs, plans
+and builds it. Start a new session if one is already open, so it reads the rebuilt commands.`);
 }
 
 /**

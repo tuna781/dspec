@@ -49,3 +49,28 @@ export function changedModelFiles(repo: string, specDir: string): string[] {
   if (!status) return [];
   return status.split('\n').filter(Boolean).map((l) => l.slice(3)).filter((p) => p.endsWith('.md'));
 }
+
+/**
+ * Files added or modified in the working tree and index — renames by their new path, deletions
+ * left out. `null` when git cannot say.
+ *
+ * ⚠️ **NUL-separated, unquoted.** The same reason `sourceInventory` reads `-z`: a quoted non-ASCII
+ * path does not end in its extension, and would silently stop being source.
+ */
+export function changedFiles(repo: string): string[] | null {
+  const out = gitOut(repo, ['-c', 'core.quotePath=off', 'status', '--porcelain', '-uall', '-z']);
+  if (out === null) return null;
+  const tokens = out.split('\0');
+  const files: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.length < 4) continue;
+    const xy = t.slice(0, 2);
+    const file = t.slice(3);
+    // A rename or copy is followed by one more token: the path it came from.
+    if (xy.includes('R') || xy.includes('C')) i++;
+    if (xy.includes('D')) continue;
+    files.push(file);
+  }
+  return files;
+}

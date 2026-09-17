@@ -17,5 +17,7 @@ Bring dspec up to date and rebuild what it installed into this repository — th
 
 3. **Report what changed**, from the two outputs: the version before and after, and per agent what
    was added, rebuilt and removed. Say that the rebuilt commands take effect in a **new session**,
-   and that `__DS_CMD_BOOTSTRAP__` brings the product model up to date with anything the new version
+   and that `/ds-bootstrap` brings the product model up to date with anything the new version
    measures differently.
+
+<!-- dspec:managed -->

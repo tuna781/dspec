@@ -13,7 +13,7 @@ const path = require('node:path');
 const { ROOT } = require('../support/repo');
 
 const COMMANDS = fs.readdirSync(path.join(ROOT, 'templates/commands'));
-const SURFACES = ['templates/skills/dspec/SKILL.md', ...COMMANDS.map((f) => `templates/commands/${f}`)];
+const SURFACES = COMMANDS.map((f) => `templates/commands/${f}`);
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf-8');
 
 test('placeholders are the only way a surface names another command', () => {
@@ -52,39 +52,49 @@ test('nothing keeps its own copy of the verb list', () => {
   }
 });
 
-test('every slash command the skill names exists as a file', () => {
-  const skill = read('templates/skills/dspec/SKILL.md');
-  for (const ph of skill.match(/__DS_CMD_([A-Z]+)__/g) ?? []) {
-    const name = ph.replace(/__DS_CMD_|__/g, '').toLowerCase();
-    assert.ok(COMMANDS.includes(`${name}.md`), `the skill names /ds-${name}, which has no command file`);
+test('the session has exactly three commands, and no skill', () => {
+  // ⚠️ In Claude Code and Cursor a skill is ALSO a slash command. A fourth name in the menu is the
+  // surface this product was cut down to avoid, so nothing but the three commands is installed.
+  assert.deepStrictEqual(COMMANDS.sort(), ['bootstrap.md', 'ds.md', 'update.md']);
+  assert.ok(!fs.existsSync(path.join(ROOT, 'templates/skills')), 'a skill would be a fourth command');
+  const { AGENTS, AGENT_KEYS } = require('../../dist/install/agents.js');
+  for (const key of AGENT_KEYS) {
+    const planned = AGENTS[key].plan({ repo: ROOT, templates: path.join(ROOT, 'templates') });
+    assert.ok(!planned.some((f) => /\/skills\/(?!ds(-bootstrap|-update)?\/)/.test(f.path)), `${key} is given a skill`);
   }
 });
 
-test('`/ds-spec` ships with no way to write', () => {
-  // It is the one command that must be unable to leave the model describing something that does
-  // not exist yet, and a tool list is the only instruction here that is actually enforced.
-  const meta = read('templates/commands/spec.md').split('---')[1];
-  assert.ok(!/\b(Write|Edit)\b/.test(meta), 'spec.md must not grant a write tool');
+test('/ds builds nothing before the user approves the plan', () => {
+  const body = read('templates/commands/ds.md');
+  assert.match(body, /Nothing is written — no code, no model — until the user approves/);
+  assert.match(body, /Stop and wait for the user's decision/);
 });
 
 test('a surface never promises a fence the agent does not have', () => {
-  // ⚠️ The reason `__DS_FENCE__` exists. `spec.md` used to say "It has no `Write` or `Edit` tool
-  // for that reason" — true in Claude Code, FALSE in Codex and Cursor, neither of which honours a
-  // tool list. Claiming a guarantee that is not there is the one thing the product rules forbid
-  // outright, so no template may state the mechanism itself.
+  // ⚠️ `spec.md` once said "It has no `Write` or `Edit` tool for that reason" — true in Claude
+  // Code, FALSE in Codex and Cursor, neither of which honours a tool list. No template may state
+  // the mechanism as a guarantee.
   for (const rel of SURFACES) {
     const body = read(rel).split('---').slice(2).join('---');
-    assert.ok(
-      !/has no `?(Write|Edit)`? tool/.test(body),
-      `${rel} claims a tool fence in prose — use __DS_FENCE__, which each adapter answers honestly`,
-    );
+    assert.ok(!/has no `?(Write|Edit)`? tool/.test(body), `${rel} claims a tool fence in prose`);
   }
 });
 
+test('no document names the model\'s format', () => {
+  // The model is internal. What an agent needs to write it comes from `dspec sync --guide`; no
+  // README, changelog, installed command or rendered memory file teaches or names the format.
+  const { execFileSync } = require('node:child_process');
+  let hits = '';
+  try {
+    hits = execFileSync('git', ['grep', '-n', '-i', 'dspec' + '-lang', '--', '.'], { cwd: ROOT, encoding: 'utf-8' });
+  } catch { /* git grep exits 1 when nothing matches */ }
+  assert.strictEqual(hits, '', `the format is named in:\n${hits}`);
+});
+
 test('every agent gets every command, and types it the same way', () => {
-  // Four commands, three agents, one spelling. A user who moves between agents must not have to
+  // Three commands, three agents, one spelling. A user who moves between agents must not have to
   // remember which one takes a colon — see the header of `install/agents.ts`.
-  const { AGENTS, AGENT_KEYS, COMMAND_NAMES, invoke } = require('../../dist/install/agents.js');
+  const { AGENTS, AGENT_KEYS, COMMAND_NAMES, invoke, installedName, MANAGED_MARK } = require('../../dist/install/agents.js');
   const templates = path.join(ROOT, 'templates');
   assert.deepStrictEqual(
     [...COMMAND_NAMES].sort(),
@@ -95,7 +105,7 @@ test('every agent gets every command, and types it the same way', () => {
     const planned = AGENTS[key].plan({ repo: ROOT, templates });
     for (const name of COMMAND_NAMES) {
       assert.ok(
-        planned.some((f) => f.path.includes(`dspec-${name}`)),
+        planned.some((f) => path.basename(f.path, '.md') === installedName(name) || f.path.includes(`/${installedName(name)}/`)),
         `${key} is not given \`${invoke(name)}\``,
       );
     }
@@ -103,6 +113,8 @@ test('every agent gets every command, and types it the same way', () => {
     // not exist. This is the assertion the retired plugin build used to make.
     for (const f of planned) {
       assert.ok(!/__DS_/.test(f.content), `${key}: unresolved placeholder in ${f.path}`);
+      // The mark is what `dspec init` deletes by. A file without it would never be rebuilt.
+      assert.ok(f.content.includes(MANAGED_MARK), `${key}: ${f.path} carries no ${MANAGED_MARK} mark`);
     }
   }
 });
@@ -113,13 +125,18 @@ test('every command declares a tool list', () => {
   }
 });
 
-test('the hooks only ever add context, and always exit 0', () => {
+test('the hooks never block the user or a tool call, and always exit 0', () => {
   const hooks = fs.readdirSync(path.join(ROOT, 'templates/hooks')).filter((f) => f.endsWith('.js'));
   for (const f of hooks) {
     const body = read(`templates/hooks/${f}`);
     assert.ok(!/process\.exit\([1-9]/.test(body), `${f} can fail a tool call`);
-    assert.ok(!/"decision"|permissionDecision|"deny"/.test(body), `${f} tries to block`);
+    assert.ok(!/permissionDecision|"deny"/.test(body), `${f} tries to block a tool call`);
   }
+  // Only the Stop hook may keep the AGENT working, and only behind the loop guard.
+  for (const f of hooks.filter((h) => h !== 'stop.js' && h !== '_ds.js')) {
+    assert.ok(!/emitContinue/.test(read(`templates/hooks/${f}`)), `${f} holds the agent — only stop.js may`);
+  }
+  assert.match(read('templates/hooks/stop.js'), /stop_hook_active/, 'the Stop hook must never loop');
 });
 
 test('every file in templates/hooks is one an agent is actually given', () => {
@@ -165,14 +182,11 @@ test('a hook uses no binding it has not imported', () => {
   }
 });
 
-test('the stop hook speaks about drift and nothing else', () => {
-  // A description older than its code is what `/ds-sync` walks a person through. Offering it for a
-  // lost file or an unmeasured feature would describe code changing that did not change.
+test('the stop hook holds the agent only for work the model owes', () => {
+  // Drift, lost code, a feature with no description, new code nobody claims, an artifact behind.
+  // "Not measured" is `sync --write`'s to fix mechanically, and is not a reason to keep the agent.
   const body = read('templates/hooks/stop.js');
-  assert.ok(body.includes(`'stale'`), 'stop.js does not look for drift');
-  const { STALE_LABEL } = require('../../dist/code/staleness.js');
-  for (const kind of Object.keys(STALE_LABEL)) {
-    if (kind === 'stale') continue;
-    assert.ok(!body.includes(`'${kind}'`), `stop.js speaks about \`${kind}\`, which is not drift`);
-  }
+  for (const kind of ['stale', 'code_missing', 'entry_lost']) assert.ok(body.includes(`'${kind}'`), `stop.js ignores ${kind}`);
+  assert.ok(!body.includes(`'unmeasured'`), 'stop.js holds the agent for something sync --write fixes');
+  assert.match(body, /changedUnclaimed/);
 });

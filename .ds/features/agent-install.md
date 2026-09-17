@@ -8,12 +8,12 @@ code:
 entry: cmdInit
 uses: [Agent adapters, Model loading]
 tests: [test/ship/install.test.js]
-stamp: sha256g:3ea71a52e6d92f7c
+stamp: sha256g:fcf6ee324dd0f4b4
 ---
 
 `dspec init` — installs dspec into the agents a repository uses, and **rebuilds that install on every
 run**. The terminal has two jobs: take a newer dspec (`dspec update`) and put it into the agents
-(`dspec init`); everything else happens inside a session through the `/dspec-*` commands this writes.
+(`dspec init`); everything else happens inside a session through `/ds`, `/ds-bootstrap` and `/ds-update`.
 
 It asks which agents to set up, deletes everything dspec installed for them before, writes each
 one's files again in its own syntax, and reports what was added, rebuilt and removed.
@@ -21,11 +21,11 @@ one's files again in its own syntax, and reports what was added, rebuilt and rem
 Rules
 - **Every run is a rebuild, never an accumulation.** After an upgrade, one `dspec init` leaves exactly
   what the new version ships: no out-of-date copy, no command a newer version dropped. Editing a
-  `dspec`-prefixed file is therefore pointless, and the README says so.
+  file dspec installed is therefore pointless, and the README says so.
 - **Plan everything before deleting anything.** Every chosen agent's files are rendered first; a
   template that cannot be read stops the run before any install is removed.
 - **Never guess a first install when there is nobody to ask.** A non-TTY run with no `--agent`
-  rebuilds the agents already installed here — which is what `/dspec-update` runs — and refuses
+  rebuilds the agents already installed here — which is what `/ds-update` runs — and refuses
   when there are none. Writing into somebody's `.claude/` because a CI script ran a bare
   `dspec init` is the surprise this tool exists not to spring.
 - **An agent that lives outside the repository is never uninstalled from one.** Codex prompts sit in
@@ -50,6 +50,6 @@ Behaviour
   profile. It is rewritten on every run, because the path and the version are exactly what an
   upgrade changes. It is machine-specific, so add `.ds/config.json` to your own `.gitignore`.
 - A repository with no model closes with the next step named — open the agent and type
-  `/dspec-sync` — rather than leaving somebody with commands and nothing to run them against.
+  `/ds-bootstrap` — rather than leaving somebody with commands and nothing to run them against.
 - `.ds/config.json` alone is not a model: a freshly initialised repository still gets features
   proposed by its first `dspec sync --write`.

@@ -1,6 +1,6 @@
 {
   "name": "dspec",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Spec-driven development for AI coding agents. The product model lives as markdown in your repo, bound to the code and measured. One `dspec init` puts the /ds-* commands into Claude Code, Codex and Cursor.",
   "keywords": [
     "dspec",

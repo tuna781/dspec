@@ -10,7 +10,7 @@ stamp: sha256g:05ebcaae80e24ba0
 
 `dspec update` — compares the running dspec with the version npm calls `latest`, and installs the
 newer one globally if there is one. It touches no repository: rebuilding what dspec installed into a
-repo's agents is `dspec init`, and `/dspec-update` inside a session runs the two in order.
+repo's agents is `dspec init`, and `/ds-update` inside a session runs the two in order.
 
 Rules
 - **The one command that uses the network, and only because the user ran it.** It asks npm through
@@ -34,5 +34,5 @@ Behaviour
 - Versions compare numerically by `MAJOR.MINOR.PATCH`, so `0.0.10` is newer than `0.0.9`; a
   pre-release suffix is ignored.
 - `--check` only reports whether a newer version exists.
-- After installing, it names the next step: `dspec init` in each repo, or `/dspec-update` inside the
+- After installing, it names the next step: `dspec init` in each repo, or `/ds-update` inside the
   agent.

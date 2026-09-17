@@ -22,9 +22,10 @@ npm install && npm run build && npm test
 - **A hook must not `require` dspec relative to itself.** The hooks are COPIED into the user's
   `.claude/hooks/`, so `../dist/` resolves to `.claude/dist/` and throws — which the catch turns
   into `exit 0`. The hook stops working and says nothing. Go through `dspecModule()`.
-- **The vocabulary lives in exactly one place.** `src/model/language.ts` declares the keys, the
-  labels and the glosses; every surface that teaches them is generated from it. Do not hand-write a
-  copy — `test/model/language.test.js` will catch you, which is the point.
+- **The model's vocabulary lives in exactly one place, and no document teaches it.**
+  `src/model/language.ts` declares the keys, the labels and the glosses; agents read them through
+  `dspec sync --guide`. Do not copy them into the README or a command —
+  `test/model/language.test.js` and `test/contract/invariants.test.js` will catch you.
 - **Test files live exactly one level deep.** `npm test` expands `test/*/*.test.js`, so a file
   nested deeper would never run and the suite would stay green by not testing it.
 

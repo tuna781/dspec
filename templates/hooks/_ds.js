@@ -149,4 +149,17 @@ function emitMessage(text) {
   process.exit(0);
 }
 
-module.exports = { readInput, findRepo, ds, dspecModule, emitContext, emitMessage };
+/**
+ * Keep the agent working instead of ending its turn — Stop only.
+ *
+ * ⚠️ **It holds the AGENT, never the user or a tool call**, and exactly once per stop: the caller must
+ * check `stop_hook_active` first. It is how the product model is kept current without anybody
+ * having to remember a command — the agent that just changed the code finishes the job before it
+ * hands back.
+ */
+function emitContinue(reason) {
+  if (reason) process.stdout.write(JSON.stringify({ decision: 'block', reason: retarget(reason) }));
+  process.exit(0);
+}
+
+module.exports = { readInput, findRepo, ds, dspecModule, emitContext, emitMessage, emitContinue };

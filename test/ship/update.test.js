@@ -111,5 +111,5 @@ test('a global install is updated in the prefix it runs from, and the next step 
   assert.match(r.calls, new RegExp(`install -g --prefix ${fs.realpathSync(g.prefix).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} dspec@latest`));
   assert.match(r.stdout, /→ 99\.0\.0/);
   assert.match(r.stdout, /dspec init/);
-  assert.match(r.stdout, /\/dspec-update/);
+  assert.match(r.stdout, /\/ds-update/);
 });

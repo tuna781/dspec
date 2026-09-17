@@ -47,10 +47,15 @@ test('every label appears in the rendered block', () => {
 // ─── The guard ──────────────────────────────────────────────────────────────
 
 /** Every surface that teaches the language and must therefore generate it. */
-const SURFACES = [
-  'templates/skills/dspec/SKILL.md',
-  ...fs.readdirSync(path.join(ROOT, 'templates/commands')).map((f) => `templates/commands/${f}`),
-];
+const SURFACES = fs.readdirSync(path.join(ROOT, 'templates/commands')).map((f) => `templates/commands/${f}`);
+
+test('`sync --guide` carries the whole vocabulary, generated', () => {
+  const { renderGuide } = require('../../dist/model/language.js');
+  const guide = renderGuide();
+  for (const l of BODY_LABELS) assert.ok(guide.includes(l), `${l} missing from the guide`);
+  for (const k of FEATURE_KEYS) assert.ok(guide.includes(`\`${k}\``), `${k} missing from the guide`);
+  assert.ok(guide.includes(renderLanguageBlock('full')), 'the guide is generated from the one declaration');
+});
 
 test('no surface hand-writes the vocabulary', () => {
   const offenders = [];

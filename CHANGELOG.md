@@ -7,6 +7,47 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
+## [0.1.0] — 2026-09-17
+
+Three commands, and a product model you never have to think about.
+
+### Upgrading from 0.0.x
+
+```
+dspec update     # or: npm i -g dspec@latest
+dspec init       # in each repo
+```
+
+`dspec init` removes `/dspec-sync`, `/dspec-spec`, `/dspec-plan`, `/dspec-update` and the `dspec`
+skill (or 0.0.1's `/ds-*`) and installs the three new commands. Start a new agent session afterwards.
+
+### Changed
+- **Breaking: the session has exactly three commands** — the same in Claude Code, Codex and Cursor:
+  - **`/ds-bootstrap`** builds the product model the first time and brings it fully up to date every
+    time after. The agent names features, writes their descriptions and resolves everything the
+    model no longer agrees with on its own, then reports what it did.
+  - **`/ds {what you want}`** is the whole spec-driven loop: a detailed description checked against
+    the product's rules, a build plan, then **it stops for your decision**. On approval it builds,
+    runs the tests and updates the model.
+  - **`/ds-update`** runs `dspec update` and `dspec init` from inside the session.
+- **No skill is installed.** In Claude Code and Cursor a skill is also a slash command; what it taught
+  now lives in the memory file and in `dspec sync --guide`.
+- **The agent keeps the model current by itself.** Every memory file carries the upkeep steps: after
+  any change, read each description that is older than its code, rewrite it, `dspec accept`; claim
+  or describe new code. In Claude Code the Stop hook enforces it: when the model is behind the code,
+  the agent is asked — once per turn, never in a loop — to bring it up to date before it finishes.
+  Code that was undescribed before the work is left to `/ds-bootstrap`.
+- **The model is internal.** No document describes its format; the README talks about features and
+  commands only.
+- **Ownership is a mark, not a name.** Every installed file carries `dspec:managed`, and `dspec init`
+  deletes only marked files (plus `.claude/hooks/dspec/` and older installs). A `ds-deploy.md` of your
+  own is never touched.
+
+### Added
+- **`dspec sync --guide`** prints how to write the model — what an agent reads before it writes one.
+- **`dspec sync --json`** reports `changedUnclaimed`: source files added or modified in the working
+  tree that no feature claims.
+
 ## [0.0.3] — 2026-09-17
 
 ### Fixed
@@ -114,9 +155,6 @@ dspec init          # in any repo — pick your agents
 dspec keeps a product model as markdown in `.ds/` — one file per feature, each declaring the files
 it lives in and the features it depends on, each fingerprinted against the checkout.
 
-- **dspec-lang**: four file kinds (`product.md`, `glossary.md`, generated `index.md`,
-  `features/*.md`), seven frontmatter keys of which three are required, a lead paragraph and two
-  body labels. The path of a feature file carries no meaning; `area:` is the only grouping.
 - **Declared, not inferred.** `code:` and `uses:` are written by a person and verified by
   `dspec sync`: every path must exist, every name must resolve, every `entry:` must be declared in
   one of the feature's own files.

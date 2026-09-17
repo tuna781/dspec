@@ -11,7 +11,7 @@ uses:
   - Model creation
   - Agent adapters
 tests: [test/reconcile/sync.test.js]
-stamp: sha256g:195500c27edc8ea4
+stamp: sha256g:fe7d73c4ba45dd74
 ---
 
 Reconciles the model with the checkout in **both** directions and repairs what is safe to repair:
@@ -67,3 +67,8 @@ Behaviour
   have: accepting a guessed feature would assert freshness for a description nobody read. `--all`
   accepts every stale feature, for the reviewed-refactor case, and is spelled out so nobody reaches
   it by accident.
+- `--guide` prints how to write the model — generated from the vocabulary's single declaration —
+  and writes nothing. It is what an agent reads before it writes under `.ds/`; no document teaches
+  the format.
+- The JSON report carries `changedUnclaimed`: source files added or modified in the working tree
+  that no feature claims. Only those hold an agent's turn; older undescribed code is `/ds-bootstrap`'s.
