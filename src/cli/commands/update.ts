@@ -10,9 +10,10 @@
 // command reads the checkout and nothing else. This asks npm — through the user's own `npm`, so
 // their registry, proxy and credentials apply and dspec holds none of them.
 //
-// ⚠️ **It installs only a GLOBAL install.** A dspec running from a project's `node_modules` or from
-// a checkout belongs to that project's package.json; rewriting it from here would put the
-// lockfile and the running version out of step. It says what to run instead.
+// ⚠️ **It installs only a GLOBAL install, and into the prefix it is running from.** A dspec running
+// from a project's `node_modules` or from a checkout belongs to that project's package.json;
+// rewriting it from here would put the lockfile and the running version out of step. It says what
+// to run instead.
 // ============================================================
 
 import * as fs from 'node:fs';
@@ -59,6 +60,34 @@ const real = (p: string): string => {
   try { return fs.realpathSync(p); } catch { return path.resolve(p); }
 };
 
+/**
+ * The npm global prefix this dspec is installed in, or `null` when it is not a global install.
+ *
+ * ⚠️ **Read from the layout npm creates, never from npm's own output.** This used to compare the
+ * package directory with `npm root -g` — and npm REDACTS any path segment that looks like a UUID,
+ * printing `***` in its place, so a prefix under such a directory never matched and a real global
+ * install was refused as "not global". The layout needs no parsing:
+ *
+ *   Unix     <prefix>/lib/node_modules/dspec   with  <prefix>/bin/dspec → into that package
+ *   Windows  <prefix>/node_modules/dspec       with  <prefix>/dspec.cmd
+ *
+ * A project-local install is `<project>/node_modules/dspec` with its link in `node_modules/.bin`,
+ * so it never matches.
+ */
+export function globalPrefixOf(root: string): string | null {
+  const pkg = real(root);
+  const nodeModules = path.dirname(pkg);
+  if (path.basename(pkg) !== PACKAGE || path.basename(nodeModules) !== 'node_modules') return null;
+  const parent = path.dirname(nodeModules);
+  if (process.platform === 'win32') {
+    return fs.existsSync(path.join(parent, `${PACKAGE}.cmd`)) ? parent : null;
+  }
+  if (path.basename(parent) !== 'lib') return null;
+  const prefix = path.dirname(parent);
+  const link = path.join(prefix, 'bin', PACKAGE);
+  return fs.existsSync(link) && real(link).startsWith(pkg + path.sep) ? prefix : null;
+}
+
 export function cmdUpdate(argv: string[]): number {
   const { values } = parseFlags<{ check?: boolean; help?: boolean }>(argv, {
     check: { type: 'boolean' },
@@ -88,19 +117,22 @@ export function cmdUpdate(argv: string[]): number {
     return 0;
   }
 
-  const globalRoot = npm(['root', '-g']);
-  const isGlobal = globalRoot.ok && real(packageRoot()).startsWith(real(globalRoot.out) + path.sep);
-  if (!isGlobal) {
+  const prefix = globalPrefixOf(packageRoot());
+  if (!prefix) {
     console.log(`  This dspec is not a global npm install (it runs from ${packageRoot()}).`);
     console.log(`  Update it where it is installed — for a project: npm i -D ${PACKAGE}@latest`);
     return 0;
   }
 
-  console.log(`  npm install -g ${PACKAGE}@latest`);
-  const install = npm(['install', '-g', `${PACKAGE}@latest`], true);
+  // `--prefix` names the install being replaced. Without it npm uses its own configured prefix,
+  // which is not always the one this dspec runs from — a switched nvm version, a second Node — and
+  // the update would land somewhere else while this one stayed old.
+  const args = ['install', '-g', '--prefix', prefix, `${PACKAGE}@latest`];
+  console.log(`  npm ${args.join(' ')}`);
+  const install = npm(args, true);
   if (!install.ok) {
     console.error(`\n✗ npm could not install ${PACKAGE}@${latest}. If it was a permissions error, run it yourself:`);
-    console.error(`  npm install -g ${PACKAGE}@latest`);
+    console.error(`  npm ${args.join(' ')}`);
     return 1;
   }
 

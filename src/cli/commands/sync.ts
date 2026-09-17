@@ -243,7 +243,9 @@ export function cmdSync(args: string[]): number {
     const stamps = writeStamps(repo, loaded.model, loaded.sourceOf, true);
     const rendered = renderArtifacts(repo);
 
-    for (const r of restored) say(`✓ restored ${r}`);
+    // Nothing was there before a first run, so nothing was RESTORED: saying so told a user their
+    // brand-new model had been repaired.
+    for (const r of restored) say(`✓ ${hadModel ? 'restored' : 'created'} ${r}`);
     if (!hadModel && !proposed.length) {
       say('· no source files found to propose features from — write `.ds/features/*.md` by hand.');
     } else if (proposed.length) {

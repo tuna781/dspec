@@ -195,6 +195,8 @@ test('sync creates the model and proposes features in one go, when there is none
   assert.ok(existsIn(dir, '.ds/glossary.md'));
   assert.ok(existsIn(dir, '.ds/features/order.md'));
   assert.match(r.stdout, /provisional/i);
+  assert.match(r.stdout, /✓ created \.ds\/product\.md/, 'a first run creates; it restores nothing');
+  assert.ok(!/restored/.test(r.stdout), r.stdout);
   // ⚠️ And nothing else. The agent surface is `dspec init`'s to write; the command that creates a
   // model must not also reach into directories the user's editor owns.
   assert.ok(!existsIn(dir, '.claude'), '`.claude/` belongs to `dspec init`');
