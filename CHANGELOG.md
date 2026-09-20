@@ -3,9 +3,13 @@
 All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
-adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The command surface, the
-`.ds/` file format and the exit-code contract are what the major version covers: a breaking change
-to any of them takes a major bump.
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). What a version number covers
+is the command surface, the `.ds/` file format and the exit-code contract.
+
+**While dspec is 0.x, a breaking change to any of those takes a minor bump** — 0.2.x → 0.3.0 — and
+the patch digit is for changes that break none of them. This says what the project has actually
+done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
+still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
 ## [Unreleased]
 
