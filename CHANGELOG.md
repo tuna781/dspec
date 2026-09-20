@@ -7,6 +7,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
+## [Unreleased]
+
+### Changed
+
+- **`dspec init` asks nothing.** It installs into every agent dspec supports — Claude Code, Codex
+  CLI and Cursor — every time, in a terminal, a script or CI alike.
+
+  The picker asked the user to predict which agents they, and every teammate, would reach for on
+  this repository. The two mistakes it could make are not the same size: installing an agent
+  nobody opens costs one markdown file, while leaving out the one they do open costs a session
+  where `/ds-bootstrap` is simply missing and nothing says why. So the cheap mistake is now the
+  default.
+
+  `dspec init --agent claude` still installs for one agent only, and uninstalls any other that
+  keeps its files in this repository.
+
+### Removed
+
+- **`--all` and `--yes`.** `--all` is what a bare `dspec init` now does, and there is no longer a
+  prompt for `--yes` to skip. Both are rejected rather than silently ignored, so a script carrying
+  one is told instead of quietly doing something else.
+- The interactive picker, and the per-agent `detect()` that existed only to preselect it. Whether
+  a `.claude/` directory exists was never evidence that somebody uses Claude Code.
+
 ## [0.2.0] — 2026-09-20
 
 **dspec is a map, not a method.** Everything that made it a workflow is gone. What is left is the

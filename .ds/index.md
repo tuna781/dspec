@@ -8,9 +8,9 @@ Read this first, then the one feature file you need under `.ds/features/`.
 - **Agent adapters** — The one place in dspec where anything is agent-specific: where each agent's
   command file goes, what frontmatter it reads, and how to recognise an install.
   → `src/agents.ts` · uses: Managed install
-- **Agent install** — `dspec init`, the entire terminal surface: choose agents, install the command
-  and the map instructions, report what changed.
-  → `src/init.ts`, `src/prompt.ts` · uses: Agent adapters, Managed install
+- **Agent install** — `dspec init`, the entire terminal surface: install the command and the map
+  instructions into every supported agent, and report what changed. It asks nothing.
+  → `src/init.ts` · uses: Agent adapters, Managed install
 - **Managed install** — Writing dspec's files into somebody else's repository, and being able to
   take every one of them back. Ownership is the `dspec:managed` mark.
   → `src/install.ts`

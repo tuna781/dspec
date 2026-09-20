@@ -28,7 +28,7 @@ const init = (dir, ...args) => {
 
 test('a fresh install puts one command per agent, and the block in its memory file', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
 
   assert.ok(existsIn(dir, CLAUDE_CMD), 'Claude command');
   assert.ok(existsIn(dir, CURSOR_CMD), 'Cursor skill');
@@ -44,14 +44,14 @@ test('a fresh install puts one command per agent, and the block in its memory fi
 
 test('the command is the only one installed — the 0.1.x workflow commands are not', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   assert.deepEqual(fs.readdirSync(path.join(dir, '.claude', 'commands')), ['ds-bootstrap.md']);
   assert.deepEqual(fs.readdirSync(path.join(dir, '.agents', 'skills')), ['ds-bootstrap']);
 });
 
 test('every installed file carries the mark, and no placeholder survives into one', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   for (const p of [path.join(dir, CLAUDE_CMD), path.join(dir, CURSOR_CMD), codexPrompt(dir, 'ds-bootstrap.md')]) {
     const body = fs.readFileSync(p, 'utf-8');
     assert.ok(body.includes(MARK), `${p} carries the mark`);
@@ -61,7 +61,7 @@ test('every installed file carries the mark, and no placeholder survives into on
 
 test('each agent gets the frontmatter it actually reads', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   // Claude honours a tool list; the other two do not, so giving them one would be a promise
   // nothing keeps.
   assert.match(readIn(dir, CLAUDE_CMD), /^allowed-tools: /m);
@@ -73,18 +73,29 @@ test('each agent gets the frontmatter it actually reads', () => {
 
 test('re-running init is byte-identical', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   const before = snapshot(dir);
-  init(dir, '--yes');
+  init(dir);
   assert.deepEqual(snapshot(dir), before);
 });
 
-test('--yes with nothing installed refuses rather than guessing a first install', () => {
+test('a bare init installs every agent, asking nothing', () => {
   const dir = makeRepo();
-  const r = runCli(dir, 'init', '--yes');
-  assert.equal(r.status, 2);
-  assert.match(r.stderr, /not installed for any agent/);
-  assert.equal(existsIn(dir, 'CLAUDE.md'), false);
+  // ⚠️ stdin is not a TTY under the test runner, which is exactly the case the old picker
+  // treated as "nobody to ask" and refused. There is nothing to ask now.
+  init(dir);
+  assert.ok(existsIn(dir, CLAUDE_CMD), 'Claude');
+  assert.ok(existsIn(dir, CURSOR_CMD), 'Cursor');
+  assert.ok(fs.existsSync(codexPrompt(dir, 'ds-bootstrap.md')), 'Codex');
+  assert.ok(existsIn(dir, 'CLAUDE.md') && existsIn(dir, 'AGENTS.md'), 'both memory files');
+});
+
+test('the removed picker flags are errors, not silently ignored', () => {
+  const dir = makeRepo();
+  for (const gone of ['--all', '--yes']) {
+    const r = runCli(dir, 'init', gone);
+    assert.notEqual(r.status, 0, `${gone} is gone`);
+  }
 });
 
 // ─── what dspec is allowed to touch ─────────────────────────────────────────
@@ -102,7 +113,7 @@ test('a second run replaces only what is between the markers', () => {
   const dir = makeRepo({ files: { 'CLAUDE.md': '# Mine\n' } });
   init(dir, '--agent', 'claude');
   writeIn(dir, 'CLAUDE.md', readIn(dir, 'CLAUDE.md') + '\n## Afterword\n\nStill mine.\n');
-  init(dir, '--yes');
+  init(dir);
   const body = readIn(dir, 'CLAUDE.md');
   assert.match(body, /# Mine/);
   assert.match(body, /## Afterword/);
@@ -118,14 +129,14 @@ test('a file named like ours but without the mark is never removed', () => {
 
 test('not choosing Codex does not uninstall it from the home directory', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   init(dir, '--agent', 'claude');
   assert.ok(fs.existsSync(codexPrompt(dir, 'ds-bootstrap.md')), 'Codex prompt survives');
 });
 
 test('choosing an agent again after dropping another leaves the dropped one removed', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   init(dir, '--agent', 'claude');
   assert.equal(existsIn(dir, CURSOR_CMD), false, 'Cursor was removed — it lives in the repo');
   assert.ok(existsIn(dir, CLAUDE_CMD));
@@ -155,7 +166,7 @@ function seedLegacy(dir) {
 test('upgrading removes the workflow commands and the hook scripts', () => {
   const dir = makeRepo();
   seedLegacy(dir);
-  init(dir, '--yes');
+  init(dir);
 
   assert.deepEqual(fs.readdirSync(path.join(dir, '.claude', 'commands')), ['ds-bootstrap.md']);
   assert.equal(existsIn(dir, '.claude/hooks/dspec'), false, 'the hook directory is gone');
@@ -167,7 +178,7 @@ test('upgrading removes the workflow commands and the hook scripts', () => {
 test('upgrading takes back the hook entries the old version added, and nothing else', () => {
   const dir = makeRepo();
   seedLegacy(dir);
-  init(dir, '--yes');
+  init(dir);
 
   const settings = JSON.parse(readIn(dir, '.claude/settings.json'));
   // The whole `hooks` key goes, because dspec's entries were all of it. A block emptied by our
@@ -206,7 +217,7 @@ test('a settings.json that does not parse is reported and never written', () => 
 test('a CLAUDE.md the old version generated in full is replaced, not appended to', () => {
   const dir = makeRepo();
   seedLegacy(dir);
-  init(dir, '--yes');
+  init(dir);
   const body = readIn(dir, 'CLAUDE.md');
   assert.doesNotMatch(body, /Generated in full by the old version/);
   assert.doesNotMatch(body, /<!-- ds: project=/, 'the old stamp is gone');
@@ -215,7 +226,7 @@ test('a CLAUDE.md the old version generated in full is replaced, not appended to
 
 test('init never creates .ds/ — reading the codebase is the agent\'s job', () => {
   const dir = makeRepo();
-  init(dir, '--all');
+  init(dir);
   assert.equal(existsIn(dir, '.ds'), false);
 });
 

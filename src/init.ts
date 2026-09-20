@@ -2,7 +2,13 @@
 // `dspec init` — install dspec into your agents, and rebuild that install on every run
 //
 // The terminal has exactly one job: put the `/ds-bootstrap` command and the map instructions into
-// the agents this repository uses. Everything else happens inside an agent session.
+// every agent dspec supports. Everything else happens inside an agent session.
+//
+// ⚠️ **It asks nothing.** `dspec init` installs for all three agents, every time. A picker made the
+// user answer a question they had no way to answer well — which agents they might use on this repo,
+// this month, on this machine and every teammate's — to save a few kilobytes of markdown. Getting
+// it wrong meant a session where the command simply was not there, with nothing to explain why.
+// `--agent` is still there for somebody who genuinely wants one, and nobody has to find it.
 //
 // ⚠️ **Every run deletes everything dspec installed, then writes it again.** Ownership is the
 // `dspec:managed` mark — see `install.ts` — plus the files an older dspec wrote before the mark
@@ -22,34 +28,29 @@ import {
   AGENTS, AGENT_KEYS, INVOKE, isAgentKey, isInstalled, legacyHookCommands, type AgentKey,
 } from './agents';
 import { rebuild, removeHooks, writeMemoryBlock, type PlannedFile, type Rebuilt } from './install';
-import { canPrompt, pick } from './prompt';
 import { packageRoot, packageVersion } from './pkgRoot';
 import { csv, parseFlags } from './args';
 
-const USAGE = `dspec init [--agent claude,codex,cursor] [--all] [--yes]
+const USAGE = `dspec init [--agent claude,codex,cursor]
 
-  Install dspec into the AI coding agents you choose: the ${INVOKE} command, and the
-  instructions that teach the agent to use \`.ds/\` in CLAUDE.md / AGENTS.md.
+  Install dspec into every AI coding agent it supports — Claude Code, Codex CLI and Cursor: the
+  ${INVOKE} command, and the instructions that teach the agent to use \`.ds/\` in
+  CLAUDE.md / AGENTS.md. It asks nothing.
 
   Every run REBUILDS the install: everything dspec wrote before is deleted and written again from
   this version. Run it after upgrading. Nothing dspec did not write is ever touched.
 
-  --agent   claude, codex, cursor — comma separated
-  --all     every supported agent
-  --yes     never prompt: rebuild the agents already installed here (or those named)`;
+  --agent   install for these only, comma separated. Any agent left out that keeps its files in
+            this repository is uninstalled from it`;
 
 interface InitFlags {
   agent?: string | string[];
-  all?: boolean;
-  yes?: boolean;
   help?: boolean;
 }
 
 export async function cmdInit(argv: string[]): Promise<number> {
   const { values } = parseFlags<InitFlags>(argv, {
     agent: { type: 'string', multiple: true },
-    all: { type: 'boolean' },
-    yes: { type: 'boolean', short: 'y' },
     help: { type: 'boolean', short: 'h' },
   });
 
@@ -69,40 +70,11 @@ export async function cmdInit(argv: string[]): Promise<number> {
     return 2;
   }
 
-  let chosen: AgentKey[];
-  if (values.all) {
-    chosen = [...AGENT_KEYS];
-  } else if (named.length) {
-    chosen = named.filter(isAgentKey);
-  } else if (values.yes || !canPrompt()) {
-    // With nobody to ask, rebuild what is already here.
-    // ⚠️ **Never guess a FIRST install.** Writing into somebody's `.claude/` because a CI script
-    // ran a bare `dspec init` is exactly the kind of surprise this tool must not spring.
-    if (!installed.length) {
-      console.error(`✗ dspec is not installed for any agent here — name one with --agent or --all\n\n${USAGE}`);
-      return 2;
-    }
-    chosen = installed;
-  } else {
-    chosen = (await pick(
-      'Which agents should get dspec?',
-      AGENT_KEYS.map((k) => {
-        const a = AGENTS[k];
-        return {
-          key: k,
-          label: a.label,
-          // An upgrade is Enter: whatever is installed now is what gets rebuilt.
-          preselected: installed.length ? installed.includes(k) : a.detect(repo),
-          note: a.note,
-        };
-      }),
-    )).filter(isAgentKey);
-  }
-
-  if (!chosen.length) {
-    console.log('· no agents chosen — nothing written.');
-    return 0;
-  }
+  // ⚠️ **All three unless told otherwise, and the same answer in a terminal, a script and CI.**
+  // Installing an agent somebody never opens costs them one markdown file; NOT installing the one
+  // they do open costs them a session where `/ds-bootstrap` is missing and nothing says why. The
+  // two mistakes are not the same size, so the default is the cheap one.
+  const chosen: AgentKey[] = named.length ? named.filter(isAgentKey) : [...AGENT_KEYS];
 
   const templates = path.join(packageRoot(), 'templates');
   const memoryTemplate = path.join(templates, 'memory.md');

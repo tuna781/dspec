@@ -61,16 +61,11 @@ export interface Agent {
   key: AgentKey;
   label: string;
   /**
-   * Does this machine or repo look like it uses this agent? Preselects the picker, and nothing
-   * else — a `.claude/` directory says somebody uses Claude Code, not that dspec is installed.
-   */
-  detect(repo: string): boolean;
-  /**
    * One file that exists only because dspec put it there.
    *
    * This is how "is dspec installed for this agent?" is answered — **derived from the checkout,
-   * never stored.** A different question from `detect`, and conflating the two is how a repo that
-   * chose Claude alone would still be handed an `AGENTS.md`.
+   * never stored.** It decides whether an agent left out of `--agent` had anything here to take
+   * back; it is never a guess at whether somebody uses that agent.
    */
   marker(repo: string): string;
   /** The same question for an install made by an older dspec. */
@@ -86,7 +81,7 @@ export interface Agent {
   memoryFile: 'CLAUDE.md' | 'AGENTS.md';
   /** Does it keep its command outside the repo, so a teammate does not get it on clone? */
   outsideRepo?: boolean;
-  /** The one line this agent owes the user about what installing it actually does. */
+  /** The one line this agent owes the user about where its files landed. */
   note: string;
   /** The command file this agent should receive. */
   plan(ctx: PlanContext): PlannedFile[];
@@ -122,7 +117,6 @@ const claude: Agent = {
   label: 'Claude Code',
   memoryFile: 'CLAUDE.md',
   note: `${INVOKE} in .claude/commands/, and the map instructions in CLAUDE.md`,
-  detect: (repo) => fs.existsSync(path.join(repo, '.claude')),
   marker: (repo) => path.join(repo, '.claude', 'commands', `${COMMAND}.md`),
   legacyMarkers: (repo) => [
     path.join(repo, '.claude', 'commands', 'ds.md'),
@@ -178,7 +172,6 @@ const codex: Agent = {
   memoryFile: 'AGENTS.md',
   outsideRepo: true,
   note: `${INVOKE} in ~/.codex/prompts — not shared when a teammate clones`,
-  detect: () => fs.existsSync(path.dirname(codexPromptsDir())),
   marker: () => path.join(codexPromptsDir(), `${COMMAND}.md`),
   legacyMarkers: () => [
     path.join(codexPromptsDir(), 'ds.md'),
@@ -213,7 +206,6 @@ const cursor: Agent = {
   label: 'Cursor',
   memoryFile: 'AGENTS.md',
   note: `${INVOKE} in .agents/skills/, and the map instructions in AGENTS.md`,
-  detect: (repo) => fs.existsSync(path.join(repo, '.cursor')) || fs.existsSync(path.join(repo, '.agents')),
   marker: (repo) => path.join(repo, '.agents', 'skills', COMMAND, 'SKILL.md'),
   legacyMarkers: (repo) => [
     path.join(repo, '.agents', 'skills', 'ds', 'SKILL.md'),
@@ -246,7 +238,7 @@ export const AGENTS: { [K in AgentKey]: Agent } = { claude, codex, cursor };
  * Installed now, or by an older dspec. Derived from the files, never stored.
  *
  * ⚠️ The current marker is checked for dspec's MARK, not merely for existence: somebody else's
- * `ds-bootstrap.md` is not an install of ours, and treating it as one would make `--yes` rebuild
+ * `ds-bootstrap.md` is not an install of ours, and treating it as one would have `init` rebuild
  * — which is to say delete and rewrite — a file dspec has no claim on.
  */
 export function isInstalled(agent: Agent, repo: string): boolean {
