@@ -20,13 +20,12 @@ Hide
 Type "cd shop && clear && export PS1='$ '" Enter
 Show
 
-Sleep 600ms
-Type "# A question about a codebase you did not write:" Enter
-Type "#   'why does checkout reject my second discount code?'" Enter
-Sleep 1400ms
+Sleep 400ms
+Type "# why does checkout reject my second discount code?" Enter
+Sleep 1500ms
 Type "" Enter
 
-Type "# Without a map, your agent goes looking." Enter
+Type "# A codebase you did not write. Your agent goes looking." Enter
 Sleep 500ms
 Type "grep -rli discount src/ | wc -l    # files it has to open" Enter
 Sleep 1200ms

@@ -30,8 +30,10 @@ then only the feature files you need.
   separate ceremony.
 - New behaviour that no feature describes gets a new file under `.ds/features/`, in the same shape
   as the others.
-- If the map is missing or badly out of date, `/ds-bootstrap` rebuilds it.
+- If the map is missing or badly out of date, `/ds-bootstrap` rebuilds it. If that command is not
+  available in this session, say so and tell the user to run `npm i -g dspec && dspec init`.
 
-**Talk to the user about features and behaviour, never about these files.** `.ds/` is yours to
-maintain; the user neither reads nor edits it.
+**Talk to the user about features and behaviour, never about these files** — the one exception is
+telling them to install dspec when the command is missing. `.ds/` is yours to maintain; the user
+neither reads nor edits it.
 <!-- ds:end -->

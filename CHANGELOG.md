@@ -13,6 +13,41 @@ still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
 ## [Unreleased]
 
+### Added
+
+- **The README's recording is now two real Claude Code sessions, side by side.** The same question,
+  in the same repository, once with `.ds/` committed and once without — left greps and opens every
+  file that mentions the word, right reads the map index and opens the two files it names.
+
+  The previous recording was a sequence of shell commands standing in for an agent. It argued the
+  case; it did not show it. `demo/record-split.sh` and `demo/compose-split.sh` now record and join
+  the two halves, and `demo/README.md` says what is and is not reproducible about them.
+
+  Recording happens in a staging copy outside this repository, deliberately: Claude Code reads
+  `CLAUDE.md` from every parent directory, so a session recorded inside `demo/` inherits dspec's
+  own block and the no-map half goes looking for a map anyway — a broken comparison that still
+  produces a plausible-looking gif.
+
+- **The README carries measured numbers.** One question put to Claude Code twice, with and without
+  the map: 45s and 127,814 tokens against 29s and 67,436. One run each on the 15-file fixture in
+  `demo/shop`, which anyone can clone and re-run.
+
+### Changed
+
+- **The block dspec writes into `CLAUDE.md` / `AGENTS.md` now names the install command.** When the
+  map needs rebuilding and `/ds-bootstrap` does not exist in the session, the agent is told to say
+  so and to give the user `npm i -g dspec && dspec init`.
+
+  This is the only path by which somebody who cloned a repository carrying a map — a teammate, a
+  contributor — finds out what wrote it. `.ds/` itself stays unattributed: the index is read every
+  session, so a credit there would be paid for on every turn. The fallback costs its ~25 tokens
+  only where a repository already has a map that has fallen behind, which is the moment the tool is
+  worth naming at all.
+
+### Removed
+
+- **`demo.gif`**, the scripted recording, replaced by `demo-split.gif`.
+
 ### Fixed
 
 - **`npm run release` now dates the changelog heading itself.** `## [Unreleased]` becomes

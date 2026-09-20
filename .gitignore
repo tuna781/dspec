@@ -31,3 +31,7 @@ coverage/
 # from the user's own home directory.
 .ds/config.json
 CLAUDE.local.md
+
+# demo recording intermediates — only ../demo-split.gif is committed
+demo/half-*.gif
+demo/label-*.png

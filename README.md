@@ -17,7 +17,12 @@
 </p>
 
 <p align="center">
-  <img src="demo.gif" alt="One question about a product: 12 of 15 files to grep without dspec; two reads with it" width="100%">
+  <img src="demo-split.gif" alt="Two real Claude Code sessions asked the same question side by side: without dspec it greps and reads every matching file; with dspec it reads the map index and opens two named files" width="100%">
+</p>
+
+<p align="center">
+  <em>Two real Claude Code sessions. Same repository, same question, same model.<br>
+  The only difference is whether <code>.ds/</code> is committed.</em>
 </p>
 
 ```bash
@@ -87,8 +92,29 @@ The map is written once and read many times. A feature file is a few hundred tok
 replaces is tens of thousands — on every question, in every new session, for every person on your
 team.
 
+The recording above, measured. One question — *why does checkout reject my second discount code?* —
+put to Claude Code twice, in the same repository, once with `.ds/` committed and once without:
+
+| | answered in | tokens through the context | cost |
+|---|---|---|---|
+| without dspec | 45s | 127,814 | $0.32 |
+| with dspec | 29s | 67,436 | $0.19 |
+
+One run each, on the 15-file demo repository in [`demo/shop`](demo/) — clone it and check. It is a
+small codebase, and the gap grows with the repository: the map stays a few thousand tokens while
+the search it replaces grows with every file you add.
+
 It's also more **accurate**. A grep finds files that mention a word. The map says which files a
 feature actually lives in, because an agent read them and wrote it down.
+
+## One person sets it up; the team gets it
+
+`.ds/` and the instruction block are committed, like any other file. So the developer who runs
+`/ds-bootstrap` isn't the one who benefits from it — everyone who pulls does, in their very next
+session, without installing anything or being told.
+
+That's also how the map stays honest across a team. Nobody has to remember to update it: whoever
+touches the code has an agent that was already told to fix the feature file it just invalidated.
 
 ## dspec is not a workflow
 

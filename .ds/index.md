@@ -28,6 +28,12 @@ Read this first, then the one feature file you need under `.ds/features/`.
 - **Command surface** — The `dspec` command itself: one verb, its flags, and locating the running
   package so `templates/` resolves.
   → `bin/ds.js`, `src/cli.ts`, `src/args.ts`, `src/pkgRoot.ts` · uses: Agent install
+- **Demo recording** — The README's recording: two real Claude Code sessions asked the same question
+  side by side, one with a `.ds/` map and one without, staged outside this repository so the
+  no-map half really has no map.
+  → `demo/record-split.sh`, `demo/compose-split.sh`, `demo/make-labels.py`, `demo/.rec-env.sh`,
+  `demo/half-without.tape`, `demo/half-with.tape`, `demo/shop`
+
 - **Release** — Cuts a release: the version and the changelog heading, the suite, the commit, the
   tag on that commit, then the GitHub Release from those same notes.
   → `scripts/release.js`, `scripts/publish-release.js`
