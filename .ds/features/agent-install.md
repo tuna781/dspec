@@ -2,54 +2,43 @@
 name: Agent install
 area: Setup
 code:
-  - src/cli/commands/init.ts
-  - src/install/prompt.ts
-  - src/install/tracker.ts
-entry: cmdInit
-uses: [Agent adapters, Model loading]
-tests: [test/ship/install.test.js]
-stamp: sha256g:fcf6ee324dd0f4b4
+  - src/init.ts
+  - src/prompt.ts
+uses: [Agent adapters, Managed install]
 ---
 
-`dspec init` — installs dspec into the agents a repository uses, and **rebuilds that install on every
-run**. The terminal has two jobs: take a newer dspec (`dspec update`) and put it into the agents
-(`dspec init`); everything else happens inside a session through `/ds`, `/ds-bootstrap` and `/ds-update`.
+`dspec init` — the entire terminal surface. It asks which agents this repository uses, installs the
+`/ds-bootstrap` command into each, writes the map instructions into their memory files, and reports
+what changed. Start at `cmdInit` in `src/init.ts`.
 
-It asks which agents to set up, deletes everything dspec installed for them before, writes each
-one's files again in its own syntax, and reports what was added, rebuilt and removed.
+## Rules
 
-Rules
-- **Every run is a rebuild, never an accumulation.** After an upgrade, one `dspec init` leaves exactly
-  what the new version ships: no out-of-date copy, no command a newer version dropped. Editing a
-  file dspec installed is therefore pointless, and the README says so.
-- **Plan everything before deleting anything.** Every chosen agent's files are rendered first; a
-  template that cannot be read stops the run before any install is removed.
-- **Never guess a first install when there is nobody to ask.** A non-TTY run with no `--agent`
-  rebuilds the agents already installed here — which is what `/ds-update` runs — and refuses
-  when there are none. Writing into somebody's `.claude/` because a CI script ran a bare
-  `dspec init` is the surprise this tool exists not to spring.
-- **An agent that lives outside the repository is never uninstalled from one.** Codex prompts sit in
-  the home directory and serve every repository on the machine; not choosing Codex here is not a
-  request to remove it everywhere. A repo-scoped agent that was installed and is not chosen again
-  is removed.
-- **A typo names itself and installs nothing.** An unknown agent is an error before any file is
-  written, never a silent omission that leaves half a surface behind.
-- **It installs the surface; it does not invent a model.** `dspec sync --write` creates `.ds/`, the
-  first time it runs. Keeping the two apart is what stops "set the tooling up" from carrying the
-  power to write feature files.
-- **The picker takes typed numbers, not arrow keys.** Raw mode on a terminal that does not support
-  it leaves the user's shell without an echo after the process exits; `1,3` works over ssh, in
-  tmux, and in every editor's embedded shell.
+- **It never reads or creates `.ds/`.** Setting the tooling up and reading somebody's whole
+  codebase are different intentions, and one must not silently carry the other's power. The map is
+  written by an agent running `/ds-bootstrap`, which is the only thing that can judge what a
+  feature is.
+- **Never guess a first install.** With nobody to ask (`--yes`, or no TTY) and nothing installed
+  here yet, it refuses rather than writing into somebody's `.claude/` because a CI script ran a
+  bare `dspec init`.
+- **Everything is planned before anything is deleted.** A template that cannot be read must not
+  leave an agent with its old install removed and no new one written.
+- **Not choosing an agent that lives outside the repository is not a request to uninstall it.**
+  Codex's command sits in the home directory and is shared by every repo on the machine; skipping
+  it here must not remove it from all of them. An agent whose files are in the repo is removed.
 
-Behaviour
-- Agents dspec is already installed for are preselected, so after an upgrade Enter rebuilds the
-  same set. With none installed, agents already visible in the repo or the home directory are
-  preselected — a guess about what somebody uses, never a claim that dspec is installed for it.
-- The absolute path of the running CLI is recorded in `.ds/config.json`, so the Claude hooks still
-  resolve when `dspec` is not on PATH — a switched nvm version, a shell that never sourced the
-  profile. It is rewritten on every run, because the path and the version are exactly what an
-  upgrade changes. It is machine-specific, so add `.ds/config.json` to your own `.gitignore`.
-- A repository with no model closes with the next step named — open the agent and type
-  `/ds-bootstrap` — rather than leaving somebody with commands and nothing to run them against.
-- `.ds/config.json` alone is not a model: a freshly initialised repository still gets features
-  proposed by its first `dspec sync --write`.
+## Behaviour
+
+- Which agents: `--all`, then `--agent a,b`, then — with nobody to ask — whatever is already
+  installed, and otherwise an interactive picker. The picker preselects what is installed, so an
+  upgrade is a single Enter; in a repo with nothing installed it preselects what it can detect.
+- A memory file is written once per distinct name, so choosing Codex and Cursor together produces
+  one `AGENTS.md`, not two writes of it.
+- `.claude/settings.json` is checked on every run purely to take back the session hooks 0.1.x
+  added. Nothing is ever added to it, and a file holding none of dspec's entries is not rewritten
+  at all — not even reformatted.
+- A `settings.json` that does not parse is reported and left alone, and the install still goes
+  through: one stray comma must not cost somebody their configuration, nor their install.
+- The report names removals individually. A removal is the one outcome somebody might not expect —
+  a command an older dspec had and this one does not.
+- The closing line points at `/ds-bootstrap` and says to start a new session, because an agent
+  already running will not see a command file that appeared underneath it.

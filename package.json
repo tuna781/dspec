@@ -1,17 +1,17 @@
 {
   "name": "dspec",
   "version": "0.1.0",
-  "description": "Spec-driven development for AI coding agents. The product model lives as markdown in your repo, bound to the code and measured. One `dspec init` puts the /ds-* commands into Claude Code, Codex and Cursor.",
+  "description": "Stop paying your coding agent to re-read your product every session. dspec writes it down once in .ds/ \u2014 a form Claude Code, Codex and Cursor read fast.",
   "keywords": [
     "dspec",
-    "specs",
-    "spec-driven",
-    "spec-driven-development",
     "code-map",
+    "codebase-map",
+    "context",
     "claude-code",
     "codex",
     "cursor",
     "agents",
+    "ai",
     "local",
     "cli"
   ],
@@ -48,7 +48,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "dev": "tsc --watch --preserveWatchOutput",
-    "test": "tsc && node --test test/*/*.test.js",
+    "test": "tsc && node --test test/*.test.js",
     "release": "node scripts/release.js",
     "prepublishOnly": "npm run build"
   }

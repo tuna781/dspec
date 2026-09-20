@@ -8,7 +8,7 @@
 
 - [ ] `npm test` passes (it type-checks first)
 - [ ] Touched `templates/`? Checked the prose is true in **all three** agents — only Claude Code honours a tool list
-- [ ] Touched `.ds/`? Ran `dspec sync --write`, and `dspec sync --strict` is clean
+- [ ] Touched code? Updated the `.ds/` feature file that claims it, and `.ds/index.md` if its summary or file list changed
 - [ ] Added or updated a test
 - [ ] Noted anything user-visible in `CHANGELOG.md` under `## [Unreleased]`
 - [ ] Did **not** bump the version and did **not** tag — the git tag is the version, cut at release time

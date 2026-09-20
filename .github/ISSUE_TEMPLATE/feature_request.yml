@@ -5,11 +5,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        dspec is deliberately small: it answers what a feature is, where it lives, and what it
-        touches, and it is built for nothing else. A request that fits that shape has a much better
-        chance than one that widens it — and some things are ruled out on purpose, so it is worth
-        reading the non-negotiables in
-        [`.ds/product.md`](https://github.com/tuna781/dspec/blob/master/.ds/product.md) first.
+        dspec does one thing: it keeps a map of your codebase so your agent can answer questions
+        without searching. A request that makes the map better, cheaper or truer has a good chance.
+
+        A request that adds a **process** — a spec to write, a plan to approve, a gate to pass, a
+        required order of work — does not. Version 0.2.0 deliberately removed all of that. Some
+        other things are ruled out on purpose too; the non-negotiables are in
+        [CONTRIBUTING.md](https://github.com/tuna781/dspec/blob/master/CONTRIBUTING.md).
 
   - type: textarea
     id: problem
@@ -41,4 +43,5 @@ body:
       options:
         - label: It needs no runtime dependency
         - label: It needs no network call, server or token
-        - label: Anything it would assert about the code can be re-read from the checkout
+        - label: It does not require anyone to work in a particular way
+        - label: It can be done the same way for Claude Code, Codex and Cursor

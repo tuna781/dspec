@@ -1,260 +1,175 @@
-<div align="center">
+<h1 align="center">dspec</h1>
 
-# 📐 dspec
+<p align="center">
+  <strong>Stop paying your agent to re-read your product every single session.</strong>
+</p>
 
-### Spec-driven development in one command: `/ds {anything}`
+<p align="center">
+  Write it down once in <code>.ds/</code> — a form built to be read fast:<br>
+  one page to find the feature, one file to understand it.
+</p>
 
-**Say what you want. Your agent specs it against what your product already is, plans the build, and waits for your go — then builds it and keeps the product model true on its own.**
+<p align="center">
+  <a href="https://www.npmjs.com/package/dspec"><img src="https://img.shields.io/npm/v/dspec.svg" alt="npm"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/npm/l/dspec.svg" alt="MIT"></a>
+  <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="zero dependencies">
+  <img src="https://img.shields.io/badge/network%20calls-0-brightgreen" alt="no network">
+</p>
 
-[![CI](https://github.com/tuna781/dspec/actions/workflows/ci.yml/badge.svg)](https://github.com/tuna781/dspec/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/tuna781/dspec?label=release&color=blue)](https://github.com/tuna781/dspec/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-brightgreen.svg)](https://nodejs.org)
-[![Dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen.svg)](package.json)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-8A2BE2.svg)](#ds--the-one-command)
-[![Codex](https://img.shields.io/badge/Codex-000000.svg)](#ds--the-one-command)
-[![Cursor](https://img.shields.io/badge/Cursor-1a1a1a.svg)](#ds--the-one-command)
+<p align="center">
+  <img src="demo.gif" alt="One question about a product: 12 of 15 files to grep without dspec; two reads with it" width="100%">
+</p>
 
-<br>
-
-<img src="demo.gif" alt="A real Claude Code session: /ds let a customer stack two coupons — the agent finds the product rule the request breaks, lists what is not settled, plans the build and waits for a decision before writing any code" width="820">
-
-</div>
-
-```
-npm i -g dspec && dspec init            # once: install, pick your agents
-/ds-bootstrap                           # once per repo, inside the agent
-
-/ds let customers stack two coupons     # ← this is dspec. Every feature, every change, from here on.
-```
-
----
-
-## What dspec does
-
-An agent that has to read your codebase to understand it will read the wrong four files sooner or
-later, and be confident about it. `CLAUDE.md` is meant to carry that knowledge across sessions —
-except nothing checks that a word of it is still true.
-
-dspec gives your agent a **product model**: every feature — what it is, where it lives in the code,
-what it depends on, and the rules it must never break. The agent builds it once, reads it before
-every change, and **keeps it up to date itself** after every change. You never edit it; you talk to
-your agent about features.
-
-- **Discovery gets cheap.** The agent reads the one feature a request touches, not your source tree.
-- **One command is the whole loop.** `/ds {anything}` turns a sentence into a detailed spec, a
-  build plan, a decision for you, and — once you say go — working code and an up-to-date model.
-- **Broken rules surface while they are still a sentence.** `/ds` checks what you ask for against the
-  product's rules and says *"this contradicts X — you decide"* before any code exists.
-- **Guesses are labelled, not smoothed over.** When nothing in the model decides a question, the
-  agent says so instead of inventing an answer that sounds right.
-- **It stays true.** Every description is fingerprinted against the code it describes. When code
-  changes, the agent updates the description before it finishes — enforced by a hook in Claude Code.
-
-Everything is local: no server, no token, no telemetry, zero runtime dependencies — and no network
-call, except `dspec update` asking npm for a newer version when you run it.
-
----
-
-## Contents
-
-- [Install](#install)
-- [`/ds` — the one command](#ds--the-one-command)
-- [Supporting commands](#supporting-commands)
-- [Terminal commands](#terminal-commands)
-- [Updating](#updating)
-- [How the model stays true](#how-the-model-stays-true)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-
----
-
-## Install
-
-```
+```bash
 npm i -g dspec
-```
-
-Then, in any repository:
-
-```
 dspec init
 ```
 
-It asks which agents to set up and installs `/ds` — and its two supporting commands — into each,
-in its own syntax.
+Then, in Claude Code, Codex or Cursor:
 
 ```
-Which agents should get dspec?
-
-  1. [x] Claude Code
-        commands and the three session hooks
-  2. [ ] Codex CLI
-        commands live in your home directory — not shared when a teammate clones
-  3. [x] Cursor
-        no session hooks: it cannot run a command on a session event
+/ds-bootstrap
 ```
 
-**Requires Node ≥ 20 and git.**
+That's it. That's the whole tool.
 
-### What it writes
+---
 
-| Agent | Files |
+## The problem
+
+You ask your agent a question about your own code. It has no idea what your product is, so it goes
+looking for one:
+
+```
+Grep "discount"            → 47 hits across 23 files
+Glob "src/**/*.ts"         → 312 files
+Read src/checkout/index.ts
+Read src/checkout/cart.ts
+Read src/pricing/rules.ts
+Read 6 more files…
+```
+
+Tens of thousands of tokens, half a minute of waiting, and the answer still comes back with a
+guess in it. **Then you open a new session and pay for all of it again.** And in the session after
+that. And for everyone else on the team, in every session of theirs.
+
+`CLAUDE.md` was supposed to fix this. It usually doesn't: someone writes it once, the code moves
+on, and nothing tells you it's now wrong.
+
+## What dspec does
+
+`/ds-bootstrap` reads your codebase **once** and writes down what it found:
+
+```
+.ds/
+  index.md         every feature: what it is, which files it lives in, what it depends on
+  features/*.md    one file per feature — what it does, and why
+  product.md       what the product is, and the rules that apply everywhere
+```
+
+`dspec init` adds a short instruction block to `CLAUDE.md` / `AGENTS.md` — the file your agent
+already reads at the start of every session — telling it to use that map first.
+
+Now the same question goes:
+
+```
+Read .ds/index.md                     → "Apply discount" lives in src/pricing/discount.ts
+Read .ds/features/apply-discount.md   → what it does, and why it refuses a second code
+Read src/pricing/discount.ts          → the actual code
+```
+
+Three reads. No search. And the feature file already explains the *why*, which no amount of
+reading the code would have told it.
+
+## Why it's cheaper
+
+The map is written once and read many times. A feature file is a few hundred tokens; the search it
+replaces is tens of thousands — on every question, in every new session, for every person on your
+team.
+
+It's also more **accurate**. A grep finds files that mention a word. The map says which files a
+feature actually lives in, because an agent read them and wrote it down.
+
+## dspec is not a workflow
+
+No spec to write. No plan to approve. No gate to pass. No process to adopt.
+
+dspec doesn't change how you work — it makes your agent faster and cheaper at whatever you already
+do. `.ds/` is just knowledge: where things are, and why.
+
+## The two surfaces
+
+| Where | What |
 |---|---|
-| **Claude Code** | `.claude/commands/ds.md`, `ds-bootstrap.md`, `ds-update.md`; `.claude/hooks/dspec/`; dspec's own entries in `.claude/settings.json` |
-| **Codex CLI** | `~/.codex/prompts/ds.md`, `ds-bootstrap.md`, `ds-update.md` |
-| **Cursor** | `.agents/skills/ds/`, `ds-bootstrap/`, `ds-update/` |
-
-Every file dspec installs carries a `dspec:managed` mark, and **every `dspec init` deletes all of them
-and writes them again** from the version you have — so an upgrade leaves nothing out of date and
-nothing a newer version dropped. **A file without the mark is never touched**, even one named
-`ds-something`; your own hooks and settings stay exactly as they are.
-
-Commit the Claude Code and Cursor files and a teammate gets the commands on clone. Codex prompts
-load only from your home directory, so a teammate using Codex runs `dspec init` themselves. The
-product model is committed with your code too — you never need to open it.
-
----
-
-## `/ds` — the one command
-
-**Spec-driven development is one command.** Whatever you want — a feature, a change, a fix — you
-type it after `/ds`, in plain words:
+| **Terminal** | `dspec init` — installs the command into the agents you pick, and writes the instruction block |
+| **Your agent** | `/ds-bootstrap` — builds the map, or brings it up to date |
 
 ```
-/ds let a customer stack two coupons
-/ds refunds should go back to the original card
-/ds why can a cart be checked out twice?
+dspec init [--agent claude,codex,cursor] [--all] [--yes]
 ```
 
-Every time, the same loop:
+With no flags it asks which agents you want, preselecting the ones it can see you use.
 
-1. **Understand** the request against the features it touches, their rules, and what they depend on.
-2. **Spec it in detail** — behaviour, edge cases, errors — in your product's own words, quoting every
-   rule the request would break and naming everything the product does not settle yet.
-3. **Plan the build** — where, the steps, what breaks if it is wrong, which tests.
-4. **Stop and wait for your decision.** Nothing is written — no code, no model — until you approve.
-   Ask questions, change the spec, change the plan.
-5. **On your go:** build it, run the tests, bring the product model up to date, and tell you which
-   features changed.
-
-From the session in the demo above:
-
-```
-> /ds let a customer stack two coupons
-
-⚠ Conflict: this breaks a current rule
-
-Apply discount has this rule: "Only one coupon may be applied to an order."
-Your request directly contradicts it, so one of them has to give. That's your call. Either:
-- (a) change the rule to "At most two coupons may be applied to an order", or
-- (b) keep the one-coupon rule and drop the request.
-
-Not settled: you decide
-1. How the two discounts combine. …
-2. The same code twice. …
-5. A gap you already have. The product rule says "Every write is idempotent by request id." …
-
-How I'd build it — Where · Steps · What breaks if this is wrong · Tests
-
-Before I build, tell me: (a) or (b), and your answers to 1–5.
-```
-
-`/ds` with nothing after it summarises the product's features and anything outstanding.
-
----
-
-## Supporting commands
-
-Two more commands exist so that `/ds` always has a product model to work from — you run them rarely.
-
-| | |
-|---|---|
-| **`/ds-bootstrap`** | **Once per repository.** The agent reads the code, names the product's features by what they do, and writes what each is for and the rules the product keeps. Run it again any time to bring the whole model up to date — `/ds` asks you to, in a repo that has none. |
-| **`/ds-update`** | **When a new dspec is out.** Runs `dspec update` and `dspec init` from inside the session; start a new session afterwards. |
-
----
-
-## Terminal commands
-
-Everything `/ds` and its supporting commands do is an ordinary terminal command the agent runs — so
-you can run them yourself, and a CI job can too.
-
-| Command | |
-|---|---|
-| `dspec update [--check]` | install the latest dspec from npm, if it is newer |
-| `dspec init [--agent a,b] [--all] [--yes]` | install `/ds` and its supporting commands into your agents, rebuilding everything dspec installed before |
-| `dspec sync [--write] [--strict] [--json]` | measure the model against the code; `--write` records what is mechanical |
-| `dspec accept "<Feature>"…` | record that a feature's description is current for its code |
-| `dspec spec "<Feature>" [--touch F]` | what the model knows about a piece of work |
-
-Nothing exits non-zero unless you ask for it. In CI:
-
-```yaml
-- run: dspec sync --strict     # fails only when the model and the code measurably disagree
-```
-
-Every command works from any subdirectory.
-
----
-
-## Updating
-
-```
-dspec update     # installs the latest dspec from npm, if it is newer
-dspec init       # in each repo: rebuild the commands and hooks from it
-```
-
-Or, inside the agent, **`/ds-update`** does both. `dspec update` goes through your own `npm`, so your
-registry and proxy settings apply. It updates a global install only, into the prefix it runs from —
-a dspec in a project's `node_modules` is updated through that project's `package.json`.
-
-Upgrading from `/dspec-*` or `/ds-sync` (0.0.x): `dspec init` removes those and installs `/ds`,
-`/ds-bootstrap` and `/ds-update` in their place.
-
----
-
-## How the model stays true
-
-- **Every description is fingerprinted** against the files it describes. When the code changes, the
-  description is flagged as older than its code — never silently assumed current.
-- **The agent updates it after every change**, without asking: it reads the changed code and the
-  description, rewrites the description, and records that the two agree again. It does the same for
-  new code no feature describes yet.
-- **In Claude Code this is enforced.** Before the agent ends a turn, a hook checks whether the model
-  is behind the code and, if it is, has the agent bring it up to date first — once per turn, never
-  in a loop.
-- **In Codex and Cursor it is an instruction.** Neither can run a command when a turn ends, so the
-  agent is told to do it, and `/ds-bootstrap` catches up anything that was missed.
-- **Code that was never described is left to `/ds-bootstrap`**, so an old backlog is not dumped on
-  every turn.
-
----
-
-## Troubleshooting
-
-| Symptom | Usual cause | Fix |
+| Agent | Command lands at | Reads |
 |---|---|---|
-| `/ds` does not appear in the agent | that agent was not chosen, or the session predates the install | `dspec init`, then start a new session — Codex only reads `~/.codex/prompts` at start-up |
-| `/ds` says there is no product model | the repo has not been bootstrapped | `/ds-bootstrap` |
-| a `/ds*` command you edited went back to how it was | `dspec init` rebuilds every file it installed | keep your own commands under another name |
-| a teammate has the repo but no `/ds` in **Codex** | Codex prompts live in the home directory | they run `dspec init` on their own machine |
-| nothing happens at all — no hooks, no commands | Node is not on the PATH your agent starts processes with | install Node ≥ 20. A version manager (nvm, fnm, asdf) puts it on PATH via a shell startup file, so a spawned process can miss it. `dspec init` records the absolute path as a fallback |
-| `dspec init` says `settings.json` is unreadable | your JSON has a syntax error | fix it and re-run — dspec wrote **nothing** to it |
-| `dspec update` says it is not a global install | dspec runs from a project's `node_modules` or a checkout | update it there: `npm i -D dspec@latest` |
-| `dspec sync --strict` fails in CI | a description is older than its code | run `/ds-bootstrap` in your agent and commit the result |
+| Claude Code | `.claude/commands/ds-bootstrap.md` | `CLAUDE.md` |
+| Codex CLI | `~/.codex/prompts/ds-bootstrap.md` | `AGENTS.md` |
+| Cursor | `.agents/skills/ds-bootstrap/SKILL.md` | `AGENTS.md` |
 
----
+Codex only reads prompts from your home directory, so its command isn't shared when a teammate
+clones the repo. `dspec init` tells you that when you pick it.
+
+## Keeping the map true
+
+A map that lies is worse than no map. So the instruction block is blunt about it:
+
+> **If `.ds/` and the code disagree, the code wins.**
+
+Your agent updates the feature file for whatever it just changed, as part of the work. After a big
+refactor — or a stretch of work by someone who wasn't using this — `/ds-bootstrap` rebuilds the
+whole thing.
+
+Because `.ds/` is plain markdown committed to your repo, drift shows up in code review like
+anything else.
+
+## What it won't do
+
+- **Call the network.** Ever. No server, no account, no token, no telemetry, not even a version
+  check. Upgrading is `npm`'s job.
+- **Install dependencies.** Node 20+, and nothing else.
+- **Touch a file it didn't write.** Every file dspec installs is marked; `dspec init` deletes only
+  marked files before writing them again. In `CLAUDE.md` / `AGENTS.md` it owns only the block
+  between `<!-- ds:begin -->` and `<!-- ds:end -->` — every other byte is yours.
+- **Read your codebase.** `dspec init` installs files and nothing more. Deciding what your features
+  are takes judgement, and that's your agent's job, not a CLI's.
+
+## Upgrading
+
+```bash
+npm i -g dspec@latest
+dspec init          # rebuilds what dspec installed, from the new version
+```
+
+Start a new agent session afterwards so it picks up the rebuilt command.
+
+<details>
+<summary><strong>Coming from 0.1.x?</strong></summary>
+
+0.2.0 removed everything that made dspec a workflow: the `/ds` and `/ds-update` commands, the
+session hooks, and the `dspec sync | spec | accept | update` verbs, along with code fingerprints,
+drift detection and the linter.
+
+One `dspec init` removes every trace of them, including the hook entries the old version left in
+`.claude/settings.json`. Your existing `.ds/` still reads fine — run `/ds-bootstrap` when
+convenient to bring it to the simpler format. Full detail in the [changelog](CHANGELOG.md).
+
+</details>
 
 ## Contributing
 
-Node **≥ 20**, no runtime dependencies, `npm install && npm run build && npm test`.
-
-Everything else — the rules that are easy to get wrong, where things live, and how a change reaches
-users — is in **[CONTRIBUTING.md](CONTRIBUTING.md)**. Bugs go through the
-[issue forms](https://github.com/tuna781/dspec/issues/new/choose); questions go to
-[Discussions](https://github.com/tuna781/dspec/discussions).
+See [CONTRIBUTING.md](CONTRIBUTING.md). The whole program is about a thousand lines, and it does
+one thing.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Security policy: [SECURITY.md](SECURITY.md).
+MIT

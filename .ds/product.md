@@ -2,46 +2,53 @@
 name: dspec
 ---
 
-dspec keeps a product's model in the repository, so that an AI coding agent can learn what a
-feature is, where it lives in the code, and what it touches — without reading the codebase. The
-model is internal: the agent builds it, reads it and keeps it current. Spec-driven development is
-one command, `/ds {anything}`; `/ds-bootstrap` and `/ds-update` only exist so that it always has a
-current model and a current dspec to work with.
+dspec puts a map of a codebase into the repository it describes, so that an AI coding agent can
+learn what a feature is and where it lives without reading the code. The map is internal: the agent
+builds it, reads it and keeps it current, and the user is talked to about features and behaviour
+rather than about files.
 
-The problem it exists for: `CLAUDE.md` is what carries knowledge across an empty context window,
-and nothing checks that it is still true. dspec binds every description to real files and
-fingerprints them, so *"is this still true?"* is answered by reading the checkout rather than by
-anyone remembering.
+The problem it exists for: every session, an agent starts knowing nothing about the codebase, so it
+searches — and the user pays for that search on every question. `CLAUDE.md` was meant to carry the
+knowledge across an empty context window, but it is written once and then drifts. dspec makes the
+map the agent's own responsibility and gives it one command to rebuild.
 
-Rules
+**dspec is not a workflow.** It imposes no process, no gate and no way of working. Version 0.2.0
+removed everything that did: the spec-plan-build loop, the session hooks, code fingerprints, drift
+detection, the linter and the strict gate. What is left is the part that was always the point.
+
+## Rules
+
 - **Zero runtime dependencies.** A pull request adding one to `dependencies` has to argue for it
   first.
-- **Everything is local.** No server, no token, no telemetry, and no network call — except
-  `dspec update`, which asks npm for a newer dspec when the user runs it, through their own `npm`.
-  Every other command reads `.ds/` and the user's own source files, and nothing else.
-- **Measure, do not trust.** Anything the tool asserts about the code must be re-readable from the
-  checkout. A claim nobody can check does not go in a report.
-- **Report, never block.** Nothing exits non-zero unless asked for it — `dspec sync --strict` is the
-  only gate, and it is opt-in. A gate that reddens on ordinary work teaches people to route around
-  it. No hook ever blocks the user or a tool call; the Stop hook may hold the AGENT, once per turn,
-  to finish bringing the model up to date.
-- **Derive, never store.** Anything computable from the model, the checkout and git is computed on
-  demand. Every stored duplicate eventually disagrees with its source.
-- **Say what you do not know.** An unmeasured description is reported as *unmeasured*, never as
-  fine. A warning that switches off when it is most needed is worse than no warning.
-- **English only** — code, comments, CLI output, docs and seeded templates.
-- **The model is internal.** No document names or teaches its format; what an agent needs to write
-  it comes from `dspec sync --guide`. The user is told about features and behaviour, never files.
-- **The agent keeps the model current, without asking.** After any change, it reads every
-  description older than its code, rewrites it and accepts it, and describes new code. A
-  description is never accepted unread.
-- **Every agent, one surface.** Three commands in every agent. The CLI is the whole tool; a slash
-  command is prose telling an agent which CLI command to run and what to judge in its output. A new
-  agent is therefore an adapter over frontmatter, never a second implementation — and the automatic
-  half, session hooks, is Claude Code only because no other agent can run a command on a session
-  event. That gap is reported, never papered over.
+- **Everything is local, and nothing touches the network.** No server, no token, no telemetry, no
+  version check — not in any command. Upgrading goes through the user's own `npm`, which they run
+  themselves.
+- **Report, never block.** Nothing exits non-zero except a usage error. A tool that reddens on
+  ordinary work teaches people to route around it.
 - **dspec owns what carries its mark, and nothing else.** `dspec init` writes into repositories and
   home directories it does not own. Everything it installs carries `dspec:managed`, and every run
   deletes all of it and writes it again, so an upgrade leaves nothing stale and nothing a newer
   version dropped. A file without the mark is never written or removed — whatever its name — and in
-  a settings file only dspec's own hook entries are.
+  a memory file only the block between the markers is dspec's.
+- **Installing and mapping are different intentions.** `dspec init` never reads or creates `.ds/`.
+  Reading a codebase and deciding what its features are is judgement, and judgement belongs to the
+  agent. One intention must not silently carry the other's power.
+- **Every agent, one surface.** One command, the same spelling everywhere. A new agent is an
+  adapter over a file path and a frontmatter shape, never a second implementation. Nothing is done
+  for one agent that cannot be done for all three.
+- **The map is internal.** No document names or teaches its format to the user; what an agent needs
+  in order to write it is in the bootstrap command it runs.
+- **English only** — code, comments, CLI output, docs and templates.
+
+## Vocabulary
+
+- **The map** — everything under `.ds/`: the index, the product file, and one file per feature.
+- **Feature** — something a person would name: a capability of the product. Not a directory, not a
+  class, not a layer.
+- **Agent** — a coding assistant dspec installs into: Claude Code, Codex CLI, Cursor.
+- **Memory file** — the file an agent reads at the start of every session without being asked:
+  `CLAUDE.md` for Claude Code, `AGENTS.md` for the other two.
+- **The mark** — the `dspec:managed` comment carried by every file dspec installs, and the only
+  thing that makes a file dspec's to delete.
+- **The block** — the region of a memory file between `<!-- ds:begin -->` and `<!-- ds:end -->`.
+  The only part of that file dspec may write.

@@ -3,12 +3,12 @@ import * as path from 'node:path';
 
 /**
  * The root directory of the running dspec — the repo checkout in development, the installed npm
- * package in the hands of a user.
+ * package in the hands of a user. `templates/` is resolved from it.
  *
- * ⚠️ **Why not `path.join(__dirname, '..', '..', '..')`.** That chain of `..` encodes the
- * DEPTH of whichever file calls it inside `dist/` — three levels from `dist/cli/commands/`, two
- * from `dist/install/`. Every caller counting its own levels is another place that can be wrong
- * independently, and the mistake only surfaces after publishing.
+ * ⚠️ **Why not `path.join(__dirname, '..')`.** A chain of `..` encodes the DEPTH of whichever file
+ * calls it inside `dist/`, so every caller counting its own levels is another place that can be
+ * wrong independently — and the mistake only surfaces after publishing, when the layout differs
+ * from the checkout.
  *
  * ⚠️ **The `name` guard is necessary, not decoration.** A repo that USES dspec has a
  * `package.json` at its root too, and stopping at the first one found would return the user's
