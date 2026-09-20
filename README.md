@@ -1,7 +1,12 @@
 <h1 align="center">dspec</h1>
 
 <p align="center">
-  <strong>Your coding agent re-learns your codebase every session.<br>dspec writes it down once.</strong>
+  <strong>Stop paying your agent to re-read your product every single session.</strong>
+</p>
+
+<p align="center">
+  Write it down once in <code>.ds/</code> — a form built to be read fast:<br>
+  one page to find the feature, one file to understand it.
 </p>
 
 <p align="center">
@@ -12,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="demo.gif" alt="A question about a codebase: 12 of 15 files to grep without dspec; two reads with it" width="100%">
+  <img src="demo.gif" alt="One question about a product: 12 of 15 files to grep without dspec; two reads with it" width="100%">
 </p>
 
 ```bash
@@ -32,8 +37,8 @@ That's it. That's the whole tool.
 
 ## The problem
 
-You ask your agent a question about your own code. It has no idea what your codebase is, so it
-goes looking:
+You ask your agent a question about your own code. It has no idea what your product is, so it goes
+looking for one:
 
 ```
 Grep "discount"            → 47 hits across 23 files
@@ -45,7 +50,8 @@ Read 6 more files…
 ```
 
 Tens of thousands of tokens, half a minute of waiting, and the answer still comes back with a
-guess in it. Then you open a new session and it does the whole thing again.
+guess in it. **Then you open a new session and pay for all of it again.** And in the session after
+that. And for everyone else on the team, in every session of theirs.
 
 `CLAUDE.md` was supposed to fix this. It usually doesn't: someone writes it once, the code moves
 on, and nothing tells you it's now wrong.
