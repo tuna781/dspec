@@ -11,6 +11,10 @@
   <img src="https://img.shields.io/badge/network%20calls-0-brightgreen" alt="no network">
 </p>
 
+<p align="center">
+  <img src="demo.gif" alt="A question about a codebase: 12 of 15 files to grep without dspec; two reads with it" width="100%">
+</p>
+
 ```bash
 npm i -g dspec
 dspec init
