@@ -16,9 +16,10 @@ recognise an install of dspec — its own and older versions'. Start at the `Age
   copies would be three chances for Cursor to be taught something Claude was not.
 - **The templates carry no frontmatter; the adapter prepends its own.** Shipping frontmatter and
   rewriting it per agent is what an entire YAML parser used to exist for, to translate three keys.
-- **`detect` and `marker` are different questions.** A `.claude/` directory says somebody uses
-  Claude Code, not that dspec is installed. Conflating them is how a repo that chose Claude alone
-  would still be handed an `AGENTS.md`.
+- **Nothing guesses whether somebody uses an agent.** Adapters once carried a `detect` that looked
+  for `.claude/` or `.cursor/`; it existed only to preselect a picker, and a directory's presence
+  was never evidence either way. `marker` answers a different and answerable question — did dspec
+  put a file here — and is the only thing left.
 - **Promise no restriction the agent does not enforce.** Only Claude Code honours `allowed-tools`,
   so only Claude Code is given one. Claiming a guarantee that is not there is worse than claiming
   nothing.
@@ -43,5 +44,5 @@ recognise an install of dspec — its own and older versions'. Start at the `Age
   writes that directory name, and 0.1.x's hooks must go — this version deletes the scripts they
   point at, and a hook whose script is missing fails on every session start.
 - `isInstalled` checks the current marker for dspec's mark, not merely for existence: somebody
-  else's `ds-bootstrap.md` is not an install of ours, and treating it as one would make `--yes`
+  else's `ds-bootstrap.md` is not an install of ours, and treating it as one would have `init`
   delete and rewrite a file dspec has no claim on.

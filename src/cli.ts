@@ -16,9 +16,10 @@ import { INVOKE } from './agents';
 
 const USAGE = `dspec — your product's map lives in \`.ds/\`, and every agent reads it
 
-  dspec init  [--agent a,b] [--all] [--yes]   install dspec into your AI coding agents:
-                                              the ${INVOKE} command, and the instructions
-                                              that teach them to use \`.ds/\`
+  dspec init  [--agent a,b]   install dspec into every AI coding agent it supports —
+                              Claude Code, Codex CLI and Cursor: the ${INVOKE}
+                              command, and the instructions that teach them to read \`.ds/\`.
+                              It asks nothing
 
 Then, in your agent: \`${INVOKE}\` reads the codebase and writes the map. After that, any
 question about the code is answered from \`.ds/\` instead of by re-reading the repository.

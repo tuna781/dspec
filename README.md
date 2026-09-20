@@ -101,14 +101,10 @@ do. `.ds/` is just knowledge: where things are, and why.
 
 | Where | What |
 |---|---|
-| **Terminal** | `dspec init` — installs the command into the agents you pick, and writes the instruction block |
+| **Terminal** | `dspec init` — installs the command into every agent it supports, and writes the instruction block |
 | **Your agent** | `/ds-bootstrap` — builds the map, or brings it up to date |
 
-```
-dspec init [--agent claude,codex,cursor] [--all] [--yes]
-```
-
-With no flags it asks which agents you want, preselecting the ones it can see you use.
+**It asks nothing.** One `dspec init` sets up all three:
 
 | Agent | Command lands at | Reads |
 |---|---|---|
@@ -116,8 +112,15 @@ With no flags it asks which agents you want, preselecting the ones it can see yo
 | Codex CLI | `~/.codex/prompts/ds-bootstrap.md` | `AGENTS.md` |
 | Cursor | `.agents/skills/ds-bootstrap/SKILL.md` | `AGENTS.md` |
 
+Installing an agent you never open costs you one markdown file. *Not* installing the one you do
+open costs you a session where `/ds-bootstrap` isn't there and nothing says why — so dspec makes
+the cheap mistake, and you don't have to predict which agent you or a teammate will reach for.
+
 Codex only reads prompts from your home directory, so its command isn't shared when a teammate
-clones the repo. `dspec init` tells you that when you pick it.
+clones the repo — they run `dspec init` once themselves.
+
+Want fewer? `dspec init --agent claude` installs only that one, and uninstalls any other that
+keeps its files in this repository.
 
 ## Keeping the map true
 

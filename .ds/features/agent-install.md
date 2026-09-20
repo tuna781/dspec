@@ -3,13 +3,12 @@ name: Agent install
 area: Setup
 code:
   - src/init.ts
-  - src/prompt.ts
 uses: [Agent adapters, Managed install]
 ---
 
-`dspec init` — the entire terminal surface. It asks which agents this repository uses, installs the
-`/ds-bootstrap` command into each, writes the map instructions into their memory files, and reports
-what changed. Start at `cmdInit` in `src/init.ts`.
+`dspec init` — the entire terminal surface. It installs the `/ds-bootstrap` command into every
+agent dspec supports, writes the map instructions into their memory files, and reports what
+changed. Start at `cmdInit` in `src/init.ts`.
 
 ## Rules
 
@@ -17,9 +16,12 @@ what changed. Start at `cmdInit` in `src/init.ts`.
   codebase are different intentions, and one must not silently carry the other's power. The map is
   written by an agent running `/ds-bootstrap`, which is the only thing that can judge what a
   feature is.
-- **Never guess a first install.** With nobody to ask (`--yes`, or no TTY) and nothing installed
-  here yet, it refuses rather than writing into somebody's `.claude/` because a CI script ran a
-  bare `dspec init`.
+- **It asks nothing, and gives the same answer everywhere.** A terminal, a script and a CI job all
+  get every supported agent. An interactive picker made the user answer a question they had no way
+  to answer well — which agents they, and every teammate, might reach for on this repo — and the
+  two mistakes it could make are not the same size: installing an agent nobody opens costs one
+  markdown file, while omitting the one they do open costs a session where `/ds-bootstrap` is
+  missing and nothing explains why.
 - **Everything is planned before anything is deleted.** A template that cannot be read must not
   leave an agent with its old install removed and no new one written.
 - **Not choosing an agent that lives outside the repository is not a request to uninstall it.**
@@ -28,9 +30,9 @@ what changed. Start at `cmdInit` in `src/init.ts`.
 
 ## Behaviour
 
-- Which agents: `--all`, then `--agent a,b`, then — with nobody to ask — whatever is already
-  installed, and otherwise an interactive picker. The picker preselects what is installed, so an
-  upgrade is a single Enter; in a repo with nothing installed it preselects what it can detect.
+- Which agents: every one dspec supports, unless `--agent a,b` names fewer. Nothing is detected and
+  nothing is remembered — the answer does not depend on what the repository looks like or on what
+  was installed last time.
 - A memory file is written once per distinct name, so choosing Codex and Cursor together produces
   one `AGENTS.md`, not two writes of it.
 - `.claude/settings.json` is checked on every run purely to take back the session hooks 0.1.x

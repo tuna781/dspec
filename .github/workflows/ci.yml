@@ -55,7 +55,7 @@ jobs:
           R=$(mktemp -d)
           git -C "$R" init -q
           cd "$R"
-          CODEX_HOME="$R/codex" node "$BIN" init --all
+          CODEX_HOME="$R/codex" node "$BIN" init
           test -f .claude/commands/ds-bootstrap.md
           test -f .agents/skills/ds-bootstrap/SKILL.md
           test -f "$R/codex/prompts/ds-bootstrap.md"
