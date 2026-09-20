@@ -11,6 +11,26 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
+## [Unreleased]
+
+### Fixed
+
+- **`npm run release` now dates the changelog heading itself.** `## [Unreleased]` becomes
+  `## [<version>] — <today>`, in the release commit, alongside the version it writes into
+  `package.json` and `package-lock.json`.
+
+  `publish-release.js` takes the GitHub Release notes from `## [<version>]` and nowhere else, so a
+  changelog still saying "Unreleased" failed at the very last step — after the push, with the tag
+  already public. Both 0.2.0 and 0.3.0 were dated by hand between the release commit and the tag:
+  one fact kept in step by hand, which is the drift `release.js` exists to stop.
+
+  A section already headed by that version is left alone, so re-cutting a shipped tag keeps the day
+  it shipped. A changelog with neither heading ends the run.
+
+- **A failed release no longer leaves the tree half-written.** Every check now runs before anything
+  is written. Previously a failure partway through left `package.json` bumped and uncommitted, so
+  the next run refused with "uncommitted changes" — about a mess the previous run had made.
+
 ## [0.3.0] — 2026-09-20
 
 ### Changed
