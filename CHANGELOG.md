@@ -7,7 +7,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
-## [Unreleased]
+## [0.2.0] — 2026-09-20
 
 **dspec is a map, not a method.** Everything that made it a workflow is gone. What is left is the
 part that was always the point: `.ds/` holds what your codebase is and where it lives, and every
