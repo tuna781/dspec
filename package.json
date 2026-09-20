@@ -1,6 +1,6 @@
 {
   "name": "dspec",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Stop paying your coding agent to re-read your product every session. dspec writes it down once in .ds/ \u2014 a form Claude Code, Codex and Cursor read fast.",
   "keywords": [
     "dspec",
