@@ -28,6 +28,6 @@ Read this first, then the one feature file you need under `.ds/features/`.
 - **Command surface** — The `dspec` command itself: one verb, its flags, and locating the running
   package so `templates/` resolves.
   → `bin/ds.js`, `src/cli.ts`, `src/args.ts`, `src/pkgRoot.ts` · uses: Agent install
-- **Release** — Cuts a release: the version, the suite, the commit, the tag on that commit, then
-  the GitHub Release.
+- **Release** — Cuts a release: the version and the changelog heading, the suite, the commit, the
+  tag on that commit, then the GitHub Release from those same notes.
   → `scripts/release.js`, `scripts/publish-release.js`

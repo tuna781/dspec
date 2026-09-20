@@ -8,8 +8,8 @@
 // `master`, and from then on every fresh install gets that later commit while still calling
 // itself the tagged version. Two people on "the same version" run different code.
 //
-// So: **the tag names the version, this script writes it everywhere, and it places the tag on
-// the commit that actually shipped.** The ordering is the whole point — a tag
+// So: **the tag names the version, this script writes it everywhere — the JSON files and the
+// changelog heading — and it places the tag on the commit that actually shipped.** The ordering is the whole point — a tag
 // created BEFORE the release commit points at code that is not what shipped.
 //
 //   node scripts/release.js            # re-cut the latest existing tag
@@ -33,6 +33,19 @@ const gitQuiet = (...args) => {
     return null;
   }
 };
+
+/**
+ * Today, in the timezone of whoever is cutting the release.
+ *
+ * ⚠️ Not `toISOString().slice(0, 10)`, which is UTC: a release cut in the evening anywhere east of
+ * Greenwich would be stamped with tomorrow's date, and the changelog would disagree with the tag's
+ * own timestamp for no reason a reader could work out.
+ */
+function today() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 function die(msg, fix) {
   console.error(`✗ ${msg}`);
@@ -63,6 +76,36 @@ if (git('status', '--porcelain')) {
 const remoteRef = gitQuiet('ls-remote', '--tags', 'origin', `refs/tags/${tag}`);
 const onRemote = Boolean(remoteRef);
 
+// ── what the changelog needs — decided before anything is written ──────────
+//
+// CONTRIBUTING tells a pull request to file its entry under `## [Unreleased]`. This is where that
+// becomes a version, because this is the only step that knows which version it is.
+//
+// ⚠️ **`publish-release.js` takes its notes from `## [<version>]` and nowhere else**, so a release
+// whose changelog still says `## [Unreleased]` fails at the very last step — after the push, when
+// the tag is public and the cheap fixes are gone. Two releases in a row were dated by hand between
+// the release commit and the tag: one fact kept in step by hand, which is the drift this whole
+// script exists to stop, reappearing one file over.
+//
+// ⚠️ **Decided here, applied below, because `die` must not leave a half-written release behind.**
+// When this check ran after the version was written, failing it left `package.json` bumped and the
+// tree dirty — so the next run refused with "uncommitted changes", complaining about a mess the
+// previous run had made.
+const CHANGELOG = path.join(ROOT, 'CHANGELOG.md');
+const UNRELEASED = /^## \[Unreleased\][^\n]*$/m;
+const changelog = fs.readFileSync(CHANGELOG, 'utf-8');
+
+/** The heading to write, or `null` when the section is already headed by this version. */
+let datedHeading = null;
+if (new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\]`, 'm').test(changelog)) {
+  // Re-cutting a tag that already shipped. Its date is the day it was released, not today.
+} else if (UNRELEASED.test(changelog)) {
+  datedHeading = `## [${version}] — ${today()}`;
+} else {
+  die(`CHANGELOG.md has neither \`## [Unreleased]\` nor \`## [${version}]\``,
+      'write the entry first — the GitHub Release takes its notes from that section');
+}
+
 // ── write the version everywhere it is read ─────────────────────────────────
 // ⚠️ There used to be three JSON files here, kept in step by hand, and they drifted within an hour
 // of the first release. Retiring the Claude Code plugin took two of them with it: `package.json` is
@@ -92,6 +135,13 @@ for (const [rel, set] of FILES) {
   }
 }
 console.log(touched.length ? `✓ version ${version} → ${touched.join(', ')}` : `· already at ${version}`);
+
+if (datedHeading) {
+  fs.writeFileSync(CHANGELOG, changelog.replace(UNRELEASED, datedHeading), 'utf-8');
+  console.log(`✓ CHANGELOG.md → ${datedHeading}`);
+} else {
+  console.log(`· CHANGELOG.md already heads a \`${version}\` section`);
+}
 
 // ── build and prove it ──────────────────────────────────────────────────────
 const run = (cmd, args) => execFileSync(cmd, args, { cwd: ROOT, stdio: 'inherit' });
