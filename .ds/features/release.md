@@ -1,36 +1,29 @@
 ---
 name: Release
 area: Delivery
-code: [scripts/release.js, scripts/publish-release.js]
-stamp: sha256g:3d12bf770afeae54
+code:
+  - scripts/release.js
+  - scripts/publish-release.js
 ---
 
-Cuts a release: writes the version into `package.json`, runs the suite, commits, and puts the tag
-on that commit. **The git tag is the version** — it used to live in three JSON files kept in step by
-hand, and it drifted within an hour of the first release. Retiring the Claude Code plugin took two
-of those three files with it, so there is now one number in one place.
+Cuts a release: writes the version into the JSON files, runs the suite, commits, and puts the tag
+on that commit — then, once it is pushed, creates the GitHub Release for it.
 
-Rules
-- **The tag goes on the release commit, never before it.** A tag created first points at code that
-  is not what shipped.
-- **Stop rather than guess** on a dirty tree, a malformed tag, or a tag already on the remote
-  pointing elsewhere.
-- **A git tag and a published release are different objects.** Creating the tag does not announce
-  anything, so a release that skips publication is shipping while the releases page still advertises
-  an older version.
-- **Release notes come from the changelog**, never from anything hand-written at publish time: a
-  second account of one change starts identical and then drifts.
-- **Publication is a separate step**, because a release cannot be created for a tag the remote does
-  not have — the tool would otherwise create that tag itself, from wherever the default branch
-  points, and describe a commit nobody released. It is idempotent, so a forgotten publication can be
-  done later.
+## Rules
 
-Behaviour
-- Writing the version, running the suite, committing and tagging happen in
-  that order, and the ordering is the point.
-- It never pushes and never publishes. It ends by naming the three steps a person takes after
-  reviewing it — push, `npm publish`, then the GitHub Release — because a publish is a release to
-  every user the moment it lands.
-- The releases page is for people; `npm i -g dspec` is what an install actually reads.
-- The build ships without source maps or declarations: the package is a CLI with no public API, and
-  a map without its source helps nobody.
+- **The git tag is the version, and nothing else is.** Kept in step by hand, the version in
+  `package.json` and the tag drift within the hour: a tag is pushed, one more commit lands, and
+  every fresh install then gets that later commit while calling itself the tagged version.
+- **The tag goes on the commit that shipped.** A tag created before the release commit points at
+  code that is not what shipped, so the ordering is the whole point.
+- **`release.js` does not push.** A push to `master` is a release to every user the moment it
+  lands, so that step is handed to a human deliberately.
+
+## Behaviour
+
+- It stops rather than guesses: a dirty tree, a malformed tag, or a tag already on the remote each
+  end the run.
+- With no argument it re-cuts the latest existing tag; with one it cuts that tag.
+- `publish-release.js` is separate because a GitHub Release cannot be created for a tag the remote
+  does not have — so it necessarily runs after the push. Folding it into `release.js` would mean
+  either pushing from there or creating a Release that tags the wrong commit.

@@ -1,8 +1,3 @@
----
-description: Map this codebase into .ds/ so any agent can answer questions about it without reading the whole repo
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash
----
-
 Map this codebase into `.ds/`, so that any future session can answer questions about it by reading
 the map instead of re-reading the repository.
 
@@ -117,5 +112,3 @@ the next session will trust it.
 Tell the user, in one short paragraph: how many features the product has, what you added, renamed
 or rewrote, and anything you could not settle from the code alone. Name features and behaviour, not
 files.
-
-<!-- dspec:managed -->

@@ -7,6 +7,53 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The comma
 `.ds/` file format and the exit-code contract are what the major version covers: a breaking change
 to any of them takes a major bump.
 
+## [0.2.0] — 2026-09-20
+
+**dspec is a map, not a method.** Everything that made it a workflow is gone. What is left is the
+part that was always the point: `.ds/` holds what your codebase is and where it lives, and every
+agent reads it instead of searching your repository.
+
+### Upgrading from 0.1.x
+
+```
+npm i -g dspec@latest
+dspec init       # in each repo
+```
+
+One `init` removes every trace of the old version — the retired commands, the hook scripts, and the
+hook entries the old version put in `.claude/settings.json`. Nothing you wrote is touched. Start a
+new agent session afterwards.
+
+Your existing `.ds/` still reads perfectly well; `stamp:`, `entry:` and `tests:` are simply ignored
+now. Run `/ds-bootstrap` when convenient to bring it to the simpler format.
+
+### Removed
+
+- **`/ds`** — the spec → plan → approve → build loop. dspec imposes no way of working.
+- **`/ds-update`** — upgrading is `npm i -g dspec@latest && dspec init`.
+- **The session hooks.** All three, and with them every write to `.claude/settings.json`.
+  `CLAUDE.md` / `AGENTS.md` is read by every agent at session start, which is enough, and is the
+  same for all three agents rather than a Claude-only advantage.
+- **`dspec sync`, `dspec spec`, `dspec accept`, `dspec update`.** `dspec init` is the whole CLI.
+- **All measurement** — code fingerprints (`stamp:`), drift detection, coverage gaps, the quality
+  linter, the work list and the `--strict` gate.
+- **`.ds/config.json`**, the `<!-- ds: project="…" -->` artifact stamp, and `dspec sync --guide`.
+- **Every network call.** dspec now makes none at all, under any command.
+
+### Changed
+
+- **One command in every agent: `/ds-bootstrap`.** It builds the map, or brings it up to date —
+  the same command the first time and every time after.
+- **`CLAUDE.md` / `AGENTS.md` is no longer generated from the model.** dspec writes a fixed
+  instruction block between `<!-- ds:begin -->` and `<!-- ds:end -->` and touches nothing else. A
+  `CLAUDE.md` that 0.1.x generated in full is replaced by that block on upgrade, since none of it
+  was ever yours.
+- **The `.ds/` format is simpler.** Frontmatter is `name`, `area`, `code`, `uses`; the body is
+  ordinary markdown with `## Rules` and `## Behaviour`. `stamp:`, `entry:` and `tests:` are gone,
+  and the glossary is a section of `product.md` rather than a file. Nothing parses any of it.
+- **`.ds/index.md` is written by the agent**, not rendered by the CLI.
+- **`dspec init` never reads or creates `.ds/`.** It installs, and that is all it does.
+
 ## [0.1.0] — 2026-09-17
 
 Three commands, and a product model you never have to think about.

@@ -13,7 +13,7 @@ body:
     attributes:
       label: Output of `dspec --version`
       description: Run it in the repository where the problem happened.
-      placeholder: "1.0.2"
+      placeholder: "0.2.0"
     validations:
       required: true
 
@@ -21,7 +21,7 @@ body:
     id: agent
     attributes:
       label: Which agent?
-      description: Only Claude Code gets the session hooks, so half the reports depend on this answer.
+      description: Each agent keeps dspec's files somewhere different, so half the reports depend on this answer.
       options:
         - Claude Code
         - Codex CLI
@@ -63,3 +63,10 @@ body:
       render: markdown
     validations:
       required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **If the problem is that your agent ignored the map** — it searched instead of reading
+        `.ds/` — say so here rather than filing it against the agent. That is dspec's prose not
+        working, which is a dspec bug.

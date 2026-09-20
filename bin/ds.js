@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 'use strict';
-// `main` may return a Promise (`init` opens a picker). Await it here rather than forcing every
-// handler to be synchronous — and set `process.exitCode`
+// `main` returns a Promise (`init` may open a picker). Await it here, and set `process.exitCode`
 // instead of calling `exit()`, so stdout has time to flush when the output is piped.
-const { main } = require('../dist/cli/index.js');
+const { main } = require('../dist/cli.js');
 Promise.resolve(main(process.argv.slice(2))).then(
   (code) => { process.exitCode = code; },
   (err) => {
