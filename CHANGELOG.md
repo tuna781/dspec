@@ -11,6 +11,33 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
+## [Unreleased]
+
+### Changed
+
+- **dspec leads with the answer rather than its cost.** The README, the `package.json`
+  description and `dspec --help` all opened with *"stop paying your agent to re-read your
+  product"*. Cost is the consequence; the reason a map matters is that a search answers from files
+  that share a word, and cannot recover *why* a feature refuses what it refuses — so the agent
+  infers it, in the same confident voice as the parts it genuinely read, and nothing marks the
+  inference as one.
+
+  All three surfaces now say the same thing, and the README argues it from what the installed
+  instructions actually make an agent do: nothing claimed from a name, nothing described unread,
+  the map checks itself, the code wins. Those are quotes from `templates/`, not claims written for
+  a README. The measured table stays, below that argument, and now says what it measures — time,
+  tokens and cost, with no accuracy benchmark invented to fill the gap.
+
+### Added
+
+- **`.github/social-preview.html`**, the source for the card GitHub renders beside the
+  repository's About. That card had advertised a "Claude Code plugin", a `stamp:` fingerprint and
+  specs "measured against" the code since 0.1.x — a plugin, a fingerprint and a gate, all three
+  deleted by 0.2.0, on the one surface a visitor sees first and nobody rereads.
+
+  The PNG is now a screenshot of a file in the repository, so the next wording change is a text
+  edit and the two cannot drift apart unnoticed.
+
 ## [0.3.1] — 2026-09-20
 
 ### Added
