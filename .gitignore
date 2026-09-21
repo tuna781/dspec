@@ -22,13 +22,13 @@ coverage/
 .env
 .env.*
 
-# ⚠️ `CLAUDE.md` and `AGENTS.md` are COMMITTED. They are rendered from `.ds/` by
-# `dspec sync --write` and verified against the model — so a clone without them reports a missing
-# artifact, and a teammate gets no pointer at the index. Never edit them by hand; regenerate.
+# ⚠️ `CLAUDE.md`, `AGENTS.md`, `.claude/` and `.agents/` are COMMITTED. All four are dspec's own
+# output, written by `dspec init` from `templates/` — nothing reads `.ds/` to produce them. They
+# are committed so a teammate gets the slash command and the map instructions on clone, without
+# installing anything. Never edit them by hand; re-run `dspec init`.
 #
-# ⚠️ So are `.claude/` and `.agents/`, which `dspec init` writes. That is how a teammate gets the
-# slash commands on clone. Codex is the exception and cannot be committed: its prompts load only
-# from the user's own home directory.
+# ⚠️ Codex is the exception and cannot be committed: its prompts load only from the user's own
+# home directory, so a teammate runs `dspec init` once themselves.
 .ds/config.json
 CLAUDE.local.md
 

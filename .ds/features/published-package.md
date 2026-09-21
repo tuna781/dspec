@@ -68,10 +68,6 @@ tarball. Start at `package.json`.
 
 ## Unsettled
 
-- **Two comments in these files describe things that no longer exist.** `.gitignore` explains the
-  committed memory files as rendered from `.ds/` by `dspec sync --write` and "verified against the
-  model" — a command and a check 0.2.0 deleted. `.gitattributes` protects `test/__snapshots__/**`,
-  a directory that is not in the repository.
 - **`.claude/settings.json` is committed holding `{}`.** 0.1.x put hook entries there and this
   version takes them back; what is left is an empty object that configures nothing. Whether it
   should be deleted or is being kept as a placeholder is not answerable from the code.
