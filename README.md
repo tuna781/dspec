@@ -227,6 +227,16 @@ convenient to bring it to the simpler format. Full detail in the [changelog](CHA
 
 </details>
 
+## Feedback wanted
+
+dspec rests on one bet: the map is prose an agent writes about its own repository, and nothing
+verifies it — no schema, no fingerprint, no drift check. What keeps it honest is *the code wins*,
+*nothing is described unread*, and *what couldn't be settled is written down as unsettled*.
+
+If you think that isn't enough, that's the conversation I want:
+[**is a map an agent writes about its own repo trustworthy?**](https://github.com/tuna781/dspec/discussions/14)
+Disagreement is more useful here than agreement.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). The whole program is about a thousand lines, and it does

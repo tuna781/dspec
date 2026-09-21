@@ -40,6 +40,10 @@ quotes is a rule that is actually in `templates/`.
   and which memory file it reads.
 - "dspec is not a workflow" gets its own short section, because the thing 0.2.0 removed is what
   readers arriving from 0.1.x expect to find.
+- "Feedback wanted" sits immediately before Contributing and puts the product's one bet — a map
+  nothing verifies, held up by three instructions — to the reader as a question, pointing at
+  Discussions. It is deliberately the last argument in the file: somebody who has not been
+  convinced by everything above it is not the person being asked.
 - Upgrading from 0.1.x is a collapsed `<details>`: it names the four verbs, the two commands and
   the hooks that went, and points at the changelog rather than restating it.
 
@@ -49,6 +53,10 @@ quotes is a rule that is actually in `templates/`.
   description and `dspec --help` — used to open with "stop paying your agent to re-read your
   product". Cost is a consequence; the reason a map matters is that a search answers from files
   that merely share a word and can never recover *why* a feature refuses what it refuses.
+- **The invitation to disagree lives in the README, not in each message sent to a reviewer.** A
+  review asked for by email is argued once and then lost; a section anybody arriving at the
+  repository can find gives every such request one destination, and states the premise being
+  questioned so the answer is about that rather than about the tool in general.
 - **The default-to-all-three decision is argued in the same words the code comments use.** The
   cheap mistake is one unused markdown file, the expensive one is a missing command with nothing to
   explain why.
