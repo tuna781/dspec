@@ -16,7 +16,7 @@
   html, body { width: 2560px; height: 1280px; overflow: hidden; }
   body {
     background: #07070c;
-    font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    font-family: Inter, ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -26,8 +26,8 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: center;
-    gap: 80px;
-    padding: 0 130px;
+    gap: 70px;
+    padding: 0 110px;
     background:
       radial-gradient(900px 620px at 10% -8%, rgba(139, 92, 246, .22), transparent 70%),
       radial-gradient(1100px 800px at 96% 108%, rgba(76, 60, 160, .16), transparent 70%),
@@ -56,10 +56,10 @@
     color: #9ea0ad; max-width: 21ch;
   }
 
-  .pills { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 86px; }
+  .pills { display: flex; flex-wrap: nowrap; gap: 18px; margin-top: 86px; }
   .pill {
-    font-size: 30px; font-weight: 600; letter-spacing: -.01em;
-    padding: 20px 34px; border-radius: 999px;
+    font-size: 26px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap;
+    padding: 18px 30px; border-radius: 999px;
     color: #c9cbd6; background: rgba(255, 255, 255, .035);
     border: 2px solid rgba(255, 255, 255, .11);
   }
@@ -69,7 +69,7 @@
   }
 
   .repo {
-    position: absolute; left: 130px; bottom: 74px;
+    position: absolute; left: 110px; bottom: 74px;
     font-size: 32px; letter-spacing: -.01em; color: #565968;
   }
 
@@ -79,10 +79,10 @@
     background: #101018;
     border: 2px solid rgba(255, 255, 255, .085);
     border-radius: 32px;
-    padding: 64px 62px;
+    padding: 60px 56px;
     box-shadow: 0 60px 140px rgba(0, 0, 0, .55);
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 35px; line-height: 1.78; letter-spacing: -.01em;
+    font-size: 30px; line-height: 1.76; letter-spacing: -.01em;
     color: #d7d9e3;
   }
   .ask { color: #6e7183; margin-bottom: 42px; }
@@ -109,18 +109,23 @@
             <path d="M24 24 L24 216 L216 216 Z"/>
           </clipPath>
         </defs>
-        <path d="M24 24 L24 216 L216 216 Z M24 128 L24 192 L88 192 Z"
+        <!-- outer triangle with a 30-unit hole: each inner edge is inset by 30 from its outer
+             counterpart, the hypotenuse by 30*sqrt(2) along y since it lies on y = x -->
+        <path d="M24 24 L24 216 L216 216 Z M54 96.4 L54 186 L143.6 186 Z"
               fill="url(#steel)" fill-rule="evenodd"/>
-        <g clip-path="url(#tri)" transform="rotate(45 24 24)"
-           stroke="#3a4152" stroke-width="4" stroke-linecap="round">
-          <line x1="52" y1="24" x2="52" y2="42"/>
-          <line x1="80" y1="24" x2="80" y2="36"/>
-          <line x1="108" y1="24" x2="108" y2="42"/>
-          <line x1="136" y1="24" x2="136" y2="36"/>
-          <line x1="164" y1="24" x2="164" y2="42"/>
-          <line x1="192" y1="24" x2="192" y2="36"/>
-          <line x1="220" y1="24" x2="220" y2="42"/>
-          <line x1="248" y1="24" x2="248" y2="36"/>
+        <!-- ruler ticks along the hypotenuse. The clip must sit on an OUTER group: on the same
+             element as the rotation it is rotated too, which clipped every tick away. -->
+        <g clip-path="url(#tri)">
+          <g transform="rotate(45 24 24)" stroke="#39404f" stroke-width="4" stroke-linecap="round">
+            <line x1="64" y1="24" x2="64" y2="40"/>
+            <line x1="89" y1="24" x2="89" y2="34"/>
+            <line x1="114" y1="24" x2="114" y2="40"/>
+            <line x1="139" y1="24" x2="139" y2="34"/>
+            <line x1="164" y1="24" x2="164" y2="40"/>
+            <line x1="189" y1="24" x2="189" y2="34"/>
+            <line x1="214" y1="24" x2="214" y2="40"/>
+            <line x1="239" y1="24" x2="239" y2="34"/>
+          </g>
         </g>
       </svg>
       <span class="wordmark">dspec</span>
@@ -138,11 +143,11 @@
   </div>
 
   <div class="panel">
-    <div class="ask">▸ <em>why does checkout reject my second discount code?</em></div>
+    <div class="ask">▸ <em>why does checkout reject my second code?</em></div>
     <div><span class="read">Read</span> <span class="path">.ds/index.md</span></div>
     <div class="found">→ Apply discount · <b>src/pricing/discount.ts</b></div>
     <div><span class="read">Read</span> <span class="path">.ds/features/apply-discount.md</span></div>
-    <div class="found">→ one code per order — the second is <b>refused, not stacked</b></div>
+    <div class="found">→ one code per order; the second is <b>refused</b></div>
     <div><span class="read">Read</span> <span class="path">src/pricing/discount.ts</span></div>
     <div class="note">Three reads. <b>No search.</b></div>
   </div>
