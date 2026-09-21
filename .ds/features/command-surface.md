@@ -29,8 +29,10 @@ resolves. Start at `main` in `src/cli.ts`.
 - `bin/ds.js` awaits `main` and sets `process.exitCode` rather than calling `exit()`, so stdout has
   time to flush when the output is piped. It is the only file that knows where `dist/` is.
 - `--version` and `--help` are flags, not verbs.
-- An unknown command exits 2 with the usage, which is the only non-zero exit dspec produces on
-  purpose besides a usage error in `init`.
+- Two non-zero exits, and no others: 2 for a usage error — an unknown command, an unknown
+  `--agent`, a dspec whose `templates/` is missing — and 1 for a failure that reached the top as an
+  exception, caught in `main` and again in `bin/ds.js`. Ordinary work always exits 0, including a
+  `settings.json` that could not be parsed.
 - `packageRoot` walks up from the compiled file until it finds a `package.json` naming dspec. The
   name guard is necessary rather than decoration: a repo that *uses* dspec has a `package.json` at
   its root too, and stopping at the first one found would return the user's project — from which

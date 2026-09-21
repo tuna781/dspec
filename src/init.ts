@@ -180,6 +180,3 @@ const WORDING: Record<string, string> = {
   appended: 'instructions added — nothing else in the file was touched',
   migrated: 'replaced: the old version generated this file in full',
 };
-
-/** `1 file` · `3 files`. Written out because `file(s)` is not how anybody reads. */
-const count = (n: number, one: string): string => `${n} ${n === 1 ? one : one + 's'}`;

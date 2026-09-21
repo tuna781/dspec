@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-// `main` returns a Promise (`init` may open a picker). Await it here, and set `process.exitCode`
-// instead of calling `exit()`, so stdout has time to flush when the output is piped.
+// `main` is async, so it is awaited here — and it sets `process.exitCode` instead of calling
+// `exit()`, so stdout has time to flush when the output is piped.
 const { main } = require('../dist/cli.js');
 Promise.resolve(main(process.argv.slice(2))).then(
   (code) => { process.exitCode = code; },

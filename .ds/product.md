@@ -27,8 +27,9 @@ detection, the linter and the strict gate. What is left is the part that was alw
 - **Everything is local, and nothing touches the network.** No server, no token, no telemetry, no
   version check — not in any command. Upgrading goes through the user's own `npm`, which they run
   themselves.
-- **Report, never block.** Nothing exits non-zero except a usage error. A tool that reddens on
-  ordinary work teaches people to route around it.
+- **Report, never block.** Ordinary work exits 0 — a usage error exits 2 and an unexpected
+  exception exits 1, and nothing else is non-zero. A tool that reddens on ordinary work teaches
+  people to route around it.
 - **dspec owns what carries its mark, and nothing else.** `dspec init` writes into repositories and
   home directories it does not own. Everything it installs carries `dspec:managed`, and every run
   deletes all of it and writes it again, so an upgrade leaves nothing stale and nothing a newer

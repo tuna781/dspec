@@ -56,6 +56,9 @@ tarball. Start at `package.json`.
   `templates/memory.md` verbatim, and `.claude/commands/ds-bootstrap.md` is
   `templates/bootstrap.md` with Claude's frontmatter prepended — so a template change is not
   landed until `dspec init` has been re-run.
+- `.gitignore` still names two paths dspec no longer writes: `.ds/config.json`, which 0.1.x put
+  there, and `CLAUDE.local.md`, which is Claude Code's own convention rather than dspec's. Both are
+  ignored so an upgraded checkout cannot commit a leftover.
 - `.gitattributes` forces `eol=lf` so a Windows contributor cannot CRLF the tree, and marks `.gif`
   and `.png` binary explicitly — correct under `text=auto` today, said outright so a later edit
   cannot quietly break the demo recording.
