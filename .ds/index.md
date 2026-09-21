@@ -38,7 +38,7 @@ Read this first, then the one feature file you need under `.ds/features/`.
 
 - **Published package** — What a user receives from `npm i -g dspec`: the TypeScript build, the two
   bin names, and the `files` list that decides what ships.
-  → `package.json` +10
+  → `package.json` +12
 - **Release** — Cuts a release: the version and the changelog heading, the suite, the commit, the
   tag on that commit, then the GitHub Release from those same notes.
   → `scripts/release.js` +2

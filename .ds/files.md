@@ -2,6 +2,7 @@
 
 Which feature owns each file. Look here before you edit, to find the feature file to update.
 
+`.agents/skills/ds-bootstrap/SKILL.md` → Published package
 `.claude/commands/ds-bootstrap.md` → Published package
 `.claude/settings.json` → Published package
 `.editorconfig` → Published package
@@ -15,6 +16,7 @@ Which feature owns each file. Look here before you edit, to find the feature fil
 `.github/workflows/ci.yml` → Install tests
 `.gitignore` → Published package
 `.nvmrc` → Published package
+`AGENTS.md` → Published package
 `CHANGELOG.md` → Release
 `CLAUDE.md` → Published package
 `CODE_OF_CONDUCT.md` → Contributing
