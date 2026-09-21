@@ -14,15 +14,16 @@ import { packageVersion } from './pkgRoot';
 import { cmdInit } from './init';
 import { INVOKE } from './agents';
 
-const USAGE = `dspec — your product's map lives in \`.ds/\`, and every agent reads it
+const USAGE = `dspec — your agent answers from what your product is, not from what it can grep
 
   dspec init  [--agent a,b]   install dspec into every AI coding agent it supports —
                               Claude Code, Codex CLI and Cursor: the ${INVOKE}
                               command, and the instructions that teach them to read \`.ds/\`.
                               It asks nothing
 
-Then, in your agent: \`${INVOKE}\` reads the codebase and writes the map. After that, any
-question about the code is answered from \`.ds/\` instead of by re-reading the repository.
+Then, in your agent: \`${INVOKE}\` reads the codebase and writes the map — what each feature
+is, where it lives, and why it behaves the way it does. After that, a question about the code is
+answered from that map instead of from whatever a search happened to turn up.
 
 Every run of \`init\` rebuilds what dspec installed before, so upgrading is:
 

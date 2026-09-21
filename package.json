@@ -1,7 +1,7 @@
 {
   "name": "dspec",
   "version": "0.3.1",
-  "description": "Stop paying your coding agent to re-read your product every session. dspec writes it down once in .ds/ — a form Claude Code, Codex and Cursor read fast.",
+  "description": "Your coding agent answers from what your product is, not from what it can grep. dspec keeps a map of your codebase in .ds/ — what each feature is, where it lives and why — read by Claude Code, Codex and Cursor.",
   "keywords": [
     "dspec",
     "code-map",

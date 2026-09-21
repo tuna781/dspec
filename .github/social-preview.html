@@ -1,0 +1,151 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>dspec — social preview card</title>
+<!--
+  Source for .github/social-preview.png, the card GitHub renders beside the repository's About.
+
+  Screenshot this page at exactly 2560x1280 and commit the result over social-preview.png.
+  Chrome:  chromium --headless --window-size=2560,1280 --screenshot=.github/social-preview.png \
+             --default-background-color=0 .github/social-preview.html
+
+  Every claim on the card is checked against src/cli.ts and .ds/product.md. Keep it that way:
+  no word here may imply a plugin, a fingerprint, a gate or a workflow — dspec is none of those.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 2560px; height: 1280px; overflow: hidden; }
+  body {
+    background: #07070c;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    position: relative;
+    width: 2560px; height: 1280px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 80px;
+    padding: 0 130px;
+    background:
+      radial-gradient(900px 620px at 10% -8%, rgba(139, 92, 246, .22), transparent 70%),
+      radial-gradient(1100px 800px at 96% 108%, rgba(76, 60, 160, .16), transparent 70%),
+      #07070c;
+  }
+  .card::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 52%, rgba(0, 0, 0, .45) 100%);
+    pointer-events: none;
+  }
+
+  /* ---- left ---- */
+  .brand { display: flex; align-items: center; gap: 34px; margin-bottom: 78px; }
+  .brand svg { width: 168px; height: 168px; display: block; }
+  .wordmark {
+    font-size: 150px; font-weight: 800; letter-spacing: -.045em; line-height: 1;
+    color: #a970ff;
+  }
+
+  h1 {
+    font-size: 116px; font-weight: 800; line-height: 1.06; letter-spacing: -.035em;
+    color: #fff; margin-bottom: 46px;
+  }
+  .sub {
+    font-size: 47px; line-height: 1.42; font-weight: 400; letter-spacing: -.012em;
+    color: #9ea0ad; max-width: 21ch;
+  }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 86px; }
+  .pill {
+    font-size: 30px; font-weight: 600; letter-spacing: -.01em;
+    padding: 20px 34px; border-radius: 999px;
+    color: #c9cbd6; background: rgba(255, 255, 255, .035);
+    border: 2px solid rgba(255, 255, 255, .11);
+  }
+  .pill.accent {
+    color: #c9a6ff; background: rgba(169, 112, 255, .11);
+    border-color: rgba(169, 112, 255, .48);
+  }
+
+  .repo {
+    position: absolute; left: 130px; bottom: 74px;
+    font-size: 32px; letter-spacing: -.01em; color: #565968;
+  }
+
+  /* ---- right ---- */
+  .panel {
+    position: relative; z-index: 1;
+    background: #101018;
+    border: 2px solid rgba(255, 255, 255, .085);
+    border-radius: 32px;
+    padding: 64px 62px;
+    box-shadow: 0 60px 140px rgba(0, 0, 0, .55);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 35px; line-height: 1.78; letter-spacing: -.01em;
+    color: #d7d9e3;
+  }
+  .ask { color: #6e7183; margin-bottom: 42px; }
+  .ask em { color: #b7bac8; font-style: normal; }
+  .read { color: #7fb4ff; }
+  .path { color: #e7e9f2; }
+  .found { color: #6e7183; padding-left: 3.6ch; }
+  .found b { color: #7de0ad; font-weight: 400; }
+  .note { color: #6e7183; margin-top: 44px; }
+  .note b { color: #a970ff; font-weight: 600; }
+</style>
+
+<div class="card">
+  <div>
+    <div class="brand">
+      <svg viewBox="0 0 240 240" aria-hidden="true">
+        <defs>
+          <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f2f4fa"/>
+            <stop offset=".55" stop-color="#b9c0d2"/>
+            <stop offset="1" stop-color="#7f8899"/>
+          </linearGradient>
+          <clipPath id="tri">
+            <path d="M24 24 L24 216 L216 216 Z"/>
+          </clipPath>
+        </defs>
+        <path d="M24 24 L24 216 L216 216 Z M24 128 L24 192 L88 192 Z"
+              fill="url(#steel)" fill-rule="evenodd"/>
+        <g clip-path="url(#tri)" transform="rotate(45 24 24)"
+           stroke="#3a4152" stroke-width="4" stroke-linecap="round">
+          <line x1="52" y1="24" x2="52" y2="42"/>
+          <line x1="80" y1="24" x2="80" y2="36"/>
+          <line x1="108" y1="24" x2="108" y2="42"/>
+          <line x1="136" y1="24" x2="136" y2="36"/>
+          <line x1="164" y1="24" x2="164" y2="42"/>
+          <line x1="192" y1="24" x2="192" y2="36"/>
+          <line x1="220" y1="24" x2="220" y2="42"/>
+          <line x1="248" y1="24" x2="248" y2="36"/>
+        </g>
+      </svg>
+      <span class="wordmark">dspec</span>
+    </div>
+
+    <h1>Ask the model,<br>not the codebase.</h1>
+    <p class="sub">Your agent answers from what your product is — not from what it can grep.</p>
+
+    <div class="pills">
+      <span class="pill accent">Claude Code · Codex · Cursor</span>
+      <span class="pill">0 dependencies</span>
+      <span class="pill">100% local</span>
+      <span class="pill">MIT</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ask">▸ <em>why does checkout reject my second discount code?</em></div>
+    <div><span class="read">Read</span> <span class="path">.ds/index.md</span></div>
+    <div class="found">→ Apply discount · <b>src/pricing/discount.ts</b></div>
+    <div><span class="read">Read</span> <span class="path">.ds/features/apply-discount.md</span></div>
+    <div class="found">→ one code per order — the second is <b>refused, not stacked</b></div>
+    <div><span class="read">Read</span> <span class="path">src/pricing/discount.ts</span></div>
+    <div class="note">Three reads. <b>No search.</b></div>
+  </div>
+
+  <div class="repo">github.com/tuna781/dspec</div>
+</div>

@@ -37,3 +37,7 @@ Read this first, then the one feature file you need under `.ds/features/`.
 - **Release** — Cuts a release: the version and the changelog heading, the suite, the commit, the
   tag on that commit, then the GitHub Release from those same notes.
   → `scripts/release.js`, `scripts/publish-release.js`
+
+- **Social preview card** — The image GitHub shows beside the repository's About: an HTML source
+  and the screenshot of it that GitHub actually serves.
+  → `.github/social-preview.html`, `.github/social-preview.png`
