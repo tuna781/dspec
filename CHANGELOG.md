@@ -11,7 +11,7 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
-## [Unreleased]
+## [0.4.0] — 2026-09-21
 
 ### Changed
 
