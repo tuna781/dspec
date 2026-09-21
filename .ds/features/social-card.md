@@ -6,10 +6,12 @@ code:
   - .github/social-preview.png
 ---
 
-The image GitHub renders beside the repository's About, and the first thing most people see of
-dspec. The HTML is the source and the PNG is a screenshot of it, both committed because GitHub
-takes an image and nothing renders one for us. It is a separate artifact from the README's
-recording: that argues the comparison at length, this has one headline and four words of proof.
+The card that unfurls wherever the repository's link is pasted — Slack, X, Discord, a chat app —
+and so the first thing most people see of dspec. It is the repository's og:image and appears
+nowhere on the repository page itself. The HTML is the source and the PNG is a screenshot of it,
+both committed because GitHub takes an image and nothing renders one for us. It is a separate
+artifact from the README's recording: that argues the comparison at length, this has one headline
+and four words of proof.
 
 ## Rules
 
@@ -25,6 +27,10 @@ recording: that argues the comparison at length, this has one headline and four 
   same failure the card itself is here to stop.
 - **It renders from the file alone.** Inline SVG for the mark, system fonts, no stylesheet and no
   asset fetched from anywhere — the card must not need the network dspec refuses to use.
+- **Committing the PNG is not shipping it.** GitHub reads the live card from an upload under
+  Settings, not from this repository, and there is no filename convention that would change that.
+  A change here is landed only once somebody has uploaded the new image too, and whoever
+  regenerates it is told so in the file itself.
 
 ## Behaviour
 

@@ -2,7 +2,13 @@
 <meta charset="utf-8">
 <title>dspec — social preview card</title>
 <!--
-  Source for .github/social-preview.png, the card GitHub renders beside the repository's About.
+  Source for .github/social-preview.png, the card that unfurls wherever the repository's link is
+  pasted — Slack, X, Discord, a chat app. It is the repository's og:image, and it appears nowhere
+  on the repository page itself.
+
+  GitHub does not read this PNG from the repository. Committing it version-controls the card and
+  nothing more: the live one changes only when somebody uploads the file at
+  Settings -> General -> Social preview. Regenerating the image is half the job.
 
   Screenshot this page at exactly 2560x1280 and commit the result over social-preview.png.
   Chrome:  chromium --headless --window-size=2560,1280 --screenshot=.github/social-preview.png \

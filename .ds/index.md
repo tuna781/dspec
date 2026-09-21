@@ -38,6 +38,6 @@ Read this first, then the one feature file you need under `.ds/features/`.
   tag on that commit, then the GitHub Release from those same notes.
   → `scripts/release.js`, `scripts/publish-release.js`
 
-- **Social preview card** — The image GitHub shows beside the repository's About: an HTML source
-  and the screenshot of it that GitHub actually serves.
+- **Social preview card** — The card that unfurls wherever the repository's link is pasted: an
+  HTML source, and the screenshot of it somebody uploads to GitHub by hand.
   → `.github/social-preview.html`, `.github/social-preview.png`
