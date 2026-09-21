@@ -1,6 +1,7 @@
 ---
 name: Social preview card
-area: Delivery
+area: Documentation
+kind: repo
 code:
   - .github/social-preview.html
   - .github/social-preview.png
@@ -17,8 +18,7 @@ and four words of proof.
 
 - **The card describes the version it ships with.** It is the surface least likely to be reread
   and the one seen first, so a stale claim here misrepresents the product to everybody who never
-  scrolls. The 0.1.x card advertised a Claude Code plugin, a `stamp:` fingerprint and specs
-  "measured against" the code for two minor versions after all three were deleted.
+  scrolls.
 - **The map's format stays off the card.** The map is internal, so the panel shows the product
   working — the three reads that answer a question — and never a feature file's frontmatter. A
   card is read by people deciding whether to install, and the format is not theirs to learn.
@@ -42,3 +42,19 @@ and four words of proof.
   image and what is not allowed on it.
 - The pill row states what the README's "What it won't do" section states — three agents, zero
   dependencies, entirely local, MIT — so the two cannot disagree.
+- The left half is one headline ("Ask the model, not the codebase.") and the README's subtitle; the
+  right half is the three reads that answer the demo fixture's question, ending in "Three reads. No
+  search."
+
+## Decisions
+
+- **The version rule came from two minor versions of a lie.** The 0.1.x card advertised a Claude
+  Code plugin, a `stamp:` fingerprint and specs "measured against" the code for two releases after
+  all three were deleted.
+
+## Unsettled
+
+- The panel's line — *one code per order; the second is refused* — is tighter than the fixture it
+  quotes, where a second code is refused only when the promotions involved are not stackable. It is
+  the one claim on the card a reader who clones `demo/shop` can catch. Whether the simplification
+  is acceptable for a card is an editorial call.

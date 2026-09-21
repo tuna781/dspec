@@ -1,6 +1,7 @@
 ---
 name: HTTP API
 area: API
+kind: product
 code:
   - src/api/routes.ts
 uses: [Checkout, Apply discount, Promotion catalogue]

@@ -40,8 +40,8 @@ const USAGE = `dspec init [--agent claude,codex,cursor]
   Every run REBUILDS the install: everything dspec wrote before is deleted and written again from
   this version. Run it after upgrading. Nothing dspec did not write is ever touched.
 
-  --agent   install for these only, comma separated. Any agent left out that keeps its files in
-            this repository is uninstalled from it`;
+  --agent   install for these only, comma separated. An agent left out is not touched —
+            \`--agent\` adds, it never uninstalls`;
 
 interface InitFlags {
   agent?: string | string[];
@@ -101,11 +101,12 @@ export async function cmdInit(argv: string[]): Promise<number> {
   for (const key of AGENT_KEYS) {
     const agent = AGENTS[key];
     const planned = plans.get(key);
-    // ⚠️ An agent that lives outside the repo (Codex, in the home directory) is shared by every
-    // repo on the machine. Not choosing it HERE is not a request to uninstall it everywhere.
-    if (!planned && agent.outsideRepo) continue;
-    if (!planned && !installed.includes(key)) continue;
-    results.push(rebuild(repo, key, [...agent.owned(repo), ...agent.legacy(repo)], planned ?? []));
+    // ⚠️ **Not naming an agent is not a request to uninstall it.** `--agent` only ever adds.
+    // Removing what was left out made a flag that reads as "install these" delete somebody's
+    // other install as a side effect, with the only warning in `--help`. Uninstalling is a
+    // separate intention and has to be asked for separately.
+    if (!planned) continue;
+    results.push(rebuild(repo, key, [...agent.owned(repo), ...agent.legacy(repo)], planned));
   }
 
   // ---- the memory files ------------------------------------------------
@@ -129,12 +130,12 @@ export async function cmdInit(argv: string[]): Promise<number> {
     notes.push('removed the session hooks an older dspec had added to .claude/settings.json.');
   }
 
-  report(chosen, results, memory, notes);
+  report(installed.filter((k) => !chosen.includes(k)), results, memory, notes);
   return 0;
 }
 
 function report(
-  chosen: AgentKey[],
+  untouched: AgentKey[],
   results: Rebuilt[],
   memory: { file: string; outcome: string }[],
   notes: string[],
@@ -142,10 +143,6 @@ function report(
   console.log(`\ndspec ${packageVersion()}`);
   for (const r of results) {
     const agent = AGENTS[r.agent as AgentKey];
-    if (!chosen.includes(agent.key)) {
-      if (r.removed.length) console.log(`  − ${agent.label.padEnd(12)} not chosen — removed ${count(r.removed.length, 'file')}`);
-      continue;
-    }
     const counts = [
       r.added.length ? `${r.added.length} added` : null,
       r.updated.length ? `${r.updated.length} rebuilt` : null,
@@ -157,6 +154,12 @@ function report(
     // dspec had and this one does not.
     for (const p of r.removed.slice(0, 8)) console.log(`    ${' '.repeat(12)} − ${p}`);
     if (r.removed.length > 8) console.log(`    ${' '.repeat(12)} … +${r.removed.length - 8} more`);
+  }
+
+  // An install that was left alone is the one outcome a narrowed `--agent` might surprise
+  // somebody with, now that nothing is removed for it.
+  for (const key of untouched) {
+    console.log(`  · ${AGENTS[key].label.padEnd(12)} already installed — not chosen, left in place`);
   }
 
   for (const m of memory) {

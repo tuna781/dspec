@@ -127,19 +127,28 @@ test('a file named like ours but without the mark is never removed', () => {
   assert.equal(readIn(dir, '.claude/commands/ds-deploy.md'), 'my own command\n');
 });
 
-test('not choosing Codex does not uninstall it from the home directory', () => {
+test('--agent only ever adds — an agent left out is never uninstalled', () => {
   const dir = makeRepo();
   init(dir);
   init(dir, '--agent', 'claude');
-  assert.ok(fs.existsSync(codexPrompt(dir, 'ds-bootstrap.md')), 'Codex prompt survives');
+  assert.ok(existsIn(dir, CLAUDE_CMD), 'the chosen agent is rebuilt');
+  assert.ok(existsIn(dir, CURSOR_CMD), 'Cursor survives, though its files live in the repo');
+  assert.ok(fs.existsSync(codexPrompt(dir, 'ds-bootstrap.md')), 'so does Codex, in the home dir');
 });
 
-test('choosing an agent again after dropping another leaves the dropped one removed', () => {
+test('a narrowed install reports what it left in place', () => {
   const dir = makeRepo();
   init(dir);
-  init(dir, '--agent', 'claude');
-  assert.equal(existsIn(dir, CURSOR_CMD), false, 'Cursor was removed — it lives in the repo');
-  assert.ok(existsIn(dir, CLAUDE_CMD));
+  const r = init(dir, '--agent', 'claude');
+  assert.match(r.stdout, /Cursor\s+already installed — not chosen, left in place/);
+  assert.match(r.stdout, /Codex CLI\s+already installed — not chosen, left in place/);
+});
+
+test('an agent that was never installed is not mentioned at all', () => {
+  const dir = makeRepo();
+  const r = init(dir, '--agent', 'claude');
+  assert.doesNotMatch(r.stdout, /left in place/);
+  assert.equal(existsIn(dir, CURSOR_CMD), false, 'and nothing was written for it');
 });
 
 // ─── upgrading from 0.1.x ───────────────────────────────────────────────────

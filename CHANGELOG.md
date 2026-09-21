@@ -15,6 +15,57 @@ still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
 ### Changed
 
+- **Instructions live in `templates/` once, and the map stopped restating them.** Seven rules
+  existed in two places: six of `templates/bootstrap.md`'s were transcribed into the *Map building*
+  feature file, and `templates/memory.md`'s "the code wins" into *Map instructions*. Both copies
+  were kept in step by hand, and only the template ships — so the map's copy could fall behind
+  with nothing saying so.
+
+  The transcriptions are deleted rather than moved. Those feature files now carry what a read of
+  the template does not give: the constraints on changing it, what depends on it, and why it says
+  what it says. `product.md` states the rule that keeps it that way, with one marked exception —
+  the README's four trust claims, which are quotations that name their source and are checked
+  against `templates/`.
+
+- **`--agent` no longer uninstalls what it leaves out.** `dspec init --agent claude` deleted the
+  install of any agent whose files lived in this repository and was not named — Cursor's command,
+  and the `AGENTS.md` block if nothing else wanted it. Codex was already spared, because its
+  command sits in the home directory and is shared by every repository on the machine.
+
+  The flag reads as *install these*, and the deletion was a side effect with its only warning in
+  `--help`. `--agent` now only ever adds: an agent left out is not planned, not rebuilt and not
+  removed, wherever its files live. One who was already installed gets a line in the report saying
+  it was left in place.
+
+  The trade is stated rather than hidden: a narrowed run rebuilds only what it names, so a plain
+  `dspec init` — which names all three — is what carries the clean-upgrade guarantee.
+
+- **The `.ds/` format gains two sections, a `kind`, and a reverse index.** Feature files had
+  `## Rules` and `## Behaviour` and nothing else, so the two kinds of content that did not fit
+  went into them anyway. This repository's own map showed both: four features carried a rejected
+  option or a post-mortem inside a rule, and one recorded two stale comments and an untracked
+  directory under *Behaviour* — where the next session would have read a defect as intended
+  design.
+
+  Feature files now also carry **`## Decisions`** — the choice made once, what was rejected and
+  why — and **`## Unsettled`**, what could not be settled from the code and what was found to
+  contradict itself. Both are omitted when empty, and neither is a tracker: nothing reads them and
+  nothing acts on them.
+
+  Every feature declares **`kind: product`** or **`kind: repo`**. The old rule said a feature was
+  only ever a capability of the product, and eight of this repository's fourteen are its
+  packaging, tests, docs and release — knowledge an agent needs and the map wrote regardless. The
+  index now leads with the product and puts the repository's own machinery under its own heading.
+
+  **`.ds/files.md`** is new: which feature owns each file, one line each. `templates/memory.md`
+  already told agents to update the feature file claiming the code they touched, without
+  supplying any way to find it — and by fourteen features that lookup had stopped being possible
+  by eye, with `.gitignore` owned by *Published package* and globs that cannot be matched. The
+  index gives up its full file lists in exchange, naming only where a feature starts, so it stops
+  growing faster than the map does.
+
+  Existing maps still read correctly and are upgraded in place by re-running `/ds-bootstrap`.
+
 - **dspec leads with the answer rather than its cost.** The README, the `package.json`
   description and `dspec --help` all opened with *"stop paying your agent to re-read your
   product"*. Cost is the consequence; the reason a map matters is that a search answers from files

@@ -18,6 +18,10 @@ detection, the linter and the strict gate. What is left is the part that was alw
 
 ## Rules
 
+- **The stack is Node and nothing else.** TypeScript in `src/`, strict, compiled to CommonJS in
+  `dist/`; Node 20 is the floor because `node:util.parseArgs` and `node:test` are what stand in
+  for an argument parser and a test framework. Tests are plain `node:test` JavaScript against the
+  built CLI, run as a real process.
 - **Zero runtime dependencies.** A pull request adding one to `dependencies` has to argue for it
   first.
 - **Everything is local, and nothing touches the network.** No server, no token, no telemetry, no
@@ -36,15 +40,37 @@ detection, the linter and the strict gate. What is left is the part that was alw
 - **Every agent, one surface.** One command, the same spelling everywhere. A new agent is an
   adapter over a file path and a frontmatter shape, never a second implementation. Nothing is done
   for one agent that cannot be done for all three.
+- **Instructions live in `templates/`, once.** Every rule an agent is asked to follow — how to
+  build the map, how to read it, how to keep it true — is written in `templates/bootstrap.md` or
+  `templates/memory.md` and nowhere else. The feature files for those two describe what they are,
+  what depends on them and why they say what they say; they do not restate what they say. A rule
+  in two places is a rule that will be edited in one. The single exception is the README, whose
+  four trust claims are marked as quotations and are checked against `templates/` — a repeat that
+  names its source can be verified; one that reads as its own rule cannot.
 - **The map is internal.** No document names or teaches its format to the user; what an agent needs
-  in order to write it is in the bootstrap command it runs.
+  in order to write it is in the bootstrap command it runs. The README may show the shape of `.ds/`
+  — never a feature file's frontmatter or sections.
+- **The map records what it does not know.** A description nobody read the code for, and a doubt
+  written around rather than written down, are the two ways a map starts lying. `## Unsettled` is
+  where the second one goes; it marks the edge of what the map knows and is never a list of work
+  to do.
+- **The git tag is the version, and nothing else is.** Nobody bumps a version by hand and nobody
+  tags; `npm run release <tag>` writes the number everywhere it is read and puts the tag on the
+  commit that shipped. One fact in several places, kept in step by hand, drifts within the hour.
+- **One set of facts across every surface.** The README, the social card, the help text, the
+  security policy and `templates/` make the same claims in the same words — zero dependencies,
+  nothing on the network, only what carries the mark. A claim that lives in one place can be
+  corrected; the same claim in five places, each phrased its own way, cannot.
 - **English only** — code, comments, CLI output, docs and templates.
 
 ## Vocabulary
 
-- **The map** — everything under `.ds/`: the index, the product file, and one file per feature.
-- **Feature** — something a person would name: a capability of the product. Not a directory, not a
-  class, not a layer.
+- **The map** — everything under `.ds/`: the index, the product file, the file index, and one file
+  per feature.
+- **Feature** — something a person would name: a capability of the product, or a piece of how the
+  repository is built and shipped. Not a directory, not a class, not a layer.
+- **Kind** — which of those two a feature is: `product` or `repo`. It is what the index leads with,
+  so a session answering a question about the product can stop reading half way.
 - **Agent** — a coding assistant dspec installs into: Claude Code, Codex CLI, Cursor.
 - **Memory file** — the file an agent reads at the start of every session without being asked:
   `CLAUDE.md` for Claude Code, `AGENTS.md` for the other two.
@@ -52,3 +78,5 @@ detection, the linter and the strict gate. What is left is the part that was alw
   thing that makes a file dspec's to delete.
 - **The block** — the region of a memory file between `<!-- ds:begin -->` and `<!-- ds:end -->`.
   The only part of that file dspec may write.
+- **The fixture** — `demo/shop`, the small storefront the recording and the README's figures are
+  made against. It stands for a repository that has already run `dspec init` and `/ds-bootstrap`.

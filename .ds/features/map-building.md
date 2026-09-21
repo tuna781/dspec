@@ -1,6 +1,7 @@
 ---
 name: Map building
 area: The map
+kind: product
 code:
   - templates/bootstrap.md
 ---
@@ -9,32 +10,45 @@ The `/ds-bootstrap` command: the prose that tells an agent how to read a codebas
 The same command the first time and every time after — it builds the map when there is none and
 reconciles it with the code when there is.
 
+**The rules it gives are the file, not this page.** Read `templates/bootstrap.md`; it is one pass
+and it is written to be read by an agent. What is below is what a read of it will not tell you.
+
 ## Rules
 
-- **A feature is something a person would name** — a capability of the product, not a directory, a
-  class or a layer. If the feature list mirrors the folder tree, the names are wrong, and the map
-  is then just an expensive `ls`.
-- **The description says what a read of the code would not.** Why a branch exists, which failure a
-  check prevents, what must never change. Restating a signature is not a description.
-- **`code` and `uses` are declared from reading, never guessed** from imports, naming or word
-  overlap. A guessed file list will one day omit the file that mattered, and present the omission
-  as scope.
-- **Never rewrite a description without reading the code for it.** A confident description of code
-  nobody opened is worse than no description, because the next session will trust it.
-- **The user is not asked to make decisions about the map.** It is the agent's to build, and the
-  report back is in features and behaviour, never in files.
+- **It carries the whole format inline, and nothing outside it enforces any of it.** No parser, no
+  linter, no schema — the format is taught where it is used. A rule that is not in this file is a
+  rule nobody follows.
+- **This page does not restate it.** Six rules here were transcriptions of the template, kept in
+  step by hand; see `product.md` for why instructions live in `templates/` once.
+- **It must read in one pass.** It is loaded whole every time somebody runs `/ds-bootstrap`, and an
+  agent that skims it writes a map by half the rules. Length is bought, never assumed.
+- **It is written for three agents at once.** Nothing in it may assume a tool, a permission or a
+  frontmatter key that only one of them has — the adapters prepend the differences.
+- **A change here is not landed until `dspec init` has been re-run**, because the installed command
+  files are copies and the repository commits them.
 
 ## Behaviour
 
-- It carries the file format inline — frontmatter `name`, `area`, `code`, `uses`, then a lead
-  paragraph and ordinary markdown sections. Nothing parses any of it, so the format is taught where
-  it is used rather than enforced by a linter.
-- First run: survey the code, decide what the features are, write one file each, write
-  `product.md`, then write `index.md` last and from the feature files — so the index cannot
-  describe features that were never written.
-- Later runs: the code is the truth and the map is what may be wrong. Fix descriptions, claim
-  unclaimed code, delete features whose behaviour is gone, rewrite the index.
-- It asks for a self-check: every `code:` path exists, every `uses:` name resolves, every source
-  file of consequence is claimed by something.
-- The index's shape is given as a worked example, because it is what every future session reads
-  first and it must stay scannable: one line of summary, one line of location, no more.
+- Both branches in one command: `.ds/` absent, it is built; `.ds/` present, it is reconciled and an
+  older map is brought up to the current shape. The user types the same thing either way.
+- The self-check at the end is the only verification that exists anywhere in dspec. It is the
+  agent checking its own work in prose — nothing in the CLI reads `.ds/` to confirm it.
+- The report it asks for is the one place the map surfaces to the user, and it is deliberately in
+  features and behaviour: what was added or rewritten, and what could not be settled from the code.
+
+## Decisions
+
+- **The six rules this file used to restate were deleted, not moved.** They were already in
+  `templates/bootstrap.md`, which is what ships and what an agent actually reads; a second copy in
+  the map could only ever fall behind it. What is left here is what a read of the template does not
+  give.
+- **The index names the entry file, not the whole list.** It once carried every path, and at
+  fourteen features four entries had already outgrown the one line the format asks for, one of them
+  splitting a feature name across a line break. The full inventory moved to `files.md`; the index
+  is read every session and is the one file that has to stay scannable.
+- **`index.md` and `files.md` are rewritten whole, never patched.** Both are derived entirely from
+  the feature files, so regenerating them is what stops them drifting on their own.
+- **`kind` replaced the rule that a feature is only a product capability.** Eight of this
+  repository's own fourteen features are its packaging, tests, docs and release — real knowledge an
+  agent needs, which the old rule forbade and the map wrote anyway. Separating the two kinds keeps
+  them without burying the product under its own scaffolding.

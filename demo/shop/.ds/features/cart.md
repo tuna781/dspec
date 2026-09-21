@@ -1,6 +1,7 @@
 ---
 name: Cart
 area: Cart
+kind: product
 code:
   - src/cart/cart.ts
   - src/cart/line.ts

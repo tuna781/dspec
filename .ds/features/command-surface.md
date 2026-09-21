@@ -1,6 +1,7 @@
 ---
 name: Command surface
-area: Delivery
+area: Command line
+kind: product
 code:
   - bin/ds.js
   - src/cli.ts
@@ -18,10 +19,8 @@ resolves. Start at `main` in `src/cli.ts`.
   measures, lints or gates anything, and none that reads the map. If a user cannot name a command,
   it should not exist.
 - **No network call exists anywhere in this program.** Upgrading is `npm`'s job, which the user
-  already has. Wrapping it in a `dspec update` bought a second way to type the same thing and the
-  only outbound request in the tool.
-- **Strict flag parsing, always.** A mistyped flag must be an error — `--stirct` once passed
-  silently through an `includes` check and a CI job was green because of it.
+  already has.
+- **Strict flag parsing, always.** A mistyped flag must be an error.
 - **Errors print one line, never a stack.** A Node stack trace only pushes the one useful line off
   the screen.
 
@@ -29,16 +28,25 @@ resolves. Start at `main` in `src/cli.ts`.
 
 - `bin/ds.js` awaits `main` and sets `process.exitCode` rather than calling `exit()`, so stdout has
   time to flush when the output is piped. It is the only file that knows where `dist/` is.
-- `--version` and `--help` are flags, not verbs: the number is the question people ask, and a
-  health report nobody asked for only makes the answer harder to find.
+- `--version` and `--help` are flags, not verbs.
 - An unknown command exits 2 with the usage, which is the only non-zero exit dspec produces on
   purpose besides a usage error in `init`.
 - `packageRoot` walks up from the compiled file until it finds a `package.json` naming dspec. The
   name guard is necessary rather than decoration: a repo that *uses* dspec has a `package.json` at
   its root too, and stopping at the first one found would return the user's project — from which
   `templates/` does not resolve, and `init` would report an incomplete install of a perfectly good
-  one. Counting `..` instead would encode each caller's depth inside `dist/`, which only breaks
-  after publishing.
+  one.
 - `packageVersion` returns `'unknown'` rather than a plausible `0.0.0` when nothing declares one: a
   made-up number reads as an answer, and this one is printed where somebody is deciding whether to
   upgrade.
+
+## Decisions
+
+- **`dspec update` was deleted.** Wrapping `npm` bought a second way to type the same thing and the
+  only outbound request in the tool.
+- **Strict parsing came from a silent failure.** `--stirct` once passed through an `includes` check
+  and a CI job was green because of it.
+- **`--version` and `--help` stayed flags rather than becoming verbs.** The number is the question
+  people ask, and a health report nobody asked for only makes the answer harder to find.
+- **`packageRoot` walks up rather than counting `..`.** Counting would encode each caller's depth
+  inside `dist/`, which only breaks after publishing.

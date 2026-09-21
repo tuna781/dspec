@@ -77,9 +77,10 @@ on, and nothing tells you it's now wrong.
 
 ```
 .ds/
-  index.md         every feature: what it is, which files it lives in, what it depends on
-  features/*.md    one file per feature — what it does, and why
+  index.md         every feature: what it is, where it starts, what it depends on
+  features/*.md    one file per feature — what it does, why, and what it isn't sure of
   product.md       what the product is, and the rules that apply everywhere
+  files.md         which feature owns each file, for when you start from the code
 ```
 
 `dspec init` adds a short instruction block to `CLAUDE.md` / `AGENTS.md` — the file your agent
@@ -109,7 +110,9 @@ allowed in.
 
 **Nothing is described unread.** An agent bringing the map up to date may not rewrite a description
 of code it hasn't opened. That is the one failure that compounds: a confident sentence about code
-nobody read gets inherited by every session afterwards, each one equally sure.
+nobody read gets inherited by every session afterwards, each one equally sure. What genuinely
+couldn't be settled from the code is written down as exactly that, so the confident half can be
+believed.
 
 **The map checks itself.** Once written, every path is verified to exist, every dependency to name
 a feature that exists, and no file of consequence to be left unclaimed — anything unclaimed is
@@ -188,8 +191,8 @@ the cheap mistake, and you don't have to predict which agent you or a teammate w
 Codex only reads prompts from your home directory, so its command isn't shared when a teammate
 clones the repo — they run `dspec init` once themselves.
 
-Want fewer? `dspec init --agent claude` installs only that one, and uninstalls any other that
-keeps its files in this repository.
+Want fewer? `dspec init --agent claude` installs only that one. Anything you leave out is left
+exactly as it is — `--agent` adds, it never uninstalls.
 
 ## What it won't do
 

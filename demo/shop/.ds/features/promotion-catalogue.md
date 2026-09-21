@@ -1,6 +1,7 @@
 ---
 name: Promotion catalogue
 area: Catalog
+kind: product
 code:
   - src/catalog/promotion.ts
   - src/catalog/product.ts
@@ -11,5 +12,10 @@ Also which products may be discounted at all.
 
 ## Rules
 
-- **Some products never take a discount** — third-party goods sold at a fixed margin. A cart mixing
-  them with a discount is rejected at checkout rather than discounting the wrong half of it.
+- **Some products never take a discount** — third-party goods sold at a fixed margin.
+
+## Decisions
+
+- **A cart mixing a non-discountable product with a discount is rejected outright** at checkout,
+  rather than discounting the half of it that is eligible. A half-applied discount is a total the
+  customer cannot reproduce from the code they entered.

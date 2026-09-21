@@ -1,6 +1,7 @@
 ---
 name: Managed install
 area: Setup
+kind: product
 code:
   - src/install.ts
 ---
@@ -15,16 +16,14 @@ answer. Start at `MANAGED_MARK` and `rebuild`.
   may already have a file by a similar name. Everything dspec installs carries `dspec:managed`, and
   only what carries it is ever deleted.
 - **Every run deletes the whole install and writes it again.** That is what makes an upgrade clean:
-  nothing out of date survives, and nothing a newer version dropped is left behind. The add-only
-  rule this replaced protected dspec's files from dspec itself, at the cost that no improvement
-  ever reached anybody who already had a copy.
+  nothing out of date survives, and nothing a newer version dropped is left behind.
 - **A memory file is the user's.** Only the block between `<!-- ds:begin -->` and `<!-- ds:end -->`
   may be written; every other byte is passed through untouched.
 - **A file that does not parse is not written to at all.** One stray comma in `settings.json` must
   never cost somebody their whole configuration.
-- **Recognising a legacy file needs more than the word "dspec".** 0.0.1's `ds-plan` prompt, once
-  the other agents had dropped its tool list, never says "dspec" — it only points at `/ds-spec`. It
-  survived upgrades as a stale command until the other signals were added.
+- **Recognising a legacy file needs more than the word "dspec".** Legacy detection is deliberately
+  conservative: a path is removed only when it exists, carries no mark, and names dspec, `.ds/`,
+  one of dspec's own commands, or loads its old hook helper.
 
 ## Behaviour
 
@@ -42,5 +41,11 @@ answer. Start at `MANAGED_MARK` and `rebuild`.
   matcher group emptied by that removal is dropped; one that was already empty is the user's and
   stays. When nothing of ours was found the file is not rewritten at all, so somebody's four-space
   indentation is not silently reformatted into two.
-- Legacy detection is deliberately conservative: a path is removed only when it exists, carries no
-  mark, and names dspec, `.ds/`, one of dspec's own commands, or loads its old hook helper.
+
+## Decisions
+
+- **Delete-and-rewrite replaced an add-only rule.** The old rule protected dspec's files from dspec
+  itself, at the cost that no improvement ever reached anybody who already had a copy.
+- **Legacy detection reads content, not just names.** 0.0.1's `ds-plan` prompt, once the other
+  agents had dropped its tool list, never says "dspec" — it only points at `/ds-spec`. It survived
+  upgrades as a stale command until the other signals were added.
