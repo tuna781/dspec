@@ -42,6 +42,15 @@ still working out its shape. From 1.0.0 onwards, breaking means a major bump.
   nobody opened, because an old date is honest about what it does not know and a fresh one is a
   claim. It stays in the frontmatter and never reaches the index.
 
+- **A diff now names the features it can invalidate.** The instruction block already asked for a
+  lookup before an edit — find the owning feature in `.ds/files.md`, update its page after. It now
+  asks for the same lookup pointed the other way when reviewing: run a diff's changed paths through
+  `.ds/files.md` to name the features it touches, then read those pages for the rules it must not
+  have broken.
+
+  This is a read, not a command. No verb, no gate, and nothing new to install — the reverse index
+  was already there, and nothing was using it at review time.
+
 ## [0.4.0] — 2026-09-21
 
 ### Changed

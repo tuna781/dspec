@@ -33,6 +33,9 @@ then only the feature files you need.
 - Before you change a file, look it up in `.ds/files.md` to find the feature that owns it. After
   you change it, update that feature file, and `.ds/index.md` if the summary or the entry file
   changed. Do it as part of the work, not as a separate ceremony.
+- Reviewing a diff or a pull request? The same lookup, the other way: run its changed paths through
+  `.ds/files.md` to name the features it touches, then read those pages for the rules it must not
+  have broken.
 - Add a file, or move one, and `.ds/files.md` has to say so too — it is the one place that answers
   which feature owns what.
 - A choice you made and the option you rejected belongs under that feature's `## Decisions`. It is
