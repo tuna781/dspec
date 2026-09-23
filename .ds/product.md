@@ -51,10 +51,8 @@ detection, the linter and the strict gate. What is left is the part that was alw
 - **The map is internal.** No document names or teaches its format to the user; what an agent needs
   in order to write it is in the bootstrap command it runs. The README may show the shape of `.ds/`
   — never a feature file's frontmatter or sections.
-- **The map records what it does not know.** A description nobody read the code for, and a doubt
-  written around rather than written down, are the two ways a map starts lying. `## Unsettled` is
-  where the second one goes; it marks the edge of what the map knows and is never a list of work
-  to do.
+- **The map says what the code is, never why.** Every sentence in it is something an agent read
+  in the code. There is no section for reasons, rejected options or doubts.
 - **The git tag is the version, and nothing else is.** Nobody bumps a version by hand and nobody
   tags; `npm run release <tag>` writes the number everywhere it is read and puts the tag on the
   commit that shipped. One fact in several places, kept in step by hand, drifts within the hour.

@@ -31,16 +31,10 @@ uses: [Cart totals, Promotion catalogue]
 What this feature is, in product terms, and where to start reading. One paragraph.
 
 ## Rules
-- Invariants a change must not break, and why.
+- Invariants the code enforces — what a change must not break.
 
 ## Behaviour
 - What it does, and the cases that matter: order, precedence, what it refuses.
-
-## Decisions
-- Why it is this way: a choice made once, what was rejected and why, what an incident taught.
-
-## Unsettled
-- What a reader must not take on trust.
 ```
 
 `name` is how the feature is addressed, and what other features' `uses:` point at — so it is
@@ -50,7 +44,7 @@ repo-relative. `uses` names other features, never files or packages. The file na
 `features/` carries no meaning; use a slug of the name.
 
 **Send a reader to a name, not only to a path.** Wherever the prose points at code — the lead
-paragraph, a behaviour bullet, a decision — name what they can search for: a function, a route, an
+paragraph, a rule, a behaviour bullet — name what they can search for: a function, a route, an
 error message, a constant. `applyDiscount()` in `src/pricing/discount.ts` lands them on the line
 rather than the file, and it survives that file being moved, which a path does not. An anchor is
 text you read in that file, never a name you expect to be there — one search has to find it.
@@ -68,20 +62,11 @@ stay scannable.
 **Never move a date forward for a page you did not open.** A date bumped to look tidy is worse than
 an old one: an old date is honest about what it does not know, and a fresh one is a claim.
 
-`Rules` and `Behaviour` are always there. The other two are not, and exist because without them
-their content has nowhere to go and ends up misfiled in the first two:
-
-- **`## Decisions`** — why it is the way it is. A choice somebody made once and the option they
-  rejected, a constraint that came from outside, what an incident taught. This is the section that
-  stops the next session helpfully re-adding what this one deliberately removed, so it is worth
-  more than any restatement of the code. Omit the heading when the feature has none.
-
-- **`## Unsettled`** — what a reader must not take on trust. Two kinds, and nothing else: what you
-  could **not** settle from the code alone — intent, external configuration, behaviour that only
-  appears at runtime — and what you found that contradicts itself or describes something that no
-  longer exists. **This is not a backlog, not a plan, not a tracker.** Nothing reads it and nothing
-  acts on it; it marks the edge of what the map knows, so that the confident half can be believed.
-  Omit the heading when there is nothing.
+**Every sentence is something you read in the code.** The map says what the code is and does —
+never why somebody made it so, and never what you expect it to do. What the code does not show —
+intent, configuration kept outside the repository, behaviour that only appears at runtime — is left
+out, not guessed at. A map that is short and true is worth more than one that is complete and
+partly invented, because the next session will trust every line of it equally.
 
 ## If `.ds/` does not exist yet
 
@@ -110,24 +95,19 @@ their content has nowhere to go and ends up misfiled in the first two:
    Aim for a list somebody could read in a minute. A large repository has tens of features in each
    area, not hundreds in one list.
 
-3. **Write one file per feature.** Read its files first — all of them. Then write what a read of
-   those files would **not** tell you: what it does for the product, why a branch exists, which
-   failure a check prevents, what must never change. Restating a function signature is not a
-   description; if one read of the code would tell you, it is not worth a line.
+3. **Write one file per feature.** Read its files first — all of them. Then write what the
+   feature does for the product, the cases that matter — order, precedence, what it refuses — and
+   the invariants its code enforces, each with the name a reader can search for. Restating a
+   function signature is not a description: say what a person asking about the feature needs, at
+   the level they would ask it.
 
    Fill `code:` with every file, and `uses:` with what you actually saw it depend on. Both are
    **declared from reading, never guessed** from imports, naming or word overlap. Date it with
    today's `checked:` as you write it.
 
-   Where a branch looks deliberate and the code does not say why, read that file's commit history
-   — the messages, and any pull request or issue they name. A reason you find there goes into
-   `## Decisions` with the commit it came from; one you cannot find goes into `## Unsettled` as a
-   question. **Never supply a reason yourself**: a plausible why that nobody gave is the most
-   convincing thing a map can get wrong. Code that nothing reaches any more is not behaviour
-   either — it goes under `## Unsettled`.
-
-   Put every reason you found into `## Decisions` rather than trailing it off a rule, and every
-   doubt into `## Unsettled` rather than writing around it.
+   **Never describe what you did not read.** A plausible sentence about code nobody opened is the
+   most convincing thing a map can get wrong. Code that nothing reaches any more stays in `code:`
+   but is not described as behaviour.
 
 4. **Write `.ds/product.md`**: what the product is in a paragraph, then `## Rules` — the
    constraints that outlive any one feature (stack, conventions, things nobody may quietly break)
@@ -191,10 +171,10 @@ wrong.**
    when it is behaviour a person would name.
 4. Is there a feature whose behaviour is no longer in the code at all? Delete its file.
 5. Bring an older map up to this shape, if it is not already: give every feature a `kind`, and a
-   `checked` date to each one whose code you actually read on this pass; move
-   reasons and rejected options out of `## Rules` and `## Behaviour` into `## Decisions`; move
-   anything you could not settle, and anything you found that no longer describes what exists, into
-   `## Unsettled`.
+   `checked` date to each one whose code you actually read on this pass. Delete any `## Decisions`
+   and `## Unsettled` sections: a line in them that states what the code does now moves into
+   `## Rules` or `## Behaviour` once you have confirmed it in the code, and reasons, rejected
+   options and doubts are dropped. Strip reasons trailing off a rule the same way.
 6. Re-check `product.md` against what the repository now is.
 7. Rewrite `.ds/index.md` from the feature files as they now stand. Delete `.ds/files.md` if an
    older map left one: what it held is now answered by searching `code:`, and a copy nobody
@@ -233,8 +213,6 @@ still apply; what changes is how much of the repository one run takes on.
 
 ## Report
 
-Tell the user, in one short paragraph: how many features the product has, what you added, renamed
-or rewrote, and anything you could not settle from the code alone — the same things you put under
-`## Unsettled`, because those are the ones only they can answer — grouped by feature, so they can
-be passed straight to whoever can answer them. If parts of the repository are not mapped yet, name
-them. Name features and behaviour, not files.
+Tell the user, in one short paragraph: how many features the product has, and what you added,
+renamed, rewrote or deleted. If parts of the repository are not mapped yet, name them. Name
+features and behaviour, not files.

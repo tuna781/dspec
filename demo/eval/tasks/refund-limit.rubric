@@ -1,0 +1,8 @@
+The answer key, from the code:
+- `refund(order, fractionPaid)` in src/orders/refund.ts refunds `Math.round(order.totalCents * fractionPaid)` — a share of what the customer actually paid, so the discount is apportioned rather than returned in full.
+- `refundCharge` in src/payments/charge.ts throws `nothing to refund` when the amount is zero or less. Nothing else is checked: the code does not cap `fractionPaid`, check the order's status, or track earlier refunds.
+
+Score 2 if the answer gives the formula (share of the order's total paid) and the zero-or-less check, and claims no limit the code does not have.
+Score 1 if the formula is right and nothing is invented, but it misses the zero-or-less check.
+Score 0 if the formula is wrong, or it claims a limit, cap or check that does not exist in the code.
+Judge only what the answer says; do not give credit for what it might have meant.

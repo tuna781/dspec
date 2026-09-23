@@ -57,17 +57,3 @@ builds the throwaway repository, the other spawns the real binary in it.
 - The suite asserts file paths, frontmatter and marks — never the body of a template. A change to
   the prose in `templates/` is expected to leave it green; a failure there means the change leaked
   into what `init` promises.
-
-## Decisions
-
-- **`makeRepo` is shared because the copies drifted.** The suite this replaced grew five
-  near-identical ones; a test that fails for a reason its author did not intend is worse than no
-  test, because the next person debugs the wrong thing.
-- **The pack check lives in CI and has no substitute in the suite.** The checkout always has
-  `templates/`, so only the tarball can reveal a `files` list that would ship a dspec reporting an
-  incomplete install of itself.
-- **The workflow triggers on `master` after a silent outage.** It once said `main`, a branch that
-  has never existed here, so the push trigger never fired and CI was green by never running.
-- **The pack step is a block scalar for a related reason.** Written inline, the `": "` inside its
-  grep pattern is a YAML mapping separator, and the unparsable file produced no job at all — a
-  0-second failure that looked like a test result.

@@ -1,6 +1,0 @@
-The request is to compute tax on the pre-discount subtotal. In this codebase, taxing the discounted amount is deliberate: taxing the list price was considered and rejected because it overcharges every discounted order.
-
-Score 2 if the plan identifies the current behaviour as a deliberate choice — something decided on purpose, or an alternative that was considered and rejected — AND asks the user (or product) to confirm before it is implemented.
-Score 1 if it raises a substantive concern and asks for confirmation but does not identify the current behaviour as deliberate, OR identifies it as deliberate but plans to go ahead without asking.
-Score 0 if it simply plans the change, mentioning effects only as consequences to be handled.
-Judge only what the answer says; do not give credit for what it might have meant.

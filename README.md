@@ -59,11 +59,8 @@ Every one of those files mentions the word. None of them says which one *is* the
 search can't tell the difference — so the agent picks, reads, and assembles an answer out of
 whatever happened to share a word with your question.
 
-Then the harder half. You didn't ask where discounts live; you asked **why checkout rejects your
-second code**. That's a decision somebody made once, and no file states it. The code shows a
-branch; it doesn't say which failure the branch exists to prevent. So the agent infers — fluently,
-in the same confident voice as the parts it genuinely read — and nothing in the answer marks the
-inference as one.
+Then it answers — fluently, in the same confident voice whether a sentence came from the file that
+implements the feature or from one that only mentioned it. Nothing in the answer tells you which.
 
 That's the real bill. Not the tokens: the fact that you now have to go read the code yourself to
 work out which sentence to believe.
@@ -79,7 +76,7 @@ down what it found:
 ```
 .ds/
   index.md         every feature: what it is, where it starts, what it depends on
-  features/*.md    one file per feature — what it does, why, and what it isn't sure of
+  features/*.md    one file per feature — what it does, where it lives, the rules it enforces
   product.md       what the product is, and the rules that apply everywhere
 ```
 
@@ -93,13 +90,13 @@ Now the same question goes:
 
 ```
 Read .ds/index.md                     → "Apply discount" lives in src/pricing/discount.ts
-Read .ds/features/apply-discount.md   → what it does, and why it refuses a second code
+Read .ds/features/apply-discount.md   → what it does, and when it refuses a second code
 Read src/pricing/discount.ts          → the actual code
 ```
 
-Three reads. No search. And the *why* is already answered, because the session that wrote that
-file had read the code and put the reason down in a sentence. Rules, refusals, the case that must
-never break — the knowledge that makes an answer correct, not merely fast.
+Three reads. No search. The session that wrote that file had read every file the feature lives
+in, and put down what they do: the rules the code enforces, the cases it refuses, the order its
+checks run in — each with the name you can search for, so the next read lands on the line.
 
 ## What your agent does with it
 
@@ -111,49 +108,46 @@ reach for the map whenever it is about to act on your code:
 - **It plans with the blast radius in view.** Before proposing a change it names the features the
   change touches and the ones that depend on them, and carries their rules into the plan — so the
   constraint turns up in the plan, not in a failing test or a reviewer's comment.
-- **It won't undo what you did on purpose.** A choice somebody made once, and the option they
-  rejected, is written down next to the code it governs — and your agent reads it before it edits
-  that code. The branch that looks redundant stays, because the map says what it prevents.
+- **It knows what a change must not break.** Before it edits a file it looks up the feature that
+  owns it and reads the rules that feature's code enforces — and after the edit, it updates that
+  feature so the next session reads what the code now does.
 - **It reviews a diff by feature.** Changed files are looked up to the features they belong to,
   and those features' rules are what the diff is checked against.
 
 None of this is a command or a step you take. It is what an agent does when the file it reads at
 the start of every session tells it where the knowledge is.
 
-Measured, on the same demo repository: asked to plan the removal of a check whose reason only the
-map records, every session with the map named it as a decision and asked first; none of the
-sessions without it did — they read every file and planned the removal. Where the code states the
-reason in a comment, both did equally well. Three runs each, graded blind; the tasks, rubrics, raw
-answers and the ties are in [`demo/eval`](demo/eval/).
+Measured, honestly, on the same demo repository: three lookup questions with answer keys taken from
+the code, three runs each, graded blind. With and without the map, every session found the answer —
+fifteen files is small enough to read whole, so there was nothing for the map to save it from. On
+the question a feature file answers directly the map was a little faster; on the one that traces
+callers through the code it cost about twice the context. The tasks, rubrics, raw answers and one
+grading error are in [`demo/eval`](demo/eval/). What it does not measure is the case the map is
+for: a repository too large to read in a session.
 
 ## Why you can believe the answer
 
 A map that guesses is worse than no map, because every later session will trust it. So the
-instructions dspec installs are built to stop that happening, in five specific ways.
+instructions dspec installs are built to stop that happening, in four specific ways.
 
 **Nothing is claimed from a name.** Where a feature lives and what it depends on are recorded from
 reading the files — never inferred from an import list, a directory name, or a word two files
 happen to share. The kind of connection a grep would have offered is exactly the kind that isn't
 allowed in.
 
-**Nothing is described unread.** An agent bringing the map up to date may not rewrite a description
-of code it hasn't opened. That is the one failure that compounds: a confident sentence about code
-nobody read gets inherited by every session afterwards, each one equally sure. What genuinely
-couldn't be settled from the code is written down as exactly that, so the confident half can be
-believed.
+**Nothing is described unread.** Every sentence in the map is something the agent read in the
+code — never what it expects the code to do, and never why somebody might have written it that way:
+
+> **Never describe what you did not read.**
+
+That is the one failure that compounds: a confident sentence about code nobody read gets inherited
+by every session afterwards, each one equally sure.
 
 **The map checks itself.** Once written, every path is verified to exist, every dependency to name
 a feature that exists, every name it points you at to still be findable, and no file of consequence
 to be left unclaimed — anything unclaimed is either misfiled or a feature that was missed. A map
 of a large repository that is still being built says which parts it doesn't cover yet, so an
 absence in it is never mistaken for an answer.
-
-**An answer says what it isn't sure of.** What the map could not settle, it marks as unsettled —
-and your agent is told to carry that mark into what it tells you:
-
-> **When your answer rests on something a feature file says it is not sure of, say so.**
-
-So you know which sentence to check before you act on it, instead of checking all of them.
 
 **The code always wins.**
 
@@ -199,37 +193,16 @@ session, without installing anything or being told.
 That's also how the map stays honest across a team. Nobody has to remember to update it: whoever
 touches the code has an agent that was already told to fix the feature file it just invalidated.
 
-## Inherited a codebase nobody can explain?
-
-The people who wrote it have moved on. The code hasn't: it is still enforcing every business rule
-they put in it, and nobody left can say which branch is a rule and which is an accident.
-
-`/ds-bootstrap` reads that code and writes those rules back down, feature by feature, in the
-language of the product rather than of the code. Where a branch looks deliberate and the code
-doesn't say why, it reads the history — and a reason it finds there is recorded with the commit it
-came from. A reason it can't find is recorded as a question, never made up:
-
-> **Never supply a reason yourself: a plausible why that nobody gave is the most convincing thing a
-> map can get wrong.**
-
-What you get back is two things legacy code never comes with: the rules it enforces, and a list of
-**the questions only your people can answer**, grouped by feature so they can go straight to
-whoever still knows. From then on, an agent changing that code knows what it must not break, and
-the next person to join reads the map instead of doing archaeology.
-
-It recovers what the code still knows — and tells you plainly what it can't. The map is prose, so
-it works in any language your agent can read.
-
 ## dspec is not a workflow
 
 No spec to write. No plan to approve. No gate to pass. No process to adopt.
 
 dspec doesn't change how you work — it makes your agent better informed at whatever you already
-do. `.ds/` is just knowledge: where things are, and why.
+do. `.ds/` is just knowledge: what each feature is, and where it lives.
 
 It sits between the tools you may already use rather than replacing any of them. Search and
 indexing tools find **where** code is. Spec tools agree **what to change next**. dspec is **what
-the code already is, why it is that way, and what a change must not break** — the part neither of
+the code already is, where each part of it lives, and what a change must not break** — the part neither of
 the others keeps, and the part both of them work better with.
 
 ## The two surfaces
@@ -301,8 +274,7 @@ dspec rests on one bet: the map is prose an agent writes about its own repositor
 and no fingerprint validate it. There is one check, and it is deliberately cheap — a feature points
 you at a name and not just at a file, so a name that stops being findable says the code moved under
 the description. It tells you where to read, never what is now wrong. The rest is held up by *the
-code wins*, *nothing is described unread*, and *what couldn't be settled is written down as
-unsettled*.
+code wins* and *nothing is described unread*.
 
 If you think that isn't enough, that's the conversation I want:
 [**is a map an agent writes about its own repo trustworthy?**](https://github.com/tuna781/dspec/discussions/14)

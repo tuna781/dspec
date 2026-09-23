@@ -64,15 +64,9 @@ is to run both sides for real. Start at `demo/README.md`, then `record-split.sh`
   from reading them off these frames.
 - The recorded "with" half goes `index.md` → one feature file, so a change that moved the index's
   entry file or renamed the first read would date the gif.
-
-## Decisions
-
-- **The trade in favour of real sessions is stated in the README rather than hidden.** What is lost
-  is a frame-for-frame reproduction; what is kept is that every tool call on screen is one the
-  agent really made.
-
-## Unsettled
-
+- The question both halves are asked is *"when does checkout refuse a second discount code?"*
+  in `half-with.tape`, `half-without.tape` and `demo.tape`. The committed `demo-split.gif` was
+  recorded before the tapes changed and still shows the earlier question, *"why does checkout
+  reject my second discount code?"* — as does the README's cost table.
 - `demo.tape` is the superseded single-pane recording. It still runs and writes `../demo.gif`, a
-  file nothing commits and nothing links to, since the README shows the split version. Whether it
-  is kept as a fallback or deleted is not decided anywhere in the code.
+  file nothing commits and nothing links to.

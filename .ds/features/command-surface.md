@@ -47,18 +47,6 @@ resolves. Start at `main` in `src/cli.ts`.
 - `packageVersion` returns `'unknown'` rather than a plausible `0.0.0` when nothing declares one: a
   made-up number reads as an answer, and this one is printed where somebody is deciding whether to
   upgrade.
-
-## Decisions
-
-- **`dspec update` was deleted.** Wrapping `npm` bought a second way to type the same thing and the
-  only outbound request in the tool.
-- **Strict parsing came from a silent failure.** `--stirct` once passed through an `includes`
-  check and a CI job was green because of it; `parseFlags` exists so that no surface parses flags
-  its own way again.
-- **`--version` and `--help` stayed flags rather than becoming verbs.** The number is the question
-  people ask, and a health report nobody asked for only makes the answer harder to find.
-- **`packageRoot` walks up rather than counting `..`.** Counting would encode each caller's depth
-  inside `dist/`, which only breaks after publishing.
-- **A failed walk falls back rather than throwing.** `locate()` ends at the filesystem root by
-  resolving `..` from `__dirname` and returning a null version. Callers already handle a missing
-  `templates/`, and an exception there would kill `init` outright.
+- There is no `update` verb; upgrading is the user's own `npm i -g dspec@latest`.
+- When the walk reaches the filesystem root without finding dspec, `locate()` falls back to
+  `..` from `__dirname` with a null version rather than throwing.

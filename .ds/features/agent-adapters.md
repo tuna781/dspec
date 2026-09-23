@@ -54,18 +54,3 @@ three adapters that implement it are gathered at the foot of the file in the `AG
 - `isInstalled` checks the current marker for dspec's mark, not merely for existence: somebody
   else's `ds-bootstrap.md` is not an install of ours, and treating it as one would have `init`
   delete and rewrite a file dspec has no claim on.
-
-## Decisions
-
-- **The templates carry no frontmatter; the adapter prepends its own.** Shipping frontmatter and
-  rewriting it per agent is what an entire YAML parser used to exist for, to translate three keys.
-- **Nothing guesses whether somebody uses an agent.** Adapters once carried a `detect` that looked
-  for `.claude/` or `.cursor/`; it existed only to preselect a picker, and a directory's presence
-  was never evidence either way. `marker` answers a different and answerable question — did dspec
-  put a file here — and is the only thing left.
-- **No session hooks, though Claude Code alone could run them.** One spelling everywhere is worth
-  more than a capability two of the three agents could not have.
-- **`.claude/skills/` and `.claude/hooks/dspec/` are swept although nothing writes them.** An
-  earlier version installed to both, and 0.1.x's hooks must go — this version deletes the scripts
-  they point at, and a hook whose script is missing fails on every session start. Nothing but dspec
-  writes that hooks directory name, which is why it needs no mark check.

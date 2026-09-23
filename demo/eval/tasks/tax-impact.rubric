@@ -1,0 +1,10 @@
+The answer key, from the code:
+- Tax is computed by `taxFor` in src/pricing/tax.ts, from the per-region `RATES` table.
+- Its only caller is `computeTotals` in src/pricing/totals.ts, which passes it the discounted amount (subtotal minus the clamped discount).
+- `computeTotals` is called by `startCheckout` and `redeemCode` in src/checkout/index.ts.
+- The resulting `totalCents` is what `placeOrder` (src/orders/place.ts) charges, and what `refund` (src/orders/refund.ts) apportions.
+
+Score 2 if the answer names tax.ts and totals.ts as the files to change, names the checkout callers, and names orders (placing and/or refunding) as downstream — and names no caller or file that does not use tax.
+Score 1 if it correctly names tax.ts and totals.ts but misses the checkout callers or the orders downstream, with nothing invented.
+Score 0 if it misses tax.ts or totals.ts, or names a caller, file or mechanism that does not exist in the code.
+Judge only what the answer says; do not give credit for what it might have meant.

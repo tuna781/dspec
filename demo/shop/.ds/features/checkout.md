@@ -13,21 +13,19 @@ uses: [Apply discount, Order totals, Cart, Promotion catalogue]
 The checkout session: validate the cart, price it, and let codes be redeemed against it. Start at
 `startCheckout`.
 
+## Rules
+
+- **A cart holding a non-discountable product and any discount is refused** when checkout starts:
+  `validateCheckout` throws `<product name> cannot be discounted`. The eligible lines are not
+  discounted on their own.
+
 ## Behaviour
 
-- Redeeming a code re-prices the whole session rather than adjusting the total in place.
-- A session older than `SESSION_TTL_MS` has stale prices and stale discounts, and is re-priced.
-- A code the session refuses is refused by *Apply discount*, not here — this only passes the
-  reason back.
-
-## Decisions
-
-- **Re-pricing beats adjusting the total in place.** A discount changes the tax and can hit the
-  minimum-charge floor, so patching one number leaves the other three disagreeing with it.
-
-## Unsettled
-
-- **`redeemCode` does not call `validateCheckout`.** The mixed-cart rule is enforced when a session
-  starts, not when a code is redeemed into it, so a code entered after `startCheckout` is priced
-  over every line — non-discountable ones included — until something re-validates. Whether that is
-  an oversight or relies on a check elsewhere cannot be settled from these files.
+- `startCheckout` runs `validateCheckout` — `cart is empty`, `unknown sku: <sku>`, then the mixed
+  cart rule above — and opens a session priced by `computeTotals`.
+- `redeemCode` passes the code to *Apply discount*; a refusal comes back unchanged. An accepted
+  code is pushed onto the cart and the whole session is re-priced with `computeTotals`.
+- `redeemCode` does not call `validateCheckout`: the mixed-cart rule is checked when a session
+  starts, not when a code is redeemed into it.
+- `isStale` reports a session older than `SESSION_TTL_MS` (30 minutes). Nothing in this repository
+  calls it.

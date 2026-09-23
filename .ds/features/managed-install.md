@@ -48,11 +48,5 @@ answer. Start at `MANAGED_MARK` and `rebuild`.
   matcher group emptied by that removal is dropped; one that was already empty is the user's and
   stays. When nothing of ours was found the file is not rewritten at all, so somebody's four-space
   indentation is not silently reformatted into two.
-
-## Decisions
-
-- **Delete-and-rewrite replaced an add-only rule.** The old rule protected dspec's files from dspec
-  itself, at the cost that no improvement ever reached anybody who already had a copy.
-- **Legacy detection reads content, not just names.** 0.0.1's `ds-plan` prompt, once the other
-  agents had dropped its tool list, never says "dspec" — it only points at `/ds-spec`. It survived
-  upgrades as a stale command until the other signals were added.
+- Legacy detection (`writtenByDspec`) reads a file's content, not only its name: it matches
+  `dspec`, `.ds/`, one of the old `/ds-*` commands, or the hook helper's `require('./_ds')`.

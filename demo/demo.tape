@@ -21,11 +21,11 @@ Type "cd shop && clear && export PS1='$ '" Enter
 Show
 
 Sleep 400ms
-Type "# why does checkout reject my second discount code?" Enter
+Type "# when does checkout refuse a second discount code?" Enter
 Sleep 1500ms
 Type "" Enter
 
-Type "# A codebase you did not write. Your agent goes looking." Enter
+Type "# Your agent does not know where that lives. It goes looking." Enter
 Sleep 500ms
 Type "grep -rli discount src/ | wc -l    # files it has to open" Enter
 Sleep 1200ms
@@ -34,7 +34,7 @@ Sleep 1600ms
 Type "" Enter
 Type "# 12 of 15 files. Tens of thousands of tokens." Enter
 Sleep 500ms
-Type "# And not one of them says WHY." Enter
+Type "# Every one mentions the word. Two of them are the feature." Enter
 Sleep 1800ms
 Type "clear" Enter
 Sleep 400ms
@@ -46,12 +46,12 @@ Sleep 2600ms
 Type "" Enter
 Type "# One feature, two files. Now read that feature:" Enter
 Sleep 600ms
-Type "sed -n '13,17p' .ds/features/apply-discount.md" Enter
+Type "sed -n '15,21p' .ds/features/apply-discount.md" Enter
 Sleep 4200ms
 Type "clear" Enter
 Sleep 300ms
 
-Type "# Two reads. No search. And it explains the why." Enter
+Type "# Two reads. No search. The answer, from the feature itself." Enter
 Sleep 1300ms
 Type "" Enter
 Type "# Get it:" Enter

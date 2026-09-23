@@ -58,9 +58,3 @@ it says outright that it is the whole contract and there is no second place to c
   npm's badge reads, the README's closing line and the card's last pill.
 - The pull-request template asks for the *why* first, and one checkbox item is updating the `.ds/`
   feature file that claims the code being touched.
-
-## Decisions
-
-- **The pull-request template asks for the *why* first** on the grounds that reasoning is the part
-  a later reader cannot reconstruct. It is the same reason a feature file has a `## Decisions`
-  section.

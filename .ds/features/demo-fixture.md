@@ -39,46 +39,28 @@ it, nothing builds it, and it ships to nobody.
 
 ## Rules
 
-- **The question must have an answer the code does not state.** *Why does checkout reject my
-  second discount code?* is a decision somebody made once — codes combine only where every
-  promotion is stackable, and never within one `exclusiveGroup`. The branch is visible in
-  `discount.ts`; the reason is not, which is the entire point being demonstrated. A fixture whose
-  behaviour were self-evident would prove nothing.
 - **The word must be spread across files that are not the feature.** Twelve of the fifteen source
   files mention "discount" — the cart, the product catalogue, checkout validation, the totals, the
-  orders, the API routes — while the feature itself is two of them. That is what makes the search
-  half of the recording expensive and the map half cheap; flattening the spread would quietly make
-  the no-map baseline look better than the tool it is measured against.
-- **Its map is written to the same standard as any other.** It is read by a real session on camera
-  and quoted on the social card, so a lazy fixture map would be a demonstration of the product
-  failing. Its rules are the fixture's actual invariants, not filler.
-- **Its map is in the current format.** It is the only worked example of `.ds/` anybody sees, so a
-  format change here is part of the format change, not a follow-up.
-- **Change `shop/`, re-record.** The gif, the README's table and the card's panel all describe one
-  run against this fixture. Editing the source without re-recording leaves three surfaces
-  describing a repository that no longer exists.
+  orders, the API routes — while the feature itself is two of them.
+- **Its map is written to the same standard as any other**, and in the current format: it is read
+  by a real session on camera and quoted on the social card.
+- **Change `shop/`, re-record.** The gif, the README's table and the card's panel all describe
+  runs against this fixture.
+- **Each eval rubric's answer key is read from `src/`.** Change the code a key rests on and the task
+  that tests it has to change too.
 
 ## Behaviour
 
-- Seven features across six areas — cart, catalogue, checkout, pricing, orders, API — small enough
-  to read in a few minutes and shaped so that "where is this decided?" is a genuine question. All
-  seven are `kind: product`: the fixture has no build, no tests and no release of its own.
-- The answer the recording is after lives in `apply-discount.md` under `## Decisions`, which is
-  what the demo's question is asking for.
-- The invariants are real ones and are why the fixture reads as code rather than as sample text:
-  money is integer cents everywhere, tax is charged on the discounted amount, a discount never
-  takes an order below `MINIMUM_CHARGE_CENTS`, and a cart mixing a discount with a
-  non-discountable product is refused outright rather than half-discounted.
-- `demo/shop/CLAUDE.md` is the installed block verbatim, which is what makes the "with dspec" half
-  a real installation rather than a hint typed into a prompt.
-- It is also what `demo/eval` puts its planning tasks to, so its `## Decisions` sections double as
-  the answer key: each task asks for a change one of them rejected.
+- Seven features across six areas — cart, catalogue, checkout, pricing, orders, API — all
+  `kind: product`: the fixture has no build, no tests and no release of its own.
+- The demo question, *when does checkout refuse a second discount code?*, is answered by the Rules
+  of `apply-discount.md`: every promotion involved must be stackable, and two in one
+  `exclusiveGroup` never combine.
+- The invariants it enforces: money is integer cents, tax is charged on the discounted amount, a
+  discount never takes an order below `MINIMUM_CHARGE_CENTS`, and a cart mixing a discount with a
+  non-discountable product is refused by `validateCheckout`.
+- Its map records what the code does where the source comments claim more: `redeemCode` does not
+  call `validateCheckout`, and nothing calls `isStale`.
+- `demo/shop/CLAUDE.md` is the installed block verbatim.
 - Nothing here is compiled or type-checked: the root `tsconfig.json` includes `src/**/*` only, and
-  `files` in `package.json` excludes `demo/` from the published package.
-
-## Decisions
-
-- **Its map was corrected where it disagreed with its code.** *Apply discount* recorded the
-  minimum-charge floor as "a refusal, not a clamp"; `clampDiscount()` in `rules.ts` clamps the
-  discount and accepts the code. The code won, as the block says it must. The recording was not
-  re-made for it: the question it asks is answered by the stacking decisions, which did not change.
+  `files` in `package.json` excludes `demo/`.

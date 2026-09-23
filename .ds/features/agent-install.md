@@ -56,17 +56,3 @@ changed. Start at `cmdInit` in `src/init.ts`.
 - An install missing its own `templates/` fails before anything is touched, with *"this dspec has
   no `templates/`"* and exit 2 — the one failure that means the package itself is broken rather
   than the repository.
-
-## Decisions
-
-- **`--agent` used to uninstall what it left out, and no longer does.** An agent whose files lived
-  in the repository was deleted when a later run did not name it; only Codex was spared, because
-  its command sits in the home directory and is shared by every repo on the machine. The flag reads
-  as "install these" and the deletion was a side effect, warned about only in `--help` — which cost
-  a working install in this repository during the `.ds/` v2 work. Uninstalling is a separate
-  intention and has to be asked for separately.
-- **The interactive picker was removed, and installing everywhere replaced it.** It made the user
-  answer a question they had no way to answer well — which agents they, and every teammate, might
-  reach for on this repo — and the two mistakes it could make are not the same size: installing an
-  agent nobody opens costs one markdown file, while omitting the one they do open costs a session
-  where `/ds-bootstrap` is missing and nothing explains why.

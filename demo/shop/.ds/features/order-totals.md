@@ -10,16 +10,15 @@ uses: [Apply discount, Cart]
 ---
 
 Turns a cart into the four numbers a customer sees: subtotal, discount, tax, total. Start at
-`computeTotals`; the order it calls `clampDiscount` and then `taxFor` in is the feature.
+`computeTotals`, which calls `clampDiscount` and then `taxFor`, in that order.
 
 ## Rules
 
 - **Tax is charged on the discounted amount, not the list price.** `taxFor` is given
   `subtotalCents - discountCents`, never the subtotal.
-- **The discount is clamped before tax**, so the floor is applied once and tax is computed on a
-  number that can actually be charged.
+- **The discount is clamped before tax is computed.**
 
-## Decisions
+## Behaviour
 
-- **Taxing the list price was rejected: it overcharges every discounted order.** The order of the
-  two steps is the whole of this feature — clamp, then tax.
+- Tax rates are per region in `RATES`: EU 21%, US 7%, UK 20%; an unknown region pays no tax.
+- `totalCents` is subtotal minus the clamped discount plus tax.

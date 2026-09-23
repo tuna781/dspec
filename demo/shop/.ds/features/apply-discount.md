@@ -14,29 +14,18 @@ with what is already there, and what it is worth. Start at `applyDiscount`.
 
 ## Rules
 
-- **A second code is refused unless every promotion involved is stackable.**
-- **Two promotions in the same `exclusiveGroup` never combine**, stackable or not. That is how one
-  campaign is expressed as several codes without them stacking against each other.
-- **A discount never takes an order below `MINIMUM_CHARGE_CENTS`** — shipping still has to be paid
-  for.
+- **A second code is refused unless every promotion involved is stackable** — `stackingAllowed`
+  checks the new promotion against each one already on the cart.
+- **Two promotions in the same `exclusiveGroup` never combine**, stackable or not.
+- **A discount never takes an order below `MINIMUM_CHARGE_CENTS`** (100 cents). `clampDiscount`
+  shrinks the discount to fit; the code itself is still accepted.
 
 ## Behaviour
 
-- Checks run in order and stop at the first failure: unknown code, expired, already applied, then
-  not stackable. `not_stackable` names the code it conflicts with, so the customer can be told
-  which of the two to keep.
-- Changing the cart lines clears every discount: the amounts were computed against the old basket.
-- A percentage discount is rounded once, against the whole subtotal, never per line.
-
-## Decisions
-
-- **The second code is refused rather than silently dropped.** Dropping it would show the customer
-  a total they cannot reproduce from the codes they entered, and a refusal that names the
-  conflicting code lets them choose which one to keep.
-- **Stackable campaigns were not allowed to compound.** Applying both would let two "20% off
-  everything" campaigns come to 36% off, which is not what either campaign meant — so the rule is
-  that *every* promotion involved must be stackable, not just the new one.
-- **The floor caps the discount; it does not refuse the code.** Where the discounts would take an
-  order below `MINIMUM_CHARGE_CENTS`, `clampDiscount` shrinks the discount so the order still costs
-  the floor — shipping costs the same whatever was discounted, so the discount is what gives way.
-  The code itself is accepted.
+- Checks run in order and stop at the first failure: `unknown_code`, `expired`, `already_applied`,
+  then `not_stackable`. `not_stackable` carries `conflictsWith`, the code already on the cart that
+  it conflicts with.
+- A percentage discount is rounded once, against the whole subtotal, never per line. A fixed
+  discount is capped at the subtotal.
+- Changing the cart lines clears every discount (`setLines` in *Cart*).
+- `removeDiscount` takes one code off the cart; it is what `DELETE /checkout/discount/:code` calls.

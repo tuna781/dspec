@@ -15,9 +15,7 @@ not break — **without reading the repository**.
    repository is built, tested and shipped follows under its own heading. A part it lists as not
    mapped yet has no map: search there as usual.
 2. Read the one or two feature files under `.ds/features/` that the question is actually about.
-   Each says what the feature does, the rules it must not break, the behaviour that matters, why
-   it is the way it is — and, where it says so, what it is not sure of. When your answer rests on
-   something a feature file says it is not sure of, say so.
+   Each says what the feature does, the rules it must not break and the behaviour that matters.
 3. Read `.ds/product.md` when the question is about the product as a whole, or when you need a
    rule or a word that applies everywhere.
 
@@ -34,9 +32,9 @@ then only the feature files you need.
 
 - If `.ds/` and the code disagree, **the code wins**. Fix the map, and say so.
 - Before you change a file, search `.ds/features/` for its path to find the feature that owns it,
-  and read its rules and decisions before you edit — they are what the change must not break or
-  quietly undo. After you change it, update that feature file, and `.ds/index.md` if the summary
-  or the entry file changed. Do it as part of the work, not as a separate ceremony.
+  and read its rules before you edit — they are what the change must not break. After you change
+  it, update that feature file, and `.ds/index.md` if the summary or the entry file changed. Do it
+  as part of the work, not as a separate ceremony.
 - Reviewing a diff or a pull request? The same search, in bulk: look its changed paths up in
   `.ds/features/` to name the features it touches, then read those pages for the rules it must not
   have broken.
@@ -44,8 +42,6 @@ then only the feature files you need.
   and carry their rules into the plan.
 - Add a file, or move one, and the owning feature's `code:` list has to say so — it is the only
   record of what a feature is made of, and what every one of these searches matches against.
-- A choice you made and the option you rejected belongs under that feature's `## Decisions`. It is
-  what stops the next session undoing it.
 - New behaviour that no feature describes gets a new file under `.ds/features/`, in the same shape
   as the others.
 - If the map is missing or badly out of date, `/ds-bootstrap` rebuilds it. If that command is not

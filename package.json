@@ -1,16 +1,14 @@
 {
   "name": "dspec",
   "version": "0.6.0",
-  "description": "Your coding agent answers from what your product is, not from what it can grep. dspec keeps a map of your codebase in .ds/ — what each feature is, where it lives, why, and what a change must not break — read by Claude Code, Codex and Cursor.",
+  "description": "Your coding agent answers from what your product is, not from what it can grep. dspec keeps a map of your codebase in .ds/ — what each feature is, where it lives, what it does, and what a change must not break — read by Claude Code, Codex and Cursor.",
   "keywords": [
     "dspec",
     "code-map",
     "codebase-map",
     "context",
-    "legacy-code",
     "monorepo",
     "onboarding",
-    "architecture-decisions",
     "claude-code",
     "codex",
     "cursor",

@@ -11,6 +11,27 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
+## [Unreleased]
+
+### Changed
+
+- **The map says what the code is, never why.** Feature files no longer carry `## Decisions` or
+  `## Unsettled`: a feature is its lead paragraph, `## Rules` — the invariants its code enforces,
+  with no reason attached — and `## Behaviour`. `/ds-bootstrap` no longer reads commit history for
+  reasons, and every sentence it writes has to be something it read in the code; what the code does
+  not show is left out rather than guessed. On an older map, the reconcile branch deletes both
+  sections, moving a line into Rules or Behaviour only once it is confirmed against the code. This
+  is a change to the `.ds/` format.
+- **The instruction block got shorter.** It no longer asks for decisions to be read before an edit
+  or written after one, or for an answer to flag what a feature file is not sure of. Reading a
+  feature's rules before editing one of its files stays.
+- **The README, the help text, the package description and the social card say the same.** The
+  legacy-codebase section is gone, the trust claims are four, and the card's headline is *Your
+  agent knows where.* The demo question is now *when does checkout refuse a second discount code?*
+- **`demo/eval` measures lookup instead of decisions**: three questions with answer keys taken from
+  the fixture's code, graded for correct, complete and nothing invented, with context tokens
+  reported beside time and cost.
+
 ## [0.6.0] — 2026-09-23
 
 ### Changed

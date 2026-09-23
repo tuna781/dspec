@@ -66,8 +66,8 @@ Going the other way — you have a file and need the feature — search `code:` 
   side by side, one with a `.ds/` map and one without, staged outside this repository so the
   no-map half really has no map.
   → `demo/README.md` +8 · uses: Demo fixture · used by: Readme
-- **Demo evaluation** — Whether the map changes what an agent plans: real sessions asked to plan a
-  change the fixture's decisions rejected, with and without `.ds/`, graded blind.
+- **Demo evaluation** — Whether the map makes answers about the code correct, complete and free of
+  invention: real sessions asked lookup questions, with and without `.ds/`, graded blind.
   → `demo/eval/run.sh` +9 · uses: Demo fixture · used by: Readme
 - **Demo fixture** — `demo/shop`, a fifteen-file storefront that exists to be asked a question, with
   a real map committed: the repository the recording and the README's figures are made in.

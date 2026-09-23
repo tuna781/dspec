@@ -44,24 +44,10 @@ and four words of proof.
   image and what is not allowed on it.
 - The pill row states what the README's "What it won't do" section states — three agents, zero
   dependencies, entirely local, MIT — so the two cannot disagree.
-- The left half is one headline ("Your agent knows why.") and the README's tagline; the right half
-  is `demo/eval`'s `mixed-cart` task: asked to plan discounting only the eligible lines, the agent
-  reads the index, then *Promotion catalogue*, finds the half-discount was rejected on purpose, and
-  "Before undoing it, it asks you."
-
-## Decisions
-
-- **The version rule came from two minor versions of a lie.** The 0.1.x card advertised a Claude
-  Code plugin, a `stamp:` fingerprint and specs "measured against" the code for two releases after
-  all three were deleted.
-- **The headline is "Your agent knows why."** *Ask the model* said nothing dspec does, and *Ask the
-  map* told the reader to consult a map the product says they never read. The *why* is the part only
-  the map holds, and it is what `demo/eval` measured a difference on.
-- **The panel shows a plan, not an answer.** It used to show the question the recording asks, ending
-  in *Three reads. No search.* — a cost claim, which the README deliberately puts below the argument,
-  and whose answer line gave a rule without its reason. The planning example is the one result the
-  evaluation separates the two conditions on, so every line of it is something a real session did.
-- **"Before undoing it", not "before it plans".** The sessions did write a plan; what they asked about
-  first was removing the decision. The card claims only that.
-- **It no longer mirrors the recording.** The gif still shows the question; the card shows the plan.
-  Two surfaces showing two uses was preferred to both repeating the one that is cheaper.
+- The left half is one headline ("Your agent knows where.") and the README's tagline; the right
+  half is the demo question, *"when is a second discount code refused?"*: the agent reads the
+  index, lands on *Apply discount* in `src/pricing/discount.ts`, reads that feature, and has the
+  answer — unless every promotion is stackable, and never within one `exclusiveGroup` — ending on
+  "Two reads. No grep."
+- The committed `social-preview.png` matches the HTML; the card GitHub serves changes only when it
+  is uploaded under Settings.

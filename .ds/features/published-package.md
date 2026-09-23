@@ -64,15 +64,4 @@ a user receives.
 - `.gitattributes` forces `eol=lf` so a Windows contributor cannot CRLF the tree, and marks `.gif`
   and `.png` binary explicitly — correct under `text=auto` today, said outright so a later edit
   cannot quietly break the demo recording.
-
-## Decisions
-
-- **`/dist/` was anchored after an incident.** A bare `dist/` once silently swallowed a nested
-  build output and shipped it empty, with nothing saying so. The warning sits in `.gitignore` above
-  the line.
-
-## Unsettled
-
-- **`.claude/settings.json` is committed holding `{}`.** 0.1.x put hook entries there and this
-  version takes them back; what is left is an empty object that configures nothing. Whether it
-  should be deleted or is being kept as a placeholder is not answerable from the code.
+- `.claude/settings.json` is committed holding `{}`.

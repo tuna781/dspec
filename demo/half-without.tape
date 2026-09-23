@@ -24,7 +24,7 @@ Sleep 14s
 Show
 
 Sleep 800ms
-Type "why does checkout reject my second discount code?"
+Type "when does checkout refuse a second discount code?"
 Sleep 900ms
 Enter
 Sleep 62s

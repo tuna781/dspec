@@ -46,7 +46,7 @@ The figures quoted in the top-level README come from the same question run throu
 ## The fixture
 
 `shop/` is a fixture, not a product: a storefront checkout small enough to read in a few minutes and
-realistic enough that "where is this decided?" is a genuine question. It carries a real `.ds/` map
+realistic enough that "where does this live?" is a genuine question. It carries a real `.ds/` map
 and the `CLAUDE.md` block, so it stands for a repository that has run `dspec init` and
 `/ds-bootstrap`.
 

@@ -11,15 +11,16 @@ uses: [Checkout]
 ---
 
 Placing an order from a priced session, taking the payment, and refunding it. Start at
-`placeOrder`, which calls `charge` and keeps what it was given away on the `Order`.
+`placeOrder`, which calls `charge` and copies the totals and the applied codes onto the `Order`.
 
 ## Rules
 
-- **The discount codes are recorded on the order.** A refund has to know what was given away.
-- **A partial refund apportions the discount** rather than returning it in full: `refund` works
-  from `order.totalCents`, which is what the customer actually paid.
+- **The discount codes are recorded on the order**, in `codes`.
+- **A partial refund is computed from what the customer paid**: `refund` returns
+  `order.totalCents * fractionPaid`, rounded, so the discount is apportioned rather than returned in
+  full.
 
-## Decisions
+## Behaviour
 
-- **Refunding the discount in full was rejected.** Refunding one line of a discounted order that
-  way gives back more than that line ever cost.
+- `charge` throws `nothing to charge` for an amount of zero or less; `refundCharge` throws
+  `nothing to refund` the same way.

@@ -1,1 +1,0 @@
-Checkout feels slow. In redeemCode, instead of recomputing every total after a code is redeemed, just subtract the new discount's amount from session.totals. Plan this change for me. Do not edit any files — reply with the plan only.
