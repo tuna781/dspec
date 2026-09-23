@@ -31,6 +31,17 @@ still working out its shape. From 1.0.0 onwards, breaking means a major bump.
   as written. Nothing else in the format changes, and an existing map stays valid: the next
   `/ds-bootstrap` adds anchors as it reconciles.
 
+- **A feature file carries the day it was last checked.** `checked:` is the date somebody last read
+  that feature's code and stood behind the page — written when the file is written, and again
+  whenever the code is re-read, including when nothing needed changing. That last case is the point:
+  it is the only way the map tells *looked at and still true* apart from *never looked at*.
+
+  Nothing reads the date, nothing enforces it, and nothing goes red as it ages, which is what
+  separates it from the code fingerprints 0.2.0 removed. It is there so a reader can weigh a page
+  before acting on it. The rule beside it does the work: a date is never moved forward for a page
+  nobody opened, because an old date is honest about what it does not know and a fresh one is a
+  claim. It stays in the frontmatter and never reaches the index.
+
 ## [0.4.0] — 2026-09-21
 
 ### Changed

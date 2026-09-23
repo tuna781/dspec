@@ -36,6 +36,9 @@ below is what a read of it will not tell you.
 - The sentence that does the most work in the build branch is *"If your feature list mirrors the
   folder tree, the names are wrong."* It is the only instruction set as a blockquote, because it is
   the failure every other rule about naming is downstream of.
+- Confirming a feature now produces something. Reading its code and finding nothing to fix still
+  moves its `checked:` date, which is the only way the map distinguishes *looked at and still
+  true* from *never looked at* — two states a description alone reads identically in.
 - The self-check at the end is the only verification that exists anywhere in dspec. It is the
   agent checking its own work in prose — nothing in the CLI reads `.ds/` to confirm it.
 - The report it asks for is the one place the map surfaces to the user, and it is deliberately in
@@ -61,6 +64,15 @@ below is what a read of it will not tell you.
   it needs somewhere to keep the hashes, it fires on a whitespace commit, and it stays silent when
   a rename inverts what a rule means. Anchors go in the prose, never in `code:` — `files.md` is
   built from those paths exactly as written.
+
+- **A date was added where a checker was refused.** `checked:` records the day somebody last read
+  a feature's code and stood behind the page. Nothing reads it, nothing enforces it and nothing
+  goes red as it ages — which is exactly what separates it from the fingerprints 0.2.0 removed. It
+  was weighed against the rule that keeping the map current is part of the work and never a
+  ceremony, and it survives that because it is one line written by the pass that was already
+  rewriting the file. What makes it worth anything is the prohibition beside it: a date is never
+  moved forward for a page nobody opened, so an old date stays honest instead of becoming a claim.
+  It is kept out of the index for the same reason the full file list is.
 
 - **`kind` replaced the rule that a feature is only a product capability.** Eight of this
   repository's own fourteen features are its packaging, tests, docs and release — real knowledge an

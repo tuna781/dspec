@@ -27,6 +27,7 @@ A feature file — ordinary markdown, nothing parses it:
 name: Apply discount
 area: Checkout
 kind: product
+checked: 2026-01-31
 code:
   - src/pricing/discount.ts
   - src/pricing/rules.ts
@@ -50,9 +51,9 @@ What this feature is, in product terms, and where to start reading. One paragrap
 
 `name` is how the feature is addressed, and what other features' `uses:` point at — so it is
 unique. `area` groups the index; it is a label, not a boundary. `kind` is `product` or `repo`, and
-step 2 says which. `code` is **every** file the feature lives in, repo-relative. `uses` names other
-features, never files or packages. The file name under `features/` carries no meaning; use a slug
-of the name.
+step 2 says which. `checked` is a date, below. `code` is **every** file the feature lives in,
+repo-relative. `uses` names other features, never files or packages. The file name under
+`features/` carries no meaning; use a slug of the name.
 
 **Send a reader to a name, not only to a path.** Wherever the prose points at code — the lead
 paragraph, a behaviour bullet, a decision — name what they can search for: a function, a route, an
@@ -60,6 +61,17 @@ error message, a constant. `applyDiscount()` in `src/pricing/discount.ts` lands 
 rather than the file, and it survives that file being moved, which a path does not. An anchor is
 text you read in that file, never a name you expect to be there — one search has to find it.
 `code:` itself stays bare paths; `files.md` is built from it exactly as written.
+
+**`checked` is the day somebody last read the code and stood behind the page.** Write today's date
+when you write the file, and again whenever you re-read its `code:` files and bring it back into
+agreement — including when you read them and nothing needed changing, because that is the whole of
+what confirming produces. Nothing reads the date and nothing goes red as it ages; it is there so
+that a reader can weigh a page before acting on it, the way they would weigh any other dated note.
+It stays in the frontmatter and never reaches the index, which is read every session and has to
+stay scannable.
+
+**Never move a date forward for a page you did not open.** A date bumped to look tidy is worse than
+an old one: an old date is honest about what it does not know, and a fresh one is a claim.
 
 `Rules` and `Behaviour` are always there. The other two are not, and exist because without them
 their content has nowhere to go and ends up misfiled in the first two:
@@ -109,7 +121,8 @@ their content has nowhere to go and ends up misfiled in the first two:
    description; if one read of the code would tell you, it is not worth a line.
 
    Fill `code:` with every file, and `uses:` with what you actually saw it depend on. Both are
-   **declared from reading, never guessed** from imports, naming or word overlap.
+   **declared from reading, never guessed** from imports, naming or word overlap. Date it with
+   today's `checked:` as you write it.
 
    Put every reason you found into `## Decisions` rather than trailing it off a rule, and every
    doubt into `## Unsettled` rather than writing around it.
@@ -186,11 +199,13 @@ wrong.**
    they do? Fix whatever is wrong — a moved file, a changed rule, behaviour that is gone. Search
    its anchors first — an anchor that no longer appears is the cheapest signal you have that the
    code moved under the description. It does not tell you what is now wrong; it tells you where to
-   read.
+   read. A feature whose files you read gets today's `checked:` date, whether or not anything
+   needed fixing; one you did not open keeps the date it has.
 3. Is there code no feature claims? Add it to the feature it belongs to, or write a new feature
    when it is behaviour a person would name.
 4. Is there a feature whose behaviour is no longer in the code at all? Delete its file.
-5. Bring an older map up to this shape, if it is not already: give every feature a `kind`; move
+5. Bring an older map up to this shape, if it is not already: give every feature a `kind`, and a
+   `checked` date to each one whose code you actually read on this pass; move
    reasons and rejected options out of `## Rules` and `## Behaviour` into `## Decisions`; move
    anything you could not settle, and anything you found that no longer describes what exists, into
    `## Unsettled`.
