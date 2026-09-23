@@ -37,7 +37,8 @@ and four words of proof.
 - The page is fixed at 2560×1280, twice GitHub's 1280×640, so the card stays sharp on a retina
   screen. Both `html` and `body` carry those dimensions and hide overflow, so a headless window of
   the same size captures the card exactly with no scrollbar and no letterboxing.
-- The screenshot command is a comment at the top of the file, next to the rule about what may
+- The screenshot command is a comment at the top of the file — *"Screenshot this page at exactly
+  2560x1280"*, with the `chromium --headless` invocation under it — next to the rule about what may
   appear on it, so whoever changes the wording is told in the same place how to regenerate the
   image and what is not allowed on it.
 - The pill row states what the README's "What it won't do" section states — three agents, zero

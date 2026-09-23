@@ -70,6 +70,9 @@ detection, the linter and the strict gate. What is left is the part that was alw
   per feature.
 - **Feature** — something a person would name: a capability of the product, or a piece of how the
   repository is built and shipped. Not a directory, not a class, not a layer.
+- **Anchor** — a name a feature file sends a reader to instead of a bare path: a function, a
+  route, an error message, a heading. It has to be text somebody read in that file, so one search
+  finds it — which is also what makes a search that stops finding it worth something.
 - **Kind** — which of those two a feature is: `product` or `repo`. It is what the index leads with,
   so a session answering a question about the product can stop reading half way.
 - **Agent** — a coding assistant dspec installs into: Claude Code, Codex CLI, Cursor.

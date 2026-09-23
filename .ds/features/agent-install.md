@@ -20,32 +20,41 @@ changed. Start at `cmdInit` in `src/init.ts`.
 - **It asks nothing, and gives the same answer everywhere.** A terminal, a script and a CI job all
   get every supported agent. Nothing is detected and nothing is remembered — the answer does not
   depend on what the repository looks like or on what was installed last time.
-- **Everything is planned before anything is deleted.** A template that cannot be read must not
-  leave an agent with its old install removed and no new one written.
+- **Everything is planned before anything is deleted.** Every adapter's `plan()` runs into the
+  `plans` map first, inside one `try`; only then does the rebuild loop start. A template that
+  cannot be read must not leave an agent with its old install removed and no new one written.
 - **Not naming an agent is not a request to uninstall it.** `--agent` only ever adds. Nothing dspec
   installed for an agent left out is touched, wherever those files live.
 
 ## Behaviour
 
-- Which agents: every one dspec supports, unless `--agent a,b` names fewer. An agent not named is
-  skipped entirely — not planned, not rebuilt, not removed.
+- Which agents: `chosen` is every one dspec supports, unless `--agent a,b` names fewer — `csv()`
+  accepts either a comma-separated list or the flag repeated. An agent not named is skipped
+  entirely: it gets no entry in `plans`, and the rebuild loop `continue`s past it, so it is not
+  planned, not rebuilt, not removed.
 - The clean-upgrade guarantee therefore belongs to a plain `init`, which names all three. A
   narrowed `--agent` rebuilds only what it names, so an older version's leftovers for an agent left
   out stay until a run names it.
-- An agent that is already installed and was not chosen gets one line in the report saying it was
+- An agent that is already installed and was not chosen gets one line in the report — the
+  `untouched` list, worked out up front by `isInstalled` before anything is written — saying it was
   left in place. It is the one outcome a narrowed run might surprise somebody with, now that
   nothing is removed for it; an agent that was never installed is not mentioned at all.
-- A memory file is written once per distinct name, so choosing Codex and Cursor together produces
-  one `AGENTS.md`, not two writes of it.
+- A memory file is written once per distinct name — the chosen agents' `memoryFile` values through
+  a `Set` — so choosing Codex and Cursor together produces one `AGENTS.md`, not two writes of it.
 - `.claude/settings.json` is checked on every run purely to take back the session hooks 0.1.x
-  added. Nothing is ever added to it, and a file holding none of dspec's entries is not rewritten
+  added: `removeHooks` is handed the exact command strings from `legacyHookCommands()` and removes
+  only those. Nothing is ever added to it, and a file holding none of dspec's entries is not rewritten
   at all — not even reformatted.
 - A `settings.json` that does not parse is reported and left alone, and the install still goes
   through: one stray comma must not cost somebody their configuration, nor their install.
-- The report names removals individually. A removal is the one outcome somebody might not expect —
-  a command an older dspec had and this one does not.
+- `report()` names removals individually, up to eight before it summarises the rest. A removal is
+  the one outcome somebody might not expect — a command an older dspec had and this one does not.
+  `WORDING` is where each memory-file outcome gets the sentence the user actually sees.
 - The closing line points at `/ds-bootstrap` and says to start a new session, because an agent
   already running will not see a command file that appeared underneath it.
+- An install missing its own `templates/` fails before anything is touched, with *"this dspec has
+  no `templates/`"* and exit 2 — the one failure that means the package itself is broken rather
+  than the repository.
 
 ## Decisions
 

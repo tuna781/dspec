@@ -11,7 +11,9 @@ The same command the first time and every time after — it builds the map when 
 reconciles it with the code when there is.
 
 **The rules it gives are the file, not this page.** Read `templates/bootstrap.md`; it is one pass
-and it is written to be read by an agent. What is below is what a read of it will not tell you.
+and it is written to be read by an agent, in four parts a reader can search for: *"What you are
+writing"*, *"If `.ds/` does not exist yet"*, *"If `.ds/` already exists"* and *"Report"*. What is
+below is what a read of it will not tell you.
 
 ## Rules
 
@@ -31,6 +33,9 @@ and it is written to be read by an agent. What is below is what a read of it wil
 
 - Both branches in one command: `.ds/` absent, it is built; `.ds/` present, it is reconciled and an
   older map is brought up to the current shape. The user types the same thing either way.
+- The sentence that does the most work in the build branch is *"If your feature list mirrors the
+  folder tree, the names are wrong."* It is the only instruction set as a blockquote, because it is
+  the failure every other rule about naming is downstream of.
 - The self-check at the end is the only verification that exists anywhere in dspec. It is the
   agent checking its own work in prose — nothing in the CLI reads `.ds/` to confirm it.
 - The report it asks for is the one place the map surfaces to the user, and it is deliberately in
@@ -48,6 +53,15 @@ and it is written to be read by an agent. What is below is what a read of it wil
   is read every session and is the one file that has to stay scannable.
 - **`index.md` and `files.md` are rewritten whole, never patched.** Both are derived entirely from
   the feature files, so regenerating them is what stops them drifting on their own.
+- **An anchor is the whole of dspec's staleness signal, and hashing was rejected for it.** A feature
+  now points at a name a search can find — a function, a route, an error message — and the
+  reconcile branch searches those before it reads anything. An anchor that no longer appears says
+  the code moved under the description, and it says it without a manifest, a state file or a CLI
+  that reads `.ds/`. Content hashing over the tree was the alternative and is what 0.2.0 removed:
+  it needs somewhere to keep the hashes, it fires on a whitespace commit, and it stays silent when
+  a rename inverts what a rule means. Anchors go in the prose, never in `code:` — `files.md` is
+  built from those paths exactly as written.
+
 - **`kind` replaced the rule that a feature is only a product capability.** Eight of this
   repository's own fourteen features are its packaging, tests, docs and release — real knowledge an
   agent needs, which the old rule forbade and the map wrote anyway. Separating the two kinds keeps

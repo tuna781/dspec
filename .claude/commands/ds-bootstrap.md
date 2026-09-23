@@ -54,6 +54,13 @@ step 2 says which. `code` is **every** file the feature lives in, repo-relative.
 features, never files or packages. The file name under `features/` carries no meaning; use a slug
 of the name.
 
+**Send a reader to a name, not only to a path.** Wherever the prose points at code — the lead
+paragraph, a behaviour bullet, a decision — name what they can search for: a function, a route, an
+error message, a constant. `applyDiscount()` in `src/pricing/discount.ts` lands them on the line
+rather than the file, and it survives that file being moved, which a path does not. An anchor is
+text you read in that file, never a name you expect to be there — one search has to find it.
+`code:` itself stays bare paths; `files.md` is built from it exactly as written.
+
 `Rules` and `Behaviour` are always there. The other two are not, and exist because without them
 their content has nowhere to go and ends up misfiled in the first two:
 
@@ -162,11 +169,12 @@ their content has nowhere to go and ends up misfiled in the first two:
    Sorted by path, one line each, every path exactly as its `code:` list writes it — globs
    included. Like the index, it is rewritten whole every time, so it cannot drift on its own.
 
-7. **Check your own work.** Every path in every `code:` exists. Every name in every `uses:` is a
-   feature that exists, and every `used by:` in the index is the reverse of a real `uses:`. Every
-   feature carries a `kind`. Every `code:` path appears in `files.md`, and nothing appears there
-   twice. Every source file of consequence is claimed by some feature — if something is not, either
-   it belongs to a feature you already wrote, or it is a feature you missed.
+7. **Check your own work.** Every path in every `code:` exists, and every anchor you wrote is found
+   by searching that feature's own files. Every name in every `uses:` is a feature that exists, and
+   every `used by:` in the index is the reverse of a real `uses:`. Every feature carries a `kind`.
+   Every `code:` path appears in `files.md`, and nothing appears there twice. Every source file of
+   consequence is claimed by some feature — if something is not, either it belongs to a feature you
+   already wrote, or it is a feature you missed.
 
 ## If `.ds/` already exists
 
@@ -175,7 +183,10 @@ wrong.**
 
 1. Read `.ds/index.md` and every feature file.
 2. For each feature: do its `code:` files still exist, and does the description still match what
-   they do? Fix whatever is wrong — a moved file, a changed rule, behaviour that is gone.
+   they do? Fix whatever is wrong — a moved file, a changed rule, behaviour that is gone. Search
+   its anchors first — an anchor that no longer appears is the cheapest signal you have that the
+   code moved under the description. It does not tell you what is now wrong; it tells you where to
+   read.
 3. Is there code no feature claims? Add it to the feature it belongs to, or write a new feature
    when it is behaviour a person would name.
 4. Is there a feature whose behaviour is no longer in the code at all? Delete its file.

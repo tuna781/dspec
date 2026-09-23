@@ -10,8 +10,10 @@ The block dspec writes into `CLAUDE.md` / `AGENTS.md`: what `.ds/` is, how to re
 job it is to keep it true. It is the only thing that makes the map get used, because it is the only
 dspec text an agent reads without being asked.
 
-**What it instructs is the file.** Read `templates/memory.md` — it is forty lines. The rules below
-are the constraints on changing it, which a read of it would not give.
+**What it instructs is the file.** Read `templates/memory.md` — it is forty lines, hinged on three
+headings a reader can search for: *"Use it first, for any question about this code."*, *"Do not"*
+and *"Keeping it true."* The rules below are the constraints on changing it, which a read of it
+would not give.
 
 ## Rules
 
@@ -26,8 +28,8 @@ are the constraints on changing it, which a read of it would not give.
 
 ## Behaviour
 
-- It states outright that the code wins when the two disagree — the one instruction that has to be
-  in the block rather than left implied, because a map that lies is worse than no map and the agent
+- It states outright that *"If `.ds/` and the code disagree, **the code wins**"* — the one
+  instruction that has to be in the block rather than left implied, because a map that lies is worse than no map and the agent
   is the only one who will ever notice.
 - Three reads, in order: `.ds/index.md` for what exists and where, one or two feature files for the
   thing actually asked about, and `.ds/product.md` only for a rule or a word that applies

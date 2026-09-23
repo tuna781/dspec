@@ -7,10 +7,10 @@ code:
 uses: [Demo recording, Demo fixture]
 ---
 
-The argument for installing dspec, in the order somebody reads it: the recording, the problem, what
-the tool does, why the answer can be believed, then the measured cost. It is the only place the
-product is argued at length, and the one surface where a claim has to be checkable — every rule it
-quotes is a rule that is actually in `templates/`.
+The argument for installing dspec, in the order somebody reads it — *The problem*, *What dspec
+does*, *Why you can believe the answer*, *And it's cheaper, too* — the recording first, the measured
+cost last. It is the only place the product is argued at length, and the one surface where a claim
+has to be checkable — every rule it quotes is a rule that is actually in `templates/`.
 
 ## Rules
 

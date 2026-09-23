@@ -11,6 +11,26 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
+## [Unreleased]
+
+### Changed
+
+- **A feature file points at a name, not only at a path.** `/ds-bootstrap` now asks that wherever
+  the prose sends a reader to code — the lead paragraph, a behaviour bullet, a decision — it names
+  the thing they can search for: a function, a route, an error message, a constant. An anchor lands
+  the reader on the line rather than the file, and it survives that file being moved, which a path
+  does not.
+
+  An anchor has to be text the writer actually read in that file, so one search finds it. That is
+  the same standard `code:` and `uses:` are already held to, and it is what makes the next part
+  possible: reconciling an existing map now searches a feature's anchors before it reads anything,
+  because an anchor that no longer appears is the cheapest signal there is that the code moved
+  under the description. It does not say what is now wrong — it says where to read.
+
+  `code:` itself is unchanged and stays bare paths, since `.ds/files.md` is built from it exactly
+  as written. Nothing else in the format changes, and an existing map stays valid: the next
+  `/ds-bootstrap` adds anchors as it reconciles.
+
 ## [0.4.0] — 2026-09-21
 
 ### Changed

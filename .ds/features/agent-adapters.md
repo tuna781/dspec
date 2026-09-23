@@ -9,7 +9,8 @@ uses: [Managed install]
 
 The one place in dspec where anything is agent-specific. An adapter says where this agent's command
 file goes, what frontmatter it reads, which memory file it opens at session start, and how to
-recognise an install of dspec — its own and older versions'. Start at the `Agent` interface.
+recognise an install of dspec — its own and older versions'. Start at the `Agent` interface; the
+three adapters that implement it are gathered at the foot of the file in the `AGENTS` registry.
 
 ## Rules
 
@@ -18,27 +19,34 @@ recognise an install of dspec — its own and older versions'. Start at the `Age
 - **Promise no restriction the agent does not enforce.** Only Claude Code honours `allowed-tools`,
   so only Claude Code is given one. Claiming a guarantee that is not there is worse than claiming
   nothing.
-- **One command, one spelling everywhere: `/ds-bootstrap`.** Nothing is installed for one agent
-  that cannot be installed for all three.
+- **One command, one spelling everywhere: `/ds-bootstrap`.** It is written once as `COMMAND` and
+  reused as `INVOKE` wherever it is shown to somebody. Nothing is installed for one agent that
+  cannot be installed for all three.
 - **A location that leaves `plan()` must stay in `owned()`.** Otherwise an install that already has
   it keeps it forever — nothing will ever come back for a path dspec no longer writes.
 
 ## Behaviour
 
-- Three adapters: Claude Code (`.claude/commands/`, reads `CLAUDE.md`), Codex CLI
-  (`$CODEX_HOME/prompts/`, reads `AGENTS.md`), Cursor (`.agents/skills/<name>/SKILL.md`, reads
-  `AGENTS.md`).
+- Three adapters — the `claude`, `codex` and `cursor` objects: Claude Code (`.claude/commands/`,
+  reads `CLAUDE.md`), Codex CLI (`$CODEX_HOME/prompts/`, reads `AGENTS.md`), Cursor
+  (`.agents/skills/<name>/SKILL.md`, reads `AGENTS.md`).
 - Codex is the one adapter that writes outside the repository, because Codex reads prompts only
-  from the home directory. The two consequences — a teammate who clones gets nothing, and a second
+  from the home directory — `codexPromptsDir()` is the whole of that difference, and it honours
+  `CODEX_HOME` before falling back to `~/.codex`. The two consequences — a teammate who clones gets nothing, and a second
   `init` elsewhere finds the file already there — are reported to the user, not hidden.
-- Frontmatter per agent: Claude gets `description` and `allowed-tools`; Codex gets `description`
-  alone, the only key besides `argument-hint` it documents; Cursor gets `name` first, because a
-  skill is addressed by its name and a reader scanning the directory should meet it first.
+- Frontmatter per agent, assembled by `frontmatter()` and stitched onto the template body by
+  `commandFile()`: Claude gets `description` and `allowed-tools`; Codex gets `description` alone,
+  the only key besides `argument-hint` it documents; Cursor gets `name` first, because a skill is
+  addressed by its name and a reader scanning the directory should meet it first. The sentence
+  itself is the `DESCRIPTION` constant, so all three say the same thing.
 - `owned()` lists what the install occupies now; `legacy()` lists what an older dspec left, found
-  by its old `dspec-` prefix or, for the unmarked 0.0.1 files, by content. `init` deletes both.
+  by its old `dspec-` prefix (`oldPrefixed()`) or, for the unmarked 0.0.1 files, by content
+  (`existingLegacy()`). The names those two hunt for are `LEGACY_COMMANDS`. `init` deletes both
+  lists.
 - Claude's `owned()` also sweeps `.claude/skills/` for marked `ds` / `ds-*` entries, and
-  `.claude/hooks/dspec/` is listed unconditionally rather than mark-checked. This version writes to
-  neither.
+  `LEGACY_HOOK_DIR` — `.claude/hooks/dspec/` — is listed unconditionally rather than mark-checked.
+  This version writes to neither. `legacyHookCommands()` is the matching half: the command strings
+  0.1.x put in `settings.json`, spelled out so they can be recognised and taken back out.
 - `isInstalled` checks the current marker for dspec's mark, not merely for existence: somebody
   else's `ds-bootstrap.md` is not an install of ours, and treating it as one would have `init`
   delete and rewrite a file dspec has no claim on.

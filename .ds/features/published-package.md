@@ -20,7 +20,8 @@ code:
 
 What a user actually receives from `npm i -g dspec`, and how it is built: TypeScript compiled from
 `src/` to `dist/`, the two binary names, and the `files` list that decides what goes in the
-tarball. Start at `package.json`.
+tarball. Start at `package.json`: `files`, `bin` and `scripts` are the three keys that decide what
+a user receives.
 
 ## Rules
 
@@ -29,8 +30,8 @@ tarball. Start at `package.json`.
 - **`templates/` must be in `files`.** `dist/` alone is a dspec whose every command reports an
   incomplete install, because `templates/` is where all the prose an agent reads lives. This is
   what the CI pack check exists for — see the install tests.
-- **Both `dspec` and `ds` are published bin names.** Either spelling has been documented, so
-  dropping one breaks somebody's shell history for no gain.
+- **Both `dspec` and `ds` are published bin names**, and `bin` points both at `bin/ds.js`. Either
+  spelling has been documented, so dropping one breaks somebody's shell history for no gain.
 - **Node 20 is the floor, declared in two places.** `engines` is what npm enforces and `.nvmrc`
   is what a contributor's shell reads; `node:util.parseArgs` and `node:test` are why the floor is
   not lower.
