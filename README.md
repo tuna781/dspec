@@ -80,8 +80,10 @@ on, and nothing tells you it's now wrong.
   index.md         every feature: what it is, where it starts, what it depends on
   features/*.md    one file per feature — what it does, why, and what it isn't sure of
   product.md       what the product is, and the rules that apply everywhere
-  files.md         which feature owns each file, for when you start from the code
 ```
+
+Starting from a file instead of a question? Search `.ds/features/` for its path — every feature
+lists the files it lives in, so the search names its owner.
 
 `dspec init` adds a short instruction block to `CLAUDE.md` / `AGENTS.md` — the file your agent
 already reads at the start of every session — telling it to use that map first.

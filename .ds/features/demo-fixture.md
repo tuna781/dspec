@@ -21,7 +21,6 @@ code:
   - demo/shop/src/pricing/totals.ts
   - demo/shop/.ds/index.md
   - demo/shop/.ds/product.md
-  - demo/shop/.ds/files.md
   - demo/shop/.ds/features/apply-discount.md
   - demo/shop/.ds/features/cart.md
   - demo/shop/.ds/features/checkout.md

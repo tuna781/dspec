@@ -66,8 +66,7 @@ detection, the linter and the strict gate. What is left is the part that was alw
 
 ## Vocabulary
 
-- **The map** — everything under `.ds/`: the index, the product file, the file index, and one file
-  per feature.
+- **The map** — everything under `.ds/`: the index, the product file, and one file per feature.
 - **Feature** — something a person would name: a capability of the product, or a piece of how the
   repository is built and shipped. Not a directory, not a class, not a layer.
 - **Anchor** — a name a feature file sends a reader to instead of a bare path: a function, a

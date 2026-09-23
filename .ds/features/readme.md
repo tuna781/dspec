@@ -33,8 +33,8 @@ has to be checkable — every rule it quotes is a rule that is actually in `temp
 
 - The install is four lines, above the fold: `npm i -g dspec`, `dspec init`, then `/ds-bootstrap`
   in the agent — followed by "That's it. That's the whole tool."
-- The `.ds/` tree it shows names `index.md`, `features/*.md`, `product.md` and `files.md`, which is
-  what `/ds-bootstrap` writes. It shows the shape, never the frontmatter — the map's format is
+- The `.ds/` tree it shows names `index.md`, `features/*.md` and `product.md`, which is what
+  `/ds-bootstrap` writes. It shows the shape, never the frontmatter — the map's format is
   internal and not a reader's to learn.
 - The three-read walkthrough goes `index.md` → `features/apply-discount.md` → the source file, so
   it depends on the index still naming where a feature starts.

@@ -34,8 +34,8 @@ would not give.
   is the only one who will ever notice.
 - Three reads, in order: `.ds/index.md` for what exists and where, one or two feature files for the
   thing actually asked about, and `.ds/product.md` only for a rule or a word that applies
-  everywhere. `.ds/files.md` is named separately as the other direction — you have a file and need
-  the feature.
+  everywhere. The other direction — you have a file and need the feature — is named separately as
+  a search over `.ds/features/` rather than as a file to open.
 - It says the index puts the product's features first and the repository's own machinery under its
   own heading, so a session answering a product question knows it can stop reading half way.
 - It says a feature file also carries why it is the way it is, and what it is not sure of — the two
@@ -43,11 +43,12 @@ would not give.
 - It says *do not* grep or glob to find where something lives, and *do not* read all of `.ds/`.
   Both are the failure this exists to prevent: an agent that searches anyway has paid for the map
   and used none of it.
-- On the writing side it asks for the lookup before the edit — find the owner in `files.md`, update
-  that feature file after — and for a choice and its rejected option to go under `## Decisions`.
+- On the writing side it asks for the lookup before the edit — search `.ds/features/` for the path
+  to find its owner, update that feature file after — and for a choice and its rejected option to go under `## Decisions`.
   Keeping the map current is asked for as part of the work, never as a separate ceremony.
-- It asks for that same lookup pointed the other way when reviewing: a diff's changed paths through
-  `files.md` name the features it touches, and those pages carry the rules it must not have broken.
+- It asks for that same lookup in bulk when reviewing: a diff's changed paths looked up in
+  `.ds/features/` name the features it touches, and those pages carry the rules it must not have
+  broken.
   It sits next to the edit-time bullet deliberately — the two are one mechanism, and teaching the
   second costs almost nothing once the first is read.
 - `/ds-bootstrap` is named as the way out when the map has fallen far behind.
@@ -66,7 +67,7 @@ would not give.
   a reader where the map came from, and it fires only when the map has fallen behind — the moment
   the tool is worth naming.
 - **Review was taught as a read, not built as a command.** Going from a diff to the features it
-  can invalidate is a lookup `files.md` already answers, so it needed no new surface. A `/ds-review`
+  can invalidate is a search over `code:` lists, so it needed no new surface. A `/ds-review`
   command was rejected because everything dspec ever installed beyond the one command was a
   workflow, and a second spelling is a second thing to keep true in three agents. A `dspec` verb was
   rejected for more: it would be the first to read `.ds/`, which is the line the tool has held since

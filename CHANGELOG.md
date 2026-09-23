@@ -27,8 +27,8 @@ still working out its shape. From 1.0.0 onwards, breaking means a major bump.
   because an anchor that no longer appears is the cheapest signal there is that the code moved
   under the description. It does not say what is now wrong — it says where to read.
 
-  `code:` itself is unchanged and stays bare paths, since `.ds/files.md` is built from it exactly
-  as written. Nothing else in the format changes, and an existing map stays valid: the next
+  `code:` itself is unchanged and stays bare paths, since those are what a search for a file's
+  owner matches. Nothing else in the format changes, and an existing map stays valid: the next
   `/ds-bootstrap` adds anchors as it reconciles.
 
 - **A feature file carries the day it was last checked.** `checked:` is the date somebody last read
@@ -43,13 +43,27 @@ still working out its shape. From 1.0.0 onwards, breaking means a major bump.
   claim. It stays in the frontmatter and never reaches the index.
 
 - **A diff now names the features it can invalidate.** The instruction block already asked for a
-  lookup before an edit — find the owning feature in `.ds/files.md`, update its page after. It now
-  asks for the same lookup pointed the other way when reviewing: run a diff's changed paths through
-  `.ds/files.md` to name the features it touches, then read those pages for the rules it must not
-  have broken.
+  lookup before an edit — find the feature that owns the file, update its page after. It now asks
+  for the same lookup in bulk when reviewing: look a diff's changed paths up in `.ds/features/` to
+  name the features it touches, then read those pages for the rules it must not have broken.
 
-  This is a read, not a command. No verb, no gate, and nothing new to install — the reverse index
-  was already there, and nothing was using it at review time.
+  This is a read, not a command. No verb, no gate, and nothing new to install — the reverse lookup
+  was always possible, and nothing was using it at review time.
+
+- **`.ds/files.md` is gone; searching the feature files replaces it.** It restated every `code:`
+  path a second time — in this repository's own map, seventy-four lines that said nothing the
+  feature files did not already say — and it had to be rewritten whole whenever a file moved, which
+  is the most expensive maintenance operation the format had. A fact in two places is a fact that
+  will be edited in one.
+
+  `grep -rl "<path>" .ds/features/` answers the same question exactly, from the `code:` lists that
+  were always the original. It cannot fall behind, because there is no longer a copy to fall
+  behind. The instruction block asks for the search in all three places it used to name the file:
+  before an edit, when reviewing a diff, and when you have a file and want its feature.
+
+  **`/ds-bootstrap` deletes a `files.md` an older map left**, so an existing map is migrated by the
+  next run and no stale copy survives to be believed. `code:` lists are unchanged — they were
+  always where the paths lived.
 
 ## [0.4.0] — 2026-09-21
 

@@ -2,7 +2,8 @@
 
 Every feature: what it is, where it starts, what it depends on.
 Read this first, then the one feature file you need under `.ds/features/`.
-`.ds/files.md` answers the other direction: which feature owns a given file.
+Going the other way — you have a file and need the feature — search `code:` across
+`.ds/features/`.
 
 ## The product
 

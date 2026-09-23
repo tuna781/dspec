@@ -64,10 +64,3 @@ it says outright that it is the whole contract and there is no second place to c
 - **The pull-request template asks for the *why* first** on the grounds that reasoning is the part
   a later reader cannot reconstruct. It is the same reason a feature file has a `## Decisions`
   section.
-
-## Unsettled
-
-- The pull-request checklist names the feature file to update *and* `.ds/index.md` when a summary
-  or file list changes, but not `.ds/files.md`, which a change that adds or moves a file also has
-  to touch. Whether the checklist should grow or stay short is an editorial call, not something the
-  code decides.

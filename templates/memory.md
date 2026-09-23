@@ -18,8 +18,8 @@ codebase — what a thing is, where it lives, what it touches — **without read
 3. Read `.ds/product.md` when the question is about the product as a whole, or when you need a
    rule or a word that applies everywhere.
 
-Going the other way — you have a file and need the feature — read `.ds/files.md`, which names the
-owner of every file in one line each.
+Going the other way — you have a file and need the feature — search the maps themselves:
+`grep -rl "<path>" .ds/features/` names the feature whose `code:` list claims it.
 
 Now you know which files to open, and you open only those.
 
@@ -30,14 +30,14 @@ then only the feature files you need.
 **Keeping it true.** The map is only worth reading while it is accurate.
 
 - If `.ds/` and the code disagree, **the code wins**. Fix the map, and say so.
-- Before you change a file, look it up in `.ds/files.md` to find the feature that owns it. After
-  you change it, update that feature file, and `.ds/index.md` if the summary or the entry file
-  changed. Do it as part of the work, not as a separate ceremony.
-- Reviewing a diff or a pull request? The same lookup, the other way: run its changed paths through
-  `.ds/files.md` to name the features it touches, then read those pages for the rules it must not
+- Before you change a file, search `.ds/features/` for its path to find the feature that owns it.
+  After you change it, update that feature file, and `.ds/index.md` if the summary or the entry
+  file changed. Do it as part of the work, not as a separate ceremony.
+- Reviewing a diff or a pull request? The same search, in bulk: look its changed paths up in
+  `.ds/features/` to name the features it touches, then read those pages for the rules it must not
   have broken.
-- Add a file, or move one, and `.ds/files.md` has to say so too — it is the one place that answers
-  which feature owns what.
+- Add a file, or move one, and the owning feature's `code:` list has to say so — it is the only
+  record of what a feature is made of, and what every one of these searches matches against.
 - A choice you made and the option you rejected belongs under that feature's `## Decisions`. It is
   what stops the next session undoing it.
 - New behaviour that no feature describes gets a new file under `.ds/features/`, in the same shape

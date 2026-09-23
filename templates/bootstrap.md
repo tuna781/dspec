@@ -11,7 +11,6 @@ files:** they neither read nor edit `.ds/`.
 .ds/
   index.md              every feature, one entry: what it is, where it starts, what it uses
   product.md            what this product is, the rules that apply to every change, its vocabulary
-  files.md              which feature owns each file — the reverse of every `code:` list
   features/<slug>.md    one file per feature
 ```
 
@@ -55,7 +54,8 @@ paragraph, a behaviour bullet, a decision — name what they can search for: a f
 error message, a constant. `applyDiscount()` in `src/pricing/discount.ts` lands them on the line
 rather than the file, and it survives that file being moved, which a path does not. An anchor is
 text you read in that file, never a name you expect to be there — one search has to find it.
-`code:` itself stays bare paths; `files.md` is built from it exactly as written.
+`code:` itself stays bare paths, one per line — they are what a search for a file's owner matches,
+so nothing may decorate them.
 
 **`checked` is the day somebody last read the code and stood behind the page.** Write today's date
 when you write the file, and again whenever you re-read its `code:` files and bring it back into
@@ -134,7 +134,8 @@ their content has nowhere to go and ends up misfiled in the first two:
 
    Every feature: what it is, where it starts, what it depends on.
    Read this first, then the one feature file you need under `.ds/features/`.
-   `.ds/files.md` answers the other direction: which feature owns a given file.
+   Going the other way — you have a file and need the feature — search `code:` across
+   `.ds/features/`.
 
    ## The product
 
@@ -153,36 +154,19 @@ their content has nowhere to go and ends up misfiled in the first two:
 
    A repository with no features of one kind simply has no section for it — an empty heading says
    nothing. The location names the **entry file** — where a reader starts — and `+N` for how many
-   more the feature holds. The full list is in `files.md`; repeating it here is what stops an
-   index being scannable. `used by:` is the reverse of every `uses:`, worked out as you write this file;
-   leave it off when nothing uses the feature.
+   more the feature holds. The full list is in the feature's own `code:`; repeating it here is what
+   stops an index being scannable. `used by:` is the reverse of every `uses:`, worked out as you
+   write this file; leave it off when nothing uses the feature.
 
    The index is what every future session reads first, so it must stay scannable: one line of
    summary, one line of location. No prose beyond that.
 
-6. **Write `.ds/files.md`** from every `code:` list — the same facts, the other way round, because
-   "I am about to edit this file" is as common a question as "where does this feature live", and
-   the entry file in the index cannot answer it:
-
-   ```markdown
-   # <product> — files
-
-   Which feature owns each file. Look here before you edit, to find the feature file to update.
-
-   `src/pricing/discount.ts` → Apply discount
-   `src/pricing/rules.ts` → Apply discount
-   `src/pricing/totals.ts` → Cart totals
-   ```
-
-   Sorted by path, one line each, every path exactly as its `code:` list writes it — globs
-   included. Like the index, it is rewritten whole every time, so it cannot drift on its own.
-
-7. **Check your own work.** Every path in every `code:` exists, and every anchor you wrote is found
+6. **Check your own work.** Every path in every `code:` exists, and every anchor you wrote is found
    by searching that feature's own files. Every name in every `uses:` is a feature that exists, and
    every `used by:` in the index is the reverse of a real `uses:`. Every feature carries a `kind`.
-   Every `code:` path appears in `files.md`, and nothing appears there twice. Every source file of
-   consequence is claimed by some feature — if something is not, either it belongs to a feature you
-   already wrote, or it is a feature you missed.
+   No path is claimed by two features. Every source file of consequence is claimed by some feature
+   — if something is not, either it belongs to a feature you already wrote, or it is a feature you
+   missed.
 
 ## If `.ds/` already exists
 
@@ -205,7 +189,9 @@ wrong.**
    anything you could not settle, and anything you found that no longer describes what exists, into
    `## Unsettled`.
 6. Re-check `product.md` against what the repository now is.
-7. Rewrite `.ds/index.md` and `.ds/files.md` from the feature files as they now stand.
+7. Rewrite `.ds/index.md` from the feature files as they now stand. Delete `.ds/files.md` if an
+   older map left one: what it held is now answered by searching `code:`, and a copy nobody
+   rewrites is a copy that lies.
 
 Work in batches, and read before you rewrite. **Never rewrite a description you have not read the
 code for** — a confident description of code you did not open is worse than no description, because

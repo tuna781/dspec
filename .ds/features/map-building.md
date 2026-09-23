@@ -53,18 +53,29 @@ below is what a read of it will not tell you.
   give.
 - **The index names the entry file, not the whole list.** It once carried every path, and at
   fourteen features four entries had already outgrown the one line the format asks for, one of them
-  splitting a feature name across a line break. The full inventory moved to `files.md`; the index
-  is read every session and is the one file that has to stay scannable.
-- **`index.md` and `files.md` are rewritten whole, never patched.** Both are derived entirely from
-  the feature files, so regenerating them is what stops them drifting on their own.
+  splitting a feature name across a line break. The full inventory stayed in each feature's own
+  `code:`; the index is read every session and is the one file that has to stay scannable.
+- **`index.md` is rewritten whole, never patched.** It is derived entirely from the feature files,
+  so regenerating it is what stops it drifting on its own.
 - **An anchor is the whole of dspec's staleness signal, and hashing was rejected for it.** A feature
   now points at a name a search can find — a function, a route, an error message — and the
   reconcile branch searches those before it reads anything. An anchor that no longer appears says
   the code moved under the description, and it says it without a manifest, a state file or a CLI
   that reads `.ds/`. Content hashing over the tree was the alternative and is what 0.2.0 removed:
   it needs somewhere to keep the hashes, it fires on a whitespace commit, and it stays silent when
-  a rename inverts what a rule means. Anchors go in the prose, never in `code:` — `files.md` is
-  built from those paths exactly as written.
+  a rename inverts what a rule means. Anchors go in the prose, never in `code:` — those paths are
+  what a search for a file's owner matches, so nothing may decorate them.
+
+- **`files.md` was deleted, and the search replaced it.** It restated every `code:` path a second
+  time — seventy-four lines of this repository's own map that said nothing the feature files did
+  not already say — and it had to be rewritten whole whenever a file moved. `product.md` already
+  says a fact in two places is a fact that will be edited in one, and the map was breaking its own
+  rule. `grep -rl` over `.ds/features/` answers the same question exactly, cannot fall behind, and
+  costs nothing to maintain. What is lost is one read where there is now one search, and a reader
+  with no tools; the reconcile branch deletes a `files.md` an older map left, because a copy nobody
+  rewrites is a copy that lies. The one place the search is weaker than the index it replaced: a
+  path that is a suffix of another — `src/a.ts` against `vendor/src/a.ts` — matches both. It is
+  visible when it happens, two features instead of one, and `grep -rn "^  - <path>$"` settles it.
 
 - **A date was added where a checker was refused.** `checked:` records the day somebody last read
   a feature's code and stood behind the page. Nothing reads it, nothing enforces it and nothing
