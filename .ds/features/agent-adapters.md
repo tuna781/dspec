@@ -2,6 +2,7 @@
 name: Agent adapters
 area: Setup
 kind: product
+checked: 2026-09-23
 code:
   - src/agents.ts
 uses: [Managed install]

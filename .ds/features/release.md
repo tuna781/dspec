@@ -2,6 +2,7 @@
 name: Release
 area: Build & ship
 kind: repo
+checked: 2026-09-23
 code:
   - scripts/release.js
   - scripts/publish-release.js
@@ -63,7 +64,13 @@ it acts: which tag, then the checks, then `FILES`, then the commit and the tag.
   commit.
 - **The lockfile is written too.** Skipping it leaves a committed file disagreeing with every other
   version source until some contributor's unrelated `npm install` silently corrects it — it was
-  once found holding `0.3.3` while everything else said `0.1.0`. There used to be three JSON files
-  here; retiring the Claude Code plugin took two of them with it.
+  once found holding `0.3.3` while everything else said `0.1.0`. There were more JSON files here
+  once; retiring the Claude Code plugin took its manifests with it, and `FILES` is down to two.
 - **A break while 0.x is a minor bump, not a major one.** Written down because 0.2.0 removed four
   commands, and calling that major would have meant 1.0.0 for a tool still working out its shape.
+
+## Unsettled
+
+- `release.js`'s own header still says the version lives in **three** JSON files. `FILES` has two.
+  Which file the third was, and whether the header is simply stale or names something the script no
+  longer touches, is not answerable from what is in the repository now.

@@ -2,6 +2,7 @@
 name: Contributing
 area: Documentation
 kind: repo
+checked: 2026-09-23
 code:
   - CONTRIBUTING.md
   - CODE_OF_CONDUCT.md
@@ -66,6 +67,7 @@ it says outright that it is the whole contract and there is no second place to c
 
 ## Unsettled
 
-- The pull-request checklist names the feature file to update but not `.ds/files.md` or the index,
-  which a change that adds or moves a file also has to touch. Whether the checklist should grow or
-  stay short is an editorial call, not something the code decides.
+- The pull-request checklist names the feature file to update *and* `.ds/index.md` when a summary
+  or file list changes, but not `.ds/files.md`, which a change that adds or moves a file also has
+  to touch. Whether the checklist should grow or stay short is an editorial call, not something the
+  code decides.

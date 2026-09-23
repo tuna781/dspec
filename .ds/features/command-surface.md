@@ -2,6 +2,7 @@
 name: Command surface
 area: Command line
 kind: product
+checked: 2026-09-23
 code:
   - bin/ds.js
   - src/cli.ts

@@ -2,6 +2,7 @@
 name: Checkout
 area: Checkout
 kind: product
+checked: 2026-09-23
 code:
   - src/checkout/index.ts
   - src/checkout/session.ts

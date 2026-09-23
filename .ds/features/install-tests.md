@@ -2,6 +2,7 @@
 name: Install tests
 area: Build & ship
 kind: repo
+checked: 2026-09-23
 code:
   - test/install.test.js
   - test/support/repo.js
