@@ -115,8 +115,8 @@ couldn't be settled from the code is written down as exactly that, so the confid
 believed.
 
 **The map checks itself.** Once written, every path is verified to exist, every dependency to name
-a feature that exists, and no file of consequence to be left unclaimed — anything unclaimed is
-either misfiled or a feature that was missed.
+a feature that exists, every name it points you at to still be findable, and no file of consequence
+to be left unclaimed — anything unclaimed is either misfiled or a feature that was missed.
 
 **The code always wins.**
 
@@ -229,9 +229,12 @@ convenient to bring it to the simpler format. Full detail in the [changelog](CHA
 
 ## Feedback wanted
 
-dspec rests on one bet: the map is prose an agent writes about its own repository, and nothing
-verifies it — no schema, no fingerprint, no drift check. What keeps it honest is *the code wins*,
-*nothing is described unread*, and *what couldn't be settled is written down as unsettled*.
+dspec rests on one bet: the map is prose an agent writes about its own repository, and no schema
+and no fingerprint validate it. There is one check, and it is deliberately cheap — a feature points
+you at a name and not just at a file, so a name that stops being findable says the code moved under
+the description. It tells you where to read, never what is now wrong. The rest is held up by *the
+code wins*, *nothing is described unread*, and *what couldn't be settled is written down as
+unsettled*.
 
 If you think that isn't enough, that's the conversation I want:
 [**is a map an agent writes about its own repo trustworthy?**](https://github.com/tuna781/dspec/discussions/14)

@@ -16,7 +16,8 @@ has to be checkable — every rule it quotes is a rule that is actually in `temp
 
 - **The four trust claims are quotations, not copy.** "Nothing is claimed from a name", "nothing is
   described unread", "the map checks itself", "the code wins" are what `templates/bootstrap.md`
-  and `templates/memory.md` actually instruct. If a template loses one of them, the claim here
+  and `templates/memory.md` actually instruct — including what the self-check covers, which is
+  enumerated here and has to stay the same list. If a template loses one of them, the claim here
   becomes a lie, and this is the file a reader believes before installing anything.
 - **The table says what it measures and nothing more.** Time, tokens and cost — one run each,
   on a named 15-file fixture anybody can clone. No accuracy benchmark is invented to fill the
@@ -40,9 +41,9 @@ has to be checkable — every rule it quotes is a rule that is actually in `temp
   and which memory file it reads.
 - "dspec is not a workflow" gets its own short section, because the thing 0.2.0 removed is what
   readers arriving from 0.1.x expect to find.
-- "Feedback wanted" sits immediately before Contributing and puts the product's one bet — a map
-  nothing verifies, held up by three instructions — to the reader as a question, pointing at
-  Discussions. It is deliberately the last argument in the file: somebody who has not been
+- "Feedback wanted" sits immediately before Contributing and puts the product's one bet — prose no
+  schema or fingerprint validates, held up by three instructions and one cheap check — to the
+  reader as a question, pointing at Discussions. It is deliberately the last argument in the file: somebody who has not been
   convinced by everything above it is not the person being asked.
 - Upgrading from 0.1.x is a collapsed `<details>`: it names the four verbs, the two commands and
   the hooks that went, and points at the changelog rather than restating it.
