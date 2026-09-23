@@ -24,3 +24,10 @@ The checkout session: validate the cart, price it, and let codes be redeemed aga
 
 - **Re-pricing beats adjusting the total in place.** A discount changes the tax and can hit the
   minimum-charge floor, so patching one number leaves the other three disagreeing with it.
+
+## Unsettled
+
+- **`redeemCode` does not call `validateCheckout`.** The mixed-cart rule is enforced when a session
+  starts, not when a code is redeemed into it, so a code entered after `startCheckout` is priced
+  over every line — non-discountable ones included — until something re-validates. Whether that is
+  an oversight or relies on a check elsewhere cannot be settled from these files.

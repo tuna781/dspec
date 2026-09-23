@@ -71,5 +71,14 @@ it, nothing builds it, and it ships to nobody.
   non-discountable product is refused outright rather than half-discounted.
 - `demo/shop/CLAUDE.md` is the installed block verbatim, which is what makes the "with dspec" half
   a real installation rather than a hint typed into a prompt.
+- It is also what `demo/eval` puts its planning tasks to, so its `## Decisions` sections double as
+  the answer key: each task asks for a change one of them rejected.
 - Nothing here is compiled or type-checked: the root `tsconfig.json` includes `src/**/*` only, and
   `files` in `package.json` excludes `demo/` from the published package.
+
+## Decisions
+
+- **Its map was corrected where it disagreed with its code.** *Apply discount* recorded the
+  minimum-charge floor as "a refusal, not a clamp"; `clampDiscount()` in `rules.ts` clamps the
+  discount and accepts the code. The code won, as the block says it must. The recording was not
+  re-made for it: the question it asks is answered by the stacking decisions, which did not change.

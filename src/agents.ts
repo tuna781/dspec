@@ -42,7 +42,14 @@ export const INVOKE = `/${COMMAND}`;
 
 /** What the agent's command menu says about it. One sentence, three frontmatters. */
 export const DESCRIPTION =
-  'Map this codebase into .ds/ so any agent can answer questions about it without reading the whole repo';
+  'Map this codebase into .ds/ so any agent can answer questions about it and plan changes to it without reading the whole repo';
+
+/**
+ * What the command menu offers to type after it. A large repository is mapped a part at a time,
+ * and the template reads the part from what the user wrote — so the hint is only a prompt, and an
+ * agent that shows none (Cursor documents no such key) loses nothing but the reminder.
+ */
+export const ARGUMENT_HINT = 'optional — an app, service or directory to map';
 
 /** 0.0.1 installed these, unprefixed and unmarked. Removed only when recognisably dspec's. */
 const LEGACY_COMMANDS = ['spec', 'plan', 'sync', 'bootstrap', 'update'];
@@ -146,6 +153,7 @@ const claude: Agent = {
     // given a list. Bootstrap reads the codebase and writes `.ds/`; it needs no more than this.
     return [commandFile('claude', `.claude/commands/${COMMAND}.md`, [
       ['description', DESCRIPTION],
+      ['argument-hint', ARGUMENT_HINT],
       ['allowed-tools', 'Read, Write, Edit, Grep, Glob, Bash'],
     ], bootstrapBody(ctx))];
   },
@@ -188,9 +196,11 @@ const codex: Agent = {
   ],
   plan(ctx) {
     // Codex documents exactly two frontmatter keys and ignores subdirectories, so the file is
-    // flat and carries nothing else. `allowed-tools` here would be silently meaningless.
+    // flat and carries those two and nothing else. `allowed-tools` here would be silently
+    // meaningless.
     return [commandFile('codex', path.join(codexPromptsDir(), `${COMMAND}.md`), [
       ['description', DESCRIPTION],
+      ['argument-hint', ARGUMENT_HINT],
     ], bootstrapBody(ctx))];
   },
 };

@@ -36,10 +36,13 @@ three adapters that implement it are gathered at the foot of the file in the `AG
   `CODEX_HOME` before falling back to `~/.codex`. The two consequences — a teammate who clones gets nothing, and a second
   `init` elsewhere finds the file already there — are reported to the user, not hidden.
 - Frontmatter per agent, assembled by `frontmatter()` and stitched onto the template body by
-  `commandFile()`: Claude gets `description` and `allowed-tools`; Codex gets `description` alone,
-  the only key besides `argument-hint` it documents; Cursor gets `name` first, because a skill is
+  `commandFile()`: Claude gets `description`, `argument-hint` and `allowed-tools`; Codex gets
+  `description` and `argument-hint`, the only two keys it documents; Cursor gets `name` first, because a skill is
   addressed by its name and a reader scanning the directory should meet it first. The sentence
-  itself is the `DESCRIPTION` constant, so all three say the same thing.
+  itself is the `DESCRIPTION` constant, so all three say the same thing. `ARGUMENT_HINT` offers
+  the part of a large repository to map; it has no leading `[`, because the frontmatter is written
+  unquoted and YAML would read one as a list. Cursor gets no hint — it documents no such key — and
+  loses nothing, since the template reads the part from what the user wrote.
 - `owned()` lists what the install occupies now; `legacy()` lists what an older dspec left, found
   by its old `dspec-` prefix (`oldPrefixed()`) or, for the unmarked 0.0.1 files, by content
   (`existingLegacy()`). The names those two hunt for are `LEGACY_COMMANDS`. `init` deletes both

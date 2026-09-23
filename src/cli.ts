@@ -22,8 +22,9 @@ const USAGE = `dspec — your agent answers from what your product is, not from 
                               It asks nothing
 
 Then, in your agent: \`${INVOKE}\` reads the codebase and writes the map — what each feature
-is, where it lives, and why it behaves the way it does. After that, a question about the code is
-answered from that map instead of from whatever a search happened to turn up.
+is, where it lives, why it behaves the way it does, and what a change must not break. After that,
+a question about the code, or a plan to change it, starts from that map instead of from whatever a
+search happened to turn up.
 
 Every run of \`init\` rebuilds what dspec installed before, so upgrading is:
 

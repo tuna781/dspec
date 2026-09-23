@@ -12,8 +12,9 @@ The same command the first time and every time after — it builds the map when 
 reconciles it with the code when there is.
 
 **The rules it gives are the file, not this page.** Read `templates/bootstrap.md`; it is one pass
-and it is written to be read by an agent, in four parts a reader can search for: *"What you are
-writing"*, *"If `.ds/` does not exist yet"*, *"If `.ds/` already exists"* and *"Report"*. What is
+and it is written to be read by an agent, in five parts a reader can search for: *"What you are
+writing"*, *"If `.ds/` does not exist yet"*, *"If `.ds/` already exists"*, *"A large repository"*
+and *"Report"*. What is
 below is what a read of it will not tell you.
 
 ## Rules
@@ -43,7 +44,18 @@ below is what a read of it will not tell you.
 - The self-check at the end is the only verification that exists anywhere in dspec. It is the
   agent checking its own work in prose — nothing in the CLI reads `.ds/` to confirm it.
 - The report it asks for is the one place the map surfaces to the user, and it is deliberately in
-  features and behaviour: what was added or rewritten, and what could not be settled from the code.
+  features and behaviour: what was added or rewritten, and what could not be settled from the code
+  — grouped by feature, so an inherited codebase's open questions can go straight to whoever still
+  knows the answers.
+- *"A large repository"* is the third branch in all but name: a run covers the part the user named,
+  writes each feature file as soon as its code is read, and leaves a `Not mapped yet — search these
+  directly:` line at the foot of the index for the rest. Stopping half way leaves a map that is
+  true as far as it goes, and running again on the same part carries on through the reconcile
+  branch.
+- The build branch reads a file's commit history when a branch looks deliberate and the code does
+  not say why. A reason found there goes into `## Decisions` with its commit; one not found goes
+  into `## Unsettled` as a question — this is what makes the command useful on a legacy codebase
+  whose authors have left.
 
 ## Decisions
 
@@ -85,6 +97,24 @@ below is what a read of it will not tell you.
   rewriting the file. What makes it worth anything is the prohibition beside it: a date is never
   moved forward for a page nobody opened, so an old date stays honest instead of becoming a claim.
   It is kept out of the index for the same reason the full file list is.
+
+- **A large repository keeps one flat index, grouped by area.** A two-level index — `index.md`
+  naming areas, one file per area — was weighed and not taken: it changes the format, the
+  instruction block and every map already written, and adds one more file to keep true. *Tens of
+  features in each area* is the rule instead. If a real repository shows a flat index no longer
+  reads in a minute, that is the evidence for splitting it.
+- **The part to map is read from what the user wrote, not from `$ARGUMENTS`.** Claude Code and
+  Codex substitute a placeholder and Cursor documents none, so a template that relied on it would
+  work in two agents of three. The adapters add an `argument-hint` where one is documented; it is a
+  reminder in a menu, and nothing depends on it.
+- **A partial map says where it stops, in the map itself.** A map that silently covers half the
+  repository teaches the next session to trust an absence. The `Not mapped yet` line is the edge of
+  what the map knows, like `## Unsettled` — not a to-do list — and the instruction block tells a
+  reader that searching there is right.
+- **History is read, never inferred.** A reason taken from a commit message is declared from
+  reading, to the same standard as `code:` and `uses:`, and names its commit so it can be checked.
+  A reason the agent supplies because it is plausible is the failure the map exists to prevent,
+  and on a legacy codebase — where nobody is left to contradict it — the most damaging one.
 
 - **`kind` replaced the rule that a feature is only a product capability.** Eight of this
   repository's own fourteen features are its packaging, tests, docs and release — real knowledge an

@@ -11,6 +11,55 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
+## [Unreleased]
+
+### Changed
+
+- **The map is read to plan and to edit, not only to answer.** The instruction block used to frame
+  `.ds/` as a way to answer questions, and on the writing side it asked for a feature's
+  decisions to be *written* without asking for them to be *read*. It now says the map is for
+  planning changes too; asks that a feature's rules and decisions be read before one of its files
+  is edited, because they are what the change must not break or quietly undo; asks a plan to name
+  the features a change touches and the ones that use them, and carry their rules; and asks that
+  an answer resting on something a feature file is not sure of say so. All four are reads. No
+  command, no gate.
+
+- **A large repository is mapped a part at a time.** `/ds-bootstrap` now has a section for
+  monorepos and anything too large for one session. A run covers the part the user named — an
+  app, a service, a directory — and leaves every other feature as it was. Each feature file is
+  written as soon as its code is read, so a run that stops half way leaves a map that is true as
+  far as it goes. Until every part is mapped, the index ends with a `Not mapped yet — search these
+  directly:` line, and the instruction block says a search there is the right move. Code shared by
+  many features is a feature of its own; generated and vendored code is not code of consequence.
+  The index stays one flat list, grouped by area, with *tens of features in each area*.
+
+  Claude Code and Codex show an `argument-hint` for the part; Cursor documents no such key, and
+  nothing depends on it — the part is read from what the user wrote.
+
+- **The why is read from history, never supplied.** When a branch looks deliberate and the code
+  does not say why, `/ds-bootstrap` reads that file's commit history. A reason found there is
+  recorded with the commit it came from; one that is not found is recorded as a question. Code
+  nothing reaches any more is recorded as unsettled, not as behaviour. The report groups its open
+  questions by feature, so on an inherited codebase they can be passed to whoever still knows.
+
+- **Every surface now says what the map is used for.** The README gains *What your agent does with
+  it* — answering, planning, reading a decision before an edit, reviewing a diff by feature — a
+  fifth trust claim quoted from the block (*an answer says what it isn't sure of*), a section for
+  inherited codebases, a paragraph on large repositories, and a closing line on where dspec sits
+  next to search and spec tools. The `package.json` description and `dspec --help` add *what a
+  change must not break*. The social card's headline is now *Your agent knows why.*, and its panel
+  shows the measured planning case — the agent finds a rejected option in the map and asks before
+  undoing it — in place of a question ending in a cost claim.
+
+- **The planning claim is measured.** `demo/eval` asks real sessions to plan a change one of the
+  fixture's recorded decisions rejected, with and without the map, and grades the answers blind.
+  With the map, every session named the rejected removal as a decision and asked first; without
+  it, none did. Where a code comment already states the reason, and in a control task, the two
+  tied. The README quotes both halves and links the raw answers.
+- **The fixture's map was corrected where its code disagreed.** It called the minimum-charge floor
+  a refusal; `clampDiscount()` clamps the discount and accepts the code. It also now records, as
+  unsettled, that redeeming a code does not re-run checkout validation.
+
 ## [0.5.0] — 2026-09-23
 
 ### Changed

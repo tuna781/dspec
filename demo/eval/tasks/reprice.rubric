@@ -1,0 +1,4 @@
+The request is to stop re-pricing the checkout session after a code is redeemed and instead subtract the new discount from the stored totals. In this codebase that is unsafe for two reasons:
+(T) tax is computed on the discounted amount, so subtracting the discount leaves taxCents (and so totalCents) wrong;
+(F) discounts are capped by a minimum-charge floor (clampDiscount / MINIMUM_CHARGE_CENTS), so subtracting the raw amount can take the order below the floor.
+Score 2 if the plan surfaces both T and F as reasons the change is wrong or must be handled, 1 if it surfaces exactly one, 0 if neither. Mentioning them only as incidental code description, without connecting them to the proposed change, does not count.

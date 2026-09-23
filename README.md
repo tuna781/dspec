@@ -73,7 +73,8 @@ on, and nothing tells you it's now wrong.
 
 ## What dspec does
 
-`/ds-bootstrap` reads your codebase **once** and writes down what it found:
+`/ds-bootstrap` reads your codebase **once** — or, in a large one, a part at a time — and writes
+down what it found:
 
 ```
 .ds/
@@ -100,10 +101,35 @@ Three reads. No search. And the *why* is already answered, because the session t
 file had read the code and put the reason down in a sentence. Rules, refusals, the case that must
 never break — the knowledge that makes an answer correct, not merely fast.
 
+## What your agent does with it
+
+Answering is the first use, not the only one. The same instruction block tells your agent to
+reach for the map whenever it is about to act on your code:
+
+- **It answers from the feature**, not from every file that happens to share a word with your
+  question.
+- **It plans with the blast radius in view.** Before proposing a change it names the features the
+  change touches and the ones that depend on them, and carries their rules into the plan — so the
+  constraint turns up in the plan, not in a failing test or a reviewer's comment.
+- **It won't undo what you did on purpose.** A choice somebody made once, and the option they
+  rejected, is written down next to the code it governs — and your agent reads it before it edits
+  that code. The branch that looks redundant stays, because the map says what it prevents.
+- **It reviews a diff by feature.** Changed files are looked up to the features they belong to,
+  and those features' rules are what the diff is checked against.
+
+None of this is a command or a step you take. It is what an agent does when the file it reads at
+the start of every session tells it where the knowledge is.
+
+Measured, on the same demo repository: asked to plan the removal of a check whose reason only the
+map records, every session with the map named it as a decision and asked first; none of the
+sessions without it did — they read every file and planned the removal. Where the code states the
+reason in a comment, both did equally well. Three runs each, graded blind; the tasks, rubrics, raw
+answers and the ties are in [`demo/eval`](demo/eval/).
+
 ## Why you can believe the answer
 
 A map that guesses is worse than no map, because every later session will trust it. So the
-instructions dspec installs are built to stop that happening, in four specific ways.
+instructions dspec installs are built to stop that happening, in five specific ways.
 
 **Nothing is claimed from a name.** Where a feature lives and what it depends on are recorded from
 reading the files — never inferred from an import list, a directory name, or a word two files
@@ -118,7 +144,16 @@ believed.
 
 **The map checks itself.** Once written, every path is verified to exist, every dependency to name
 a feature that exists, every name it points you at to still be findable, and no file of consequence
-to be left unclaimed — anything unclaimed is either misfiled or a feature that was missed.
+to be left unclaimed — anything unclaimed is either misfiled or a feature that was missed. A map
+of a large repository that is still being built says which parts it doesn't cover yet, so an
+absence in it is never mistaken for an answer.
+
+**An answer says what it isn't sure of.** What the map could not settle, it marks as unsettled —
+and your agent is told to carry that mark into what it tells you:
+
+> **When your answer rests on something a feature file says it is not sure of, say so.**
+
+So you know which sentence to check before you act on it, instead of checking all of them.
 
 **The code always wins.**
 
@@ -164,12 +199,38 @@ session, without installing anything or being told.
 That's also how the map stays honest across a team. Nobody has to remember to update it: whoever
 touches the code has an agent that was already told to fix the feature file it just invalidated.
 
+## Inherited a codebase nobody can explain?
+
+The people who wrote it have moved on. The code hasn't: it is still enforcing every business rule
+they put in it, and nobody left can say which branch is a rule and which is an accident.
+
+`/ds-bootstrap` reads that code and writes those rules back down, feature by feature, in the
+language of the product rather than of the code. Where a branch looks deliberate and the code
+doesn't say why, it reads the history — and a reason it finds there is recorded with the commit it
+came from. A reason it can't find is recorded as a question, never made up:
+
+> **Never supply a reason yourself: a plausible why that nobody gave is the most convincing thing a
+> map can get wrong.**
+
+What you get back is two things legacy code never comes with: the rules it enforces, and a list of
+**the questions only your people can answer**, grouped by feature so they can go straight to
+whoever still knows. From then on, an agent changing that code knows what it must not break, and
+the next person to join reads the map instead of doing archaeology.
+
+It recovers what the code still knows — and tells you plainly what it can't. The map is prose, so
+it works in any language your agent can read.
+
 ## dspec is not a workflow
 
 No spec to write. No plan to approve. No gate to pass. No process to adopt.
 
 dspec doesn't change how you work — it makes your agent better informed at whatever you already
 do. `.ds/` is just knowledge: where things are, and why.
+
+It sits between the tools you may already use rather than replacing any of them. Search and
+indexing tools find **where** code is. Spec tools agree **what to change next**. dspec is **what
+the code already is, why it is that way, and what a change must not break** — the part neither of
+the others keeps, and the part both of them work better with.
 
 ## The two surfaces
 
@@ -195,6 +256,11 @@ clones the repo — they run `dspec init` once themselves.
 
 Want fewer? `dspec init --agent claude` installs only that one. Anything you leave out is left
 exactly as it is — `--agent` adds, it never uninstalls.
+
+**A large repository, or a monorepo?** Map it a part at a time: `/ds-bootstrap services/billing`,
+then the next app or service in another session. Each run writes as it reads, so one that stops
+half way leaves a map that is true as far as it goes. Until every part is done, the map names the
+parts it doesn't cover yet, and your agent searches those as it always did.
 
 ## What it won't do
 

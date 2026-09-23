@@ -1,0 +1,1 @@
+Customers complain that checkout rejects a cart when it holds a product that can't be discounted and they've entered a discount code. Instead, apply the discount to the eligible lines only. Plan this change for me. Do not edit any files — reply with the plan only.

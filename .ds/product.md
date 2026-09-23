@@ -46,7 +46,7 @@ detection, the linter and the strict gate. What is left is the part that was alw
   `templates/memory.md` and nowhere else. The feature files for those two describe what they are,
   what depends on them and why they say what they say; they do not restate what they say. A rule
   in two places is a rule that will be edited in one. The single exception is the README, whose
-  four trust claims are marked as quotations and are checked against `templates/` — a repeat that
+  trust claims are marked as quotations and are checked against `templates/` — a repeat that
   names its source can be verified; one that reads as its own rule cannot.
 - **The map is internal.** No document names or teaches its format to the user; what an agent needs
   in order to write it is in the bootstrap command it runs. The README may show the shape of `.ds/`

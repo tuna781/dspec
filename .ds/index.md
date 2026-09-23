@@ -21,10 +21,11 @@ Going the other way — you have a file and need the feature — search `code:` 
 
 ### The map
 
-- **Map building** — The `/ds-bootstrap` command: how an agent reads a codebase and writes `.ds/`.
+- **Map building** — The `/ds-bootstrap` command: how an agent reads a codebase and writes `.ds/` —
+  whole, or a part at a time for a large repository.
   → `templates/bootstrap.md`
 - **Map instructions** — The block written into `CLAUDE.md` / `AGENTS.md`: what `.ds/` is, how to
-  read it, and whose job it is to keep it true.
+  read it to answer, plan and review, and whose job it is to keep it true.
   → `templates/memory.md`
 
 ### Command line
@@ -51,7 +52,7 @@ Going the other way — you have a file and need the feature — search `code:` 
 
 - **Readme** — The argument for installing dspec, in reading order — and the only place the product
   is argued at length, so every rule it quotes has to be one `templates/` really states.
-  → `README.md` · uses: Demo recording, Demo fixture
+  → `README.md` · uses: Demo recording, Demo fixture, Demo evaluation
 - **Contributing** — How a change or a report gets in: one contract file, the issue and pull-request
   forms, and a private channel for anything that is a vulnerability.
   → `CONTRIBUTING.md` +7
@@ -65,6 +66,9 @@ Going the other way — you have a file and need the feature — search `code:` 
   side by side, one with a `.ds/` map and one without, staged outside this repository so the
   no-map half really has no map.
   → `demo/README.md` +8 · uses: Demo fixture · used by: Readme
+- **Demo evaluation** — Whether the map changes what an agent plans: real sessions asked to plan a
+  change the fixture's decisions rejected, with and without `.ds/`, graded blind.
+  → `demo/eval/run.sh` +9 · uses: Demo fixture · used by: Readme
 - **Demo fixture** — `demo/shop`, a fifteen-file storefront that exists to be asked a question, with
   a real map committed: the repository the recording and the README's figures are made in.
-  → `demo/shop/.ds/index.md` +25 · used by: Readme, Demo recording
+  → `demo/shop/.ds/index.md` +25 · used by: Readme, Demo recording, Demo evaluation

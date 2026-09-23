@@ -36,5 +36,7 @@ with what is already there, and what it is worth. Start at `applyDiscount`.
 - **Stackable campaigns were not allowed to compound.** Applying both would let two "20% off
   everything" campaigns come to 36% off, which is not what either campaign meant — so the rule is
   that *every* promotion involved must be stackable, not just the new one.
-- **The floor is a refusal, not a clamp to zero.** An order below `MINIMUM_CHARGE_CENTS` still
-  costs the same to ship, so the discount is what gives way.
+- **The floor caps the discount; it does not refuse the code.** Where the discounts would take an
+  order below `MINIMUM_CHARGE_CENTS`, `clampDiscount` shrinks the discount so the order still costs
+  the floor — shipping costs the same whatever was discounted, so the discount is what gives way.
+  The code itself is accepted.
