@@ -9,6 +9,7 @@ code:
   - src/args.ts
   - src/pkgRoot.ts
 uses: [Agent install]
+aka: ["no such command", "--version"]
 ---
 
 The `dspec` command itself: one verb, its flags, and finding the running package so `templates/`

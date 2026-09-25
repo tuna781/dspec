@@ -2,9 +2,10 @@
 name: Map building
 area: The map
 kind: product
-checked: 2026-09-23
+checked: 2026-09-25
 code:
   - templates/bootstrap.md
+aka: ["Not mapped yet"]
 ---
 
 The `/ds-bootstrap` command: the prose that tells an agent how to read a codebase and write `.ds/`.
@@ -31,9 +32,13 @@ and *"Report"*. What is below is what a read of it will not tell you.
 
 - Both branches in one command: `.ds/` absent, it is built; `.ds/` present, it is reconciled and an
   older map is brought up to the current shape. The user types the same thing either way.
-- A feature file is frontmatter (`name`, `area`, `kind`, `checked`, `code`, `uses`), a lead
+- A feature file is frontmatter (`name`, `area`, `kind`, `checked`, `code`, `uses`, `aka`), a lead
   paragraph, `## Rules` and `## Behaviour`. There is no section for reasons or for doubts: *"Every
   sentence is something you read in the code"*, and what the code does not show is left out.
+- `aka` holds handles: how somebody asking would refer to the feature — routes, error codes and
+  messages, labels, events, tables, config keys — each read verbatim in the feature's own `code:`,
+  or a word the user used once the code confirmed it. *"A handle belongs to exactly one feature"*;
+  a word the whole product uses goes to the vocabulary instead. The index never carries handles.
 - The build branch does not read commit history. Its guard against invention is *"Never describe
   what you did not read."*
 - The reconcile branch deletes `## Decisions` and `## Unsettled` from an older map, moving a line
@@ -49,7 +54,7 @@ and *"Report"*. What is below is what a read of it will not tell you.
 - The index names each feature's entry file and `+N`, never the full list, and is rewritten whole
   from the feature files on every run.
 - The self-check at the end is the only verification that exists anywhere in dspec: the agent
-  checking paths, anchors, `uses:`, `used by:`, `kind`, double claims and unclaimed files. Nothing in
+  checking paths, anchors, code-sourced handles and handles claimed twice, `uses:`, `used by:`, `kind`, double claims and unclaimed files. Nothing in
   the CLI reads `.ds/`.
 - The report is one paragraph in features and behaviour: how many, what was added, renamed,
   rewritten or deleted, and which parts are not mapped yet.

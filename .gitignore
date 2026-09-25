@@ -31,7 +31,3 @@ coverage/
 # home directory, so a teammate runs `dspec init` once themselves.
 .ds/config.json
 CLAUDE.local.md
-
-# demo recording intermediates — only ../demo-split.gif is committed
-demo/half-*.gif
-demo/label-*.png

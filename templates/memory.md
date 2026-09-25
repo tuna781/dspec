@@ -19,14 +19,17 @@ not break — **without reading the repository**.
 3. Read `.ds/product.md` when the question is about the product as a whole, or when you need a
    rule or a word that applies everywhere.
 
-Going the other way — you have a file and need the feature — search the maps themselves:
-`grep -rl "<path>" .ds/features/` names the feature whose `code:` list claims it.
+The question names something specific — an error message, a route, a label, a word no feature
+in the index is called? Search the maps for it: `grep -ril "<words>" .ds/features/`. Every feature
+lists in `aka:` the ways people refer to it, so a match names its owner. Going the other way — you
+have a file and need the feature — `grep -rl "<path>" .ds/features/` names the feature whose `code:`
+list claims it.
 
 Now you know which files to open, and you open only those.
 
 **Do not** grep or glob the repository to find out where something lives — the map already answers
-that, and searching costs far more than reading it. **Do not** read all of `.ds/`: read the index,
-then only the feature files you need.
+that, and searching the repository costs far more than searching the map. **Do not** read all of
+`.ds/`: read the index, then only the feature files you need.
 
 **Keeping it true.** The map is only worth reading while it is accurate.
 
@@ -40,6 +43,9 @@ then only the feature files you need.
   have broken.
 - Planning a change? Name the features it touches and, from the index, the ones that use them,
   and carry their rules into the plan.
+- The user called a feature by a word the map did not know, and the code confirmed which feature
+  they meant? Add the word to that feature's `aka:`. Add a route, an error message or a label to a
+  feature's code, and it goes in `aka:` too.
 - Add a file, or move one, and the owning feature's `code:` list has to say so — it is the only
   record of what a feature is made of, and what every one of these searches matches against.
 - New behaviour that no feature describes gets a new file under `.ds/features/`, in the same shape

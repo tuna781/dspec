@@ -2,7 +2,7 @@
 name: Map instructions
 area: The map
 kind: product
-checked: 2026-09-23
+checked: 2026-09-25
 code:
   - templates/memory.md
 ---
@@ -27,11 +27,15 @@ and *"Keeping it true."* The rules below are the constraints on changing it.
 
 - Three reads, in order: `.ds/index.md`, the one or two feature files the question is about —
   *"what the feature does, the rules it must not break and the behaviour that matters"* — and
-  `.ds/product.md` only for a rule or a word that applies everywhere. The other direction, file to
-  feature, is a `grep -rl` over `.ds/features/`.
+  `.ds/product.md` only for a rule or a word that applies everywhere. A question naming something
+  specific — an error message, a route, a word no feature is called — is a `grep -ril` over
+  `.ds/features/`, matched against each feature's `aka:`. The other direction, file to feature, is
+  a `grep -rl` over the same directory.
 - A part the index lists as not mapped yet has no map, so a search there is right — the one
   exception to *do not grep*.
 - *"If `.ds/` and the code disagree, **the code wins**"*: fix the map, and say so.
+- A word the user used for a feature, once the code confirms which one, goes into that feature's
+  `aka:`; so does a route, error message or label added to a feature's code.
 - Before an edit: find the owning feature and read its rules. After: update that feature file, and
   the index if the summary or entry file changed. Moving or adding a file updates `code:`. New
   behaviour gets a new feature file.

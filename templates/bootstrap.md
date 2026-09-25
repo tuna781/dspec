@@ -26,6 +26,7 @@ code:
   - src/pricing/discount.ts
   - src/pricing/rules.ts
 uses: [Cart totals, Promotion catalogue]
+aka: ["not_stackable", "already_applied", "coupon"]
 ---
 
 What this feature is, in product terms, and where to start reading. One paragraph.
@@ -42,6 +43,18 @@ unique. `area` groups the index; it is a label, not a boundary. `kind` is `produ
 step 2 says which. `checked` is a date, below. `code` is **every** file the feature lives in,
 repo-relative. `uses` names other features, never files or packages. The file name under
 `features/` carries no meaning; use a slug of the name.
+
+**`aka` is how somebody asking about the feature would refer to it** — the strings that turn up in
+a question about it, not the names a reader of the code would use: a route or endpoint, an error code or the text of an error message, a label the
+user sees, an event, a table, a config key or environment variable, a command. It is what lets the
+next session find the feature from the words in a question, by searching `.ds/features/` instead of
+the repository. Each one is either **text you read in this feature's own `code:` files**, verbatim,
+so one search finds it — or a word the user used for this feature, recorded only once you have
+confirmed in the code that it means this feature. **A handle belongs to exactly one feature**: a
+string that would name two is not a handle, so leave it out — a word the whole product uses belongs
+in `product.md`'s vocabulary. Do not repeat function names already in the prose; an anchor is what
+a reader of the code searches for, a handle is what a person asking says. Keep it short and
+specific, and leave it out when nothing qualifies.
 
 **Send a reader to a name, not only to a path.** Wherever the prose points at code — the lead
 paragraph, a rule, a behaviour bullet — name what they can search for: a function, a route, an
@@ -102,8 +115,9 @@ partly invented, because the next session will trust every line of it equally.
    the level they would ask it.
 
    Fill `code:` with every file, and `uses:` with what you actually saw it depend on. Both are
-   **declared from reading, never guessed** from imports, naming or word overlap. Date it with
-   today's `checked:` as you write it.
+   **declared from reading, never guessed** from imports, naming or word overlap. Fill `aka:` with
+   the routes, messages, codes and labels you read in those files. Date it with today's `checked:`
+   as you write it.
 
    **Never describe what you did not read.** A plausible sentence about code nobody opened is the
    most convincing thing a map can get wrong. Code that nothing reaches any more stays in `code:`
@@ -149,8 +163,9 @@ partly invented, because the next session will trust every line of it equally.
    summary, one line of location. No prose beyond that.
 
 6. **Check your own work.** Every path in every `code:` exists, and every anchor you wrote is found
-   by searching that feature's own files. Every name in every `uses:` is a feature that exists, and
-   every `used by:` in the index is the reverse of a real `uses:`. Every feature carries a `kind`.
+   by searching that feature's own files, and so is every handle taken from the code. No handle
+   appears in two features. Every name in every `uses:` is a feature that exists, and every
+   `used by:` in the index is the reverse of a real `uses:`. Every feature carries a `kind`.
    No path is claimed by two features. Every source file of consequence is claimed by some feature
    — if something is not, either it belongs to a feature you already wrote, or it is a feature you
    missed.
@@ -165,16 +180,18 @@ wrong.**
    they do? Fix whatever is wrong — a moved file, a changed rule, behaviour that is gone. Search
    its anchors first — an anchor that no longer appears is the cheapest signal you have that the
    code moved under the description. It does not tell you what is now wrong; it tells you where to
-   read. A feature whose files you read gets today's `checked:` date, whether or not anything
-   needed fixing; one you did not open keeps the date it has.
+   read. A handle taken from the code that no longer appears is the same signal; a handle the user
+   gave is not expected in the code, and goes only when the feature no longer means it. A feature
+   whose files you read gets today's `checked:` date, whether or not anything needed fixing; one
+   you did not open keeps the date it has.
 3. Is there code no feature claims? Add it to the feature it belongs to, or write a new feature
    when it is behaviour a person would name.
 4. Is there a feature whose behaviour is no longer in the code at all? Delete its file.
 5. Bring an older map up to this shape, if it is not already: give every feature a `kind`, and a
-   `checked` date to each one whose code you actually read on this pass. Delete any `## Decisions`
-   and `## Unsettled` sections: a line in them that states what the code does now moves into
-   `## Rules` or `## Behaviour` once you have confirmed it in the code, and reasons, rejected
-   options and doubts are dropped. Strip reasons trailing off a rule the same way.
+   `checked` date to each one whose code you actually read on this pass, and an `aka` to each one
+   whose code you read. Delete any `## Decisions` and `## Unsettled` sections: a line in them that
+   states what the code does now moves into `## Rules` or `## Behaviour` once you have confirmed
+   it in the code, and reasons, rejected options and doubts are dropped. Strip reasons trailing off a rule the same way.
 6. Re-check `product.md` against what the repository now is.
 7. Rewrite `.ds/index.md` from the feature files as they now stand. Delete `.ds/files.md` if an
    older map left one: what it held is now answered by searching `code:`, and a copy nobody

@@ -2,7 +2,7 @@
 name: Social preview card
 area: Documentation
 kind: repo
-checked: 2026-09-23
+checked: 2026-09-25
 code:
   - .github/social-preview.html
   - .github/social-preview.png
@@ -11,9 +11,8 @@ code:
 The card that unfurls wherever the repository's link is pasted — Slack, X, Discord, a chat app —
 and so the first thing most people see of dspec. It is the repository's og:image and appears
 nowhere on the repository page itself. The HTML is the source and the PNG is a screenshot of it,
-both committed because GitHub takes an image and nothing renders one for us. It is a separate
-artifact from the README's recording: that argues the comparison at length, this has one headline
-and four words of proof.
+both committed because GitHub takes an image and nothing renders one for us. It carries one
+headline and one illustration of the concept; the README argues the case at length.
 
 ## Rules
 
@@ -44,10 +43,10 @@ and four words of proof.
   image and what is not allowed on it.
 - The pill row states what the README's "What it won't do" section states — three agents, zero
   dependencies, entirely local, MIT — so the two cannot disagree.
-- The left half is one headline ("Your agent knows where.") and the README's tagline; the right
-  half is the demo question, *"when is a second discount code refused?"*: the agent reads the
-  index, lands on *Apply discount* in `src/pricing/discount.ts`, reads that feature, and has the
-  answer — unless every promotion is stackable, and never within one `exclusiveGroup` — ending on
-  "Two reads. No grep."
+- The left half is one headline ("Name it. Your agent knows where.") and the README's tagline —
+  *your agent knows your codebase like someone who has worked on it for years*. The right half
+  illustrates the concept, not a result: four ways of naming one thing — a team word, an error
+  code, a route, a question — all resolving to one feature, *Apply discount*, with where it lives,
+  what it does and what it touches, ending on "Any name. One feature."
 - The committed `social-preview.png` matches the HTML; the card GitHub serves changes only when it
   is uploaded under Settings.

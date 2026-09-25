@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Strip every marker inherited from an outer Claude Code / VS Code session so the
-# recorded session looks like a plain terminal.
-exec env -u CLAUDE_CODE_SSE_PORT -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET \
-         -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ID \
-         -u CLAUDE_CODE_CHILD_SESSION -u VSCODE_GIT_ASKPASS_NODE -u VSCODE_GIT_ASKPASS_EXTRA_ARGS \
-         -u VSCODE_GIT_ASKPASS_MAIN -u VSCODE_GIT_IPC_HANDLE -u VSCODE_INJECTION \
-         -u VSCODE_PROFILE_INITIALIZED -u VSCODE_PYTHON_AUTOACTIVATE_GUARD \
-         -u TERM_PROGRAM -u TERM_PROGRAM_VERSION "$@"

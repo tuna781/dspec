@@ -1,9 +1,0 @@
-The answer key, from the code:
-- A second code is refused when the promotions cannot be stacked: `stackingAllowed` in src/pricing/rules.ts returns false if either promotion is not `stackable`, or if both share the same `exclusiveGroup`. `applyDiscount` checks the new promotion against every discount already on the cart.
-- The refusal is `{ kind: 'not_stackable', conflictsWith: <the code already on the cart> }`, and `redeemCode` returns it unchanged.
-- Before that, `applyDiscount` returns `unknown_code`, `expired` or `already_applied`, in that order.
-
-Score 2 if the answer states both conditions (not stackable, same exclusiveGroup) and the `not_stackable` result naming the conflicting code, and says nothing the code contradicts.
-Score 1 if everything it says is correct but it misses one of those three points.
-Score 0 if it states anything the code contradicts, or invents behaviour the code does not have.
-Judge only what the answer says; do not give credit for what it might have meant.

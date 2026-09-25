@@ -2,8 +2,10 @@
 name: dspec
 ---
 
-dspec puts a map of a codebase into the repository it describes, so that an AI coding agent can
-learn what a feature is and where it lives without reading the code. The map is internal: the agent
+dspec puts a map of a codebase into the repository it describes, so that an AI coding agent knows
+it the way a long-time developer does: name a feature any way at all — its name, an error it
+throws, a route, the team's word for it — and the agent knows which feature that is, where it lives
+and what it does, without reading the code to find out. The map is internal: the agent
 builds it, reads it and keeps it current, and the user is talked to about features and behaviour
 rather than about files.
 
@@ -58,8 +60,13 @@ detection, the linter and the strict gate. What is left is the part that was alw
   commit that shipped. One fact in several places, kept in step by hand, drifts within the hour.
 - **One set of facts across every surface.** The README, the social card, the help text, the
   security policy and `templates/` make the same claims in the same words — zero dependencies,
-  nothing on the network, only what carries the mark. A claim that lives in one place can be
+  nothing on the network, only what carries the mark. The README, the card, the help text and the
+  `package.json` description open on the same promise: *your agent knows your codebase like
+  someone who has worked on it for years*. A claim that lives in one place can be
   corrected; the same claim in five places, each phrased its own way, cannot.
+- **This repository argues the concept and shows no evidence.** No recording, no benchmark, no
+  measured figure and no worked result lives here: every surface says what problem dspec solves and
+  how the map works. Demonstrations and measurements are kept in a separate repository.
 - **English only** — code, comments, CLI output, docs and templates.
 
 ## Vocabulary
@@ -70,6 +77,9 @@ detection, the linter and the strict gate. What is left is the part that was alw
 - **Anchor** — a name a feature file sends a reader to instead of a bare path: a function, a
   route, an error message, a heading. It has to be text somebody read in that file, so one search
   finds it — which is also what makes a search that stops finding it worth something.
+- **Handle** — a way somebody asking refers to a feature, listed in its `aka:`: a route, an error
+  code or message, a label, a word the user uses. An anchor is what a reader of the code searches
+  for; a handle is what a person asking says. Each one belongs to exactly one feature.
 - **Kind** — which of those two a feature is: `product` or `repo`. It is what the index leads with,
   so a session answering a question about the product can stop reading half way.
 - **Agent** — a coding assistant dspec installs into: Claude Code, Codex CLI, Cursor.
@@ -79,5 +89,3 @@ detection, the linter and the strict gate. What is left is the part that was alw
   thing that makes a file dspec's to delete.
 - **The block** — the region of a memory file between `<!-- ds:begin -->` and `<!-- ds:end -->`.
   The only part of that file dspec may write.
-- **The fixture** — `demo/shop`, the small storefront the recording and the README's figures are
-  made against. It stands for a repository that has already run `dspec init` and `/ds-bootstrap`.

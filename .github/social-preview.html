@@ -91,7 +91,8 @@
     font-size: 30px; line-height: 1.76; letter-spacing: -.01em;
     color: #d7d9e3;
   }
-  .ask { color: #6e7183; margin-bottom: 42px; }
+  .ask { color: #6e7183; }
+  .ask.last { margin-bottom: 42px; }
   .ask em { color: #b7bac8; font-style: normal; }
   .read { color: #7fb4ff; }
   .path { color: #e7e9f2; }
@@ -137,8 +138,8 @@
       <span class="wordmark">dspec</span>
     </div>
 
-    <h1>Your agent<br>knows where.</h1>
-    <p class="sub">Your agent answers from what your product is — not from what it can grep.</p>
+    <h1>Name it.<br>Your agent<br>knows where.</h1>
+    <p class="sub">Your agent knows your codebase like someone who has worked on it for years.</p>
 
     <div class="pills">
       <span class="pill accent">Claude Code · Codex · Cursor</span>
@@ -149,13 +150,15 @@
   </div>
 
   <div class="panel">
-    <div class="ask">▸ <em>when is a second discount code refused?</em></div>
-    <div><span class="read">Read</span> <span class="path">.ds/index.md</span></div>
-    <div class="found">→ Apply discount · <b>src/pricing/discount.ts</b></div>
-    <div><span class="read">Read</span> <span class="path">.ds/features/apply-discount.md</span></div>
-    <div class="found">→ unless <b>every promotion is stackable</b>,</div>
-    <div class="found">&nbsp;&nbsp;and never within one exclusiveGroup</div>
-    <div class="note">Two reads. <b>No grep.</b></div>
+    <div class="ask">▸ <em>"the coupon thing"</em></div>
+    <div class="ask">▸ <em>error: not_stackable</em></div>
+    <div class="ask">▸ <em>POST /checkout/discount</em></div>
+    <div class="ask last">▸ <em>"why is my second code refused?"</em></div>
+    <div><span class="read">one feature</span> <span class="path">Apply discount</span></div>
+    <div class="found">→ lives in <b>src/pricing/discount.ts</b></div>
+    <div class="found">→ what it does, the rules it must not break</div>
+    <div class="found">→ what it touches, what depends on it</div>
+    <div class="note">Any name. <b>One feature.</b></div>
   </div>
 
   <div class="repo">github.com/tuna781/dspec</div>

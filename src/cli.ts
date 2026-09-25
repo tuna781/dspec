@@ -14,7 +14,7 @@ import { packageVersion } from './pkgRoot';
 import { cmdInit } from './init';
 import { INVOKE } from './agents';
 
-const USAGE = `dspec — your agent answers from what your product is, not from what it can grep
+const USAGE = `dspec — your agent knows your codebase like someone who has worked on it for years
 
   dspec init  [--agent a,b]   install dspec into every AI coding agent it supports —
                               Claude Code, Codex CLI and Cursor: the ${INVOKE}
@@ -22,9 +22,9 @@ const USAGE = `dspec — your agent answers from what your product is, not from 
                               It asks nothing
 
 Then, in your agent: \`${INVOKE}\` reads the codebase and writes the map — what each feature
-is, where it lives, what it does, and what a change must not break. After that,
-a question about the code, or a plan to change it, starts from that map instead of from whatever a
-search happened to turn up.
+is, every way people refer to it, where it lives, what it does, and what a change must not break.
+After that, name a feature any way you like — its name, an error it throws, a route, your team's
+word for it — and your agent knows where it lives and what it does, instead of searching for it.
 
 Every run of \`init\` rebuilds what dspec installed before, so upgrading is:
 

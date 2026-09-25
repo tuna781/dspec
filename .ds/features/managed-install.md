@@ -5,6 +5,7 @@ kind: product
 checked: 2026-09-23
 code:
   - src/install.ts
+aka: ["dspec:managed", "ds:begin", "ds:end"]
 ---
 
 Writing dspec's own files into somebody else's repository, and being able to take every one of them

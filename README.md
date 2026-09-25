@@ -1,12 +1,12 @@
 <h1 align="center">dspec</h1>
 
 <p align="center">
-  <strong>Your agent answers from what your product is — not from what it can grep.</strong>
+  <strong>Your agent knows your codebase like someone who has worked on it for years.</strong>
 </p>
 
 <p align="center">
-  Write it down once in <code>.ds/</code> — a form built to be read fast:<br>
-  one page to find the feature, one file to understand it.
+  Name a feature any way you like — its name, an error it throws, a route, the word your team uses
+  for it —<br>and your agent knows which feature you mean, where it lives, and what it does.
 </p>
 
 <p align="center">
@@ -14,16 +14,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/npm/l/dspec.svg" alt="MIT"></a>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="zero dependencies">
   <img src="https://img.shields.io/badge/network%20calls-0-brightgreen" alt="no network">
-</p>
-
-<p align="center">
-  <img src="demo-split.gif" alt="Two real Claude Code sessions asked the same question side by side: without dspec it greps and reads every matching file; with dspec it reads the map index and opens two named files" width="100%">
-</p>
-
-<p align="center">
-  <em>Two real Claude Code sessions. Same repository, same question, same model.<br>
-  Left matched a word and opened everything that mentioned it. Right read the map and opened<br>
-  the two files the feature actually lives in. The only difference is whether <code>.ds/</code> is committed.</em>
 </p>
 
 ```bash
@@ -43,66 +33,73 @@ That's it. That's the whole tool.
 
 ## The problem
 
-You ask your agent a question about your own code. It has no idea what your product is, so it goes
-looking for one:
+Every AI coding agent starts every session as a stranger to your codebase.
 
-```
-Grep "discount"            → 47 hits across 23 files
-Glob "src/**/*.ts"         → 312 files
-Read src/checkout/index.ts
-Read src/checkout/cart.ts
-Read src/pricing/rules.ts
-Read 6 more files…
-```
+It doesn't know what your product's features are, what anybody calls them, or where they live. So
+when you ask about one, it searches — and a search matches **words**, not **meaning**. Every file
+that mentions the word comes back, and nothing says which one *is* the feature. The agent picks,
+reads, and assembles an answer out of whatever happened to share a word with your question.
 
-Every one of those files mentions the word. None of them says which one *is* the feature, and a
-search can't tell the difference — so the agent picks, reads, and assembles an answer out of
-whatever happened to share a word with your question.
+Then it answers in the same confident voice whether a sentence came from the code that implements
+the feature or from a file that only mentioned it. That is where an agent goes wrong: it loses the
+context it never had, fills the gap with something plausible, and works on the part of the code
+that matched rather than the part that matters.
 
-Then it answers — fluently, in the same confident voice whether a sentence came from the file that
-implements the feature or from one that only mentioned it. Nothing in the answer tells you which.
+`CLAUDE.md` was supposed to carry that knowledge from one session to the next. It rarely does:
+someone writes it once, the code moves on, and nothing tells you it's now wrong.
 
-That's the real bill. Not the tokens: the fact that you now have to go read the code yourself to
-work out which sentence to believe.
+## The idea
 
-`CLAUDE.md` was supposed to fix this. It usually doesn't: someone writes it once, the code moves
-on, and nothing tells you it's now wrong.
+Think of the developer who has been on a codebase for years. Mention "the second coupon bug", paste
+an error, or name a route, and they don't search. They already know:
 
-## What dspec does
+- **which feature you mean**, whatever you called it;
+- **where it lives** — the files, and where to start reading;
+- **what it does** — the cases that matter, and the rules it must not break;
+- **what it touches** — the features it depends on, and the ones that depend on it.
 
-`/ds-bootstrap` reads your codebase **once** — or, in a large one, a part at a time — and writes
-down what it found:
+dspec writes that knowledge down, in your repository, for your agent. It is a map of the codebase
+organised the way that developer thinks — by feature, not by folder — and it is the first thing
+your agent reads, so it starts every session knowing where things are instead of searching for
+them.
+
+## The map
+
+`/ds-bootstrap` has your agent read the codebase **once** — or, in a large one, a part at a time —
+and write down what it found:
 
 ```
 .ds/
   index.md         every feature: what it is, where it starts, what it depends on
-  features/*.md    one file per feature — what it does, where it lives, the rules it enforces
-  product.md       what the product is, and the rules that apply everywhere
+  features/*.md    one file per feature — what it does, where it lives, the rules it enforces,
+                   and every way somebody might refer to it
+  product.md       what the product is, the rules that apply everywhere, and its vocabulary
 ```
-
-Starting from a file instead of a question? Search `.ds/features/` for its path — every feature
-lists the files it lives in, so the search names its owner.
 
 `dspec init` adds a short instruction block to `CLAUDE.md` / `AGENTS.md` — the file your agent
 already reads at the start of every session — telling it to use that map first.
 
-Now the same question goes:
+**A feature is something a person would name**: a capability of your product, or a piece of how the
+repository is built and shipped. Not a directory, not a class, not a layer.
 
-```
-Read .ds/index.md                     → "Apply discount" lives in src/pricing/discount.ts
-Read .ds/features/apply-discount.md   → what it does, and when it refuses a second code
-Read src/pricing/discount.ts          → the actual code
-```
+**Every feature knows its names.** People don't ask about features by their proper names. They paste
+an error, quote a route, or use the word the team has always used. So each feature records the ways
+it gets referred to — its routes, its error codes and messages, the labels users see, its events,
+tables and config keys — and the words *you* use for it, once your agent has confirmed in the code
+what you meant. A question is looked up in the map, not in the repository, so a message that
+happens to contain a common word leads to the one feature that produces it, not to every file that
+spells the word.
 
-Three reads. No search. The session that wrote that file had read every file the feature lives
-in, and put down what they do: the rules the code enforces, the cases it refuses, the order its
-checks run in — each with the name you can search for, so the next read lands on the line.
+**Every feature knows its files**, so the lookup works the other way too: start from a file, and the
+map names the feature it belongs to — and the rules it must not break.
 
 ## What your agent does with it
 
 Answering is the first use, not the only one. The same instruction block tells your agent to
 reach for the map whenever it is about to act on your code:
 
+- **It knows what you mean.** Whatever you call a feature — its name, an error, a route, your
+  team's word — it looks the words up in the map and lands on the feature they belong to.
 - **It answers from the feature**, not from every file that happens to share a word with your
   question.
 - **It plans with the blast radius in view.** Before proposing a change it names the features the
@@ -116,14 +113,6 @@ reach for the map whenever it is about to act on your code:
 
 None of this is a command or a step you take. It is what an agent does when the file it reads at
 the start of every session tells it where the knowledge is.
-
-Measured, honestly, on the same demo repository: three lookup questions with answer keys taken from
-the code, three runs each, graded blind. With and without the map, every session found the answer —
-fifteen files is small enough to read whole, so there was nothing for the map to save it from. On
-the question a feature file answers directly the map was a little faster; on the one that traces
-callers through the code it cost about twice the context. The tasks, rubrics, raw answers and one
-grading error are in [`demo/eval`](demo/eval/). What it does not measure is the case the map is
-for: a repository too large to read in a session.
 
 ## Why you can believe the answer
 
@@ -144,8 +133,8 @@ That is the one failure that compounds: a confident sentence about code nobody r
 by every session afterwards, each one equally sure.
 
 **The map checks itself.** Once written, every path is verified to exist, every dependency to name
-a feature that exists, every name it points you at to still be findable, and no file of consequence
-to be left unclaimed — anything unclaimed is either misfiled or a feature that was missed. A map
+a feature that exists, every name it points you at to still be findable, every way of referring to
+a feature to belong to that feature alone, and no file of consequence to be left unclaimed — anything unclaimed is either misfiled or a feature that was missed. A map
 of a large repository that is still being built says which parts it doesn't cover yet, so an
 absence in it is never mistaken for an answer.
 
@@ -158,31 +147,6 @@ ceremony afterwards. After a big refactor — or a stretch of work by someone wh
 — `/ds-bootstrap` rebuilds the whole thing. And because `.ds/` is plain markdown committed to your
 repo, a wrong belief surfaces in code review like anything else, before it becomes the thing every
 future session is certain about.
-
-There's one more thing the map carries: **your words**. The terms your team actually uses, and what
-each one means in this repository. Ask about "the discount" and your agent resolves the word to the
-feature you meant — not to all 47 files that spell it.
-
-## And it's cheaper, too
-
-The map is written once and read many times. A feature file is a few hundred tokens; the search it
-replaces is tens of thousands — on every question, in every new session, for every person on your
-team.
-
-The recording above, measured. One question — *why does checkout reject my second discount code?* —
-put to Claude Code twice, in the same repository, once with `.ds/` committed and once without:
-
-| | answered in | tokens through the context | cost |
-|---|---|---|---|
-| without dspec | 45s | 127,814 | $0.32 |
-| with dspec | 29s | 67,436 | $0.19 |
-
-One run each, on the 15-file demo repository in [`demo/shop`](demo/) — clone it and check.
-
-What that table measures is time, tokens and cost. Correctness isn't a number here; what stands in
-for it is the line above the table — which files each session chose to open. The cost gap grows
-with the repository, too: the map stays a few thousand tokens while the search it replaces grows
-with every file you add.
 
 ## One person sets it up; the team gets it
 
@@ -198,12 +162,13 @@ touches the code has an agent that was already told to fix the feature file it j
 No spec to write. No plan to approve. No gate to pass. No process to adopt.
 
 dspec doesn't change how you work — it makes your agent better informed at whatever you already
-do. `.ds/` is just knowledge: what each feature is, and where it lives.
+do. `.ds/` is just knowledge: what each feature is, what people call it, and where it lives.
 
 It sits between the tools you may already use rather than replacing any of them. Search and
-indexing tools find **where** code is. Spec tools agree **what to change next**. dspec is **what
-the code already is, where each part of it lives, and what a change must not break** — the part neither of
-the others keeps, and the part both of them work better with.
+indexing tools find **where** code is. Spec tools agree **what to change next**. dspec is what a
+long-time developer knows: **what the code already is, what each part of it is called, where it
+lives, and what a change must not break** — the part neither of the others keeps, and the part
+both of them work better with.
 
 ## The two surfaces
 

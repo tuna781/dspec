@@ -11,6 +11,31 @@ the patch digit is for changes that break none of them. This says what the proje
 done: 0.2.0 removed four commands, and calling that a major bump would have meant 1.0.0 for a tool
 still working out its shape. From 1.0.0 onwards, breaking means a major bump.
 
+## [Unreleased]
+
+### Changed
+
+- **A feature lists the ways people refer to it.** Feature files gain `aka:` — the routes, error
+  codes and messages, labels, events, tables and config keys read in the feature's own code, plus
+  the words the user has used for it once the code confirmed what they meant. A handle belongs to
+  exactly one feature, and the self-check covers handles as it covers anchors. This is a change to
+  the `.ds/` format; the reconcile branch adds `aka:` to every feature whose code it reads.
+- **The instruction block searches the map, not the repository.** When a question names something
+  specific — an error message, a route, a word no feature is called — the block says to search
+  `.ds/features/` for it, and to add a word the user used to the feature it turned out to mean.
+- **Every surface makes one promise: your agent knows your codebase like someone who has worked on
+  it for years.** The README, `dspec --help`, the `package.json` description and the social card
+  now open on it. The README is rebuilt around the problem and the concept — *The problem*, *The
+  idea*, *The map* — and the card shows any name resolving to one feature under the headline
+  *Name it. Your agent knows where.*
+
+### Removed
+
+- **The demo and every measurement.** `demo/` — the recording, the `demo/shop` fixture and
+  `demo/eval` — is gone, along with `demo-split.gif`. The README no longer carries the recording,
+  a session transcript, the cost table or the eval paragraph. This repository argues the concept;
+  demonstrations and measurements live elsewhere.
+
 ## [0.7.0] — 2026-09-24
 
 ### Changed

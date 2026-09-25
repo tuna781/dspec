@@ -63,5 +63,5 @@ a user receives.
   ignored so an upgraded checkout cannot commit a leftover.
 - `.gitattributes` forces `eol=lf` so a Windows contributor cannot CRLF the tree, and marks `.gif`
   and `.png` binary explicitly — correct under `text=auto` today, said outright so a later edit
-  cannot quietly break the demo recording.
+  cannot quietly break the social card's image.
 - `.claude/settings.json` is committed holding `{}`.

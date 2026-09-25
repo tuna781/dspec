@@ -6,6 +6,7 @@ checked: 2026-09-23
 code:
   - src/init.ts
 uses: [Agent adapters, Managed install]
+aka: ["dspec init", "--agent", "no such agent", "the install is incomplete"]
 ---
 
 `dspec init` — the entire terminal surface. It installs the `/ds-bootstrap` command into every
